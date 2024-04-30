@@ -1,0 +1,78 @@
+[project]
+name = "cspark"
+version = "0.1.0-beta.0"
+description = "A Python SDK for interacting with Coherent Spark APIs"
+license = "Apache-2.0"
+authors = [{ name = "Coherent", email = "team@coherent.global" }]
+keywords = ["coherent", "spark", "sdk", "restful", "api"]
+dependencies = []
+readme = "README.md"
+requires-python = ">= 3.7"
+
+[project.urls]
+Homepage = "https://github.com/c-spark/cspark-py-sdk"
+Repository = "https://github.com/c-spark/cspark-py-sdk"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "pytest>=8.1.2",
+    "ruff>=0.4.2",
+    "pyright>=1.1.360",
+]
+
+[tool.rye.scripts]
+format = { chain = ["ruff format", "ruff check --fix ."] }
+lint = { chain = ["format", "pyright" ] }
+demo = "python examples/main.py"
+
+
+[tool.ruff]
+line-length = 120
+output-format = "grouped"
+target-version = "py37"
+
+[tool.ruff.lint]
+select = [
+  "I",    # isort
+  "B",    # bugbear rules
+  "F401", # remove unused imports
+  "E722", # bare except statements
+  "ARG",  # unused arguments
+  "T201", # print statements
+  "T203", # p-print statements
+  "TCH004", # misuse of typing.TYPE_CHECKING
+  "TID251", # import rules
+]
+unfixable = ["T201", "T203"] # disable auto fix for print statements
+ignore-init-module-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"test/**.py" = ["T201", "T203"]
+"examples/**.py" = ["T201", "T203"]
+
+[tool.ruff.format]
+quote-style = "single"
+docstring-code-format = true
+
+[tool.pyright]
+include = ["src", "test", "examples"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build]
+include = ["src/*"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cspark"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+addopts = "--tb=short"
+xfail_strict = true
+filterwarnings = ["error"]
