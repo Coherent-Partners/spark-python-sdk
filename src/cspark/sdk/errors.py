@@ -38,8 +38,8 @@ class SparkError(Exception):
         return ''
 
     @staticmethod
-    def sdk(error: str | Dict[str, Any]) -> SparkSdkError:
-        return SparkSdkError(ErrorMessage(error) if isinstance(error, str) else ErrorMessage.from_dict(error))
+    def sdk(message: str, cause: Optional[Any] = None) -> SparkSdkError:
+        return SparkSdkError(ErrorMessage(message, cause))
 
     @staticmethod
     def api(status: int, error: Dict[str, Any]) -> SparkApiError:
@@ -73,7 +73,7 @@ class SparkApiError(SparkError):
 
     When attempting to communicate with the API, the SDK will wrap any sort of failure
     (any error during the round trip) into `SparkApiError`. The `status` is the HTTP
-    status code of the response, and the `requestId`, a unique identifier of the request.
+    status code of the response, and the `request_id`, a unique identifier of the request.
     """
 
     def __init__(self, error: ErrorMessage, status: Optional[int] = None):
@@ -117,15 +117,11 @@ class SparkApiError(SparkError):
         elif status == 504:
             return GatewayTimeoutError(error, 504)
         else:
-            return ApiUnknownError(error)
+            return UnknownApiError(error)
 
 
 class InternetError(SparkApiError):
     status = 0
-
-    @property
-    def details(self) -> str:
-        return super().details or 'no internet access'
 
 
 class BadRequestError(SparkApiError):
@@ -172,7 +168,7 @@ class GatewayTimeoutError(SparkApiError):
     status = 504
 
 
-class ApiUnknownError(SparkApiError):
+class UnknownApiError(SparkApiError):
     status = None
 
 
