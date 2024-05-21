@@ -12,7 +12,7 @@ def test_invalid_empty_string():
 
 
 def test_reset_errors():
-    validator = Validators.positive_int()
+    validator = Validators.positive_num()
     assert validator.is_valid(-1) is False
     assert validator.is_valid(0) is False
     assert len(validator.errors) == 2

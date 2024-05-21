@@ -25,3 +25,9 @@ def is_int(value: Any | None) -> bool:
 
 def is_positive_int(value: Any | None) -> bool:
     return is_int(value) and cast(int, value) > 0
+
+
+def mask(value: str, start: int = 0, end: int = 4, char: str = '*') -> str:
+    if not value or start < 0 or end < 0:
+        return value
+    return value[:start] + char * (len(value) - start - end) + value[-end:]

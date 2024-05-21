@@ -38,18 +38,18 @@ class EmptyStringValidator(BaseValidator):
             return False
 
 
-class PositiveIntegerValidator(BaseValidator):
+class PositiveNumberValidator(BaseValidator):
     def __new__(cls):
         if not hasattr(cls, 'instance'):
-            cls.instance = super(PositiveIntegerValidator, cls).__new__(cls)
+            cls.instance = super(PositiveNumberValidator, cls).__new__(cls)
         cls.instance.reset()
         return cls.instance
 
-    def validate(self, value: int | None):
+    def validate(self, value: int | float | None):
         if not is_positive_int(value):
-            raise SparkError.sdk('must be a positive integer', value)
+            raise SparkError.sdk('must be a positive number', value)
 
-    def is_valid(self, value: int | None) -> bool:
+    def is_valid(self, value: int | float | None) -> bool:
         try:
             self.validate(value)
             return True
@@ -85,5 +85,5 @@ class BaseUrlValidator(BaseValidator):
 
 class Validators:
     empty_str = EmptyStringValidator
-    positive_int = PositiveIntegerValidator
+    positive_num = PositiveNumberValidator
     base_url = BaseUrlValidator

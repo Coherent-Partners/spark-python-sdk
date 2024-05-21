@@ -1,3 +1,4 @@
+from .auth import *
 from .client import *
 from .config import *
 from .constants import *

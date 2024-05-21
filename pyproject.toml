@@ -22,7 +22,7 @@ managed = true
 dev-dependencies = [
     "pytest>=8.1.2",
     "ruff>=0.4.2",
-    "pyright>=1.1.360",
+    "pyright>=1.1.363",
 ]
 
 [tool.rye.scripts]
