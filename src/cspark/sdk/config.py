@@ -25,7 +25,8 @@ class Config:
     def __init__(
         self,
         *,
-        base_url: str | BaseUrl | None = BASE_URL,
+        base_url: Optional[str | BaseUrl] = BASE_URL,
+        oauth: Optional[Mapping[str, str] | str] = None,
         api_key: Optional[str] = API_KEY,
         token: Optional[str] = BEARER_TOKEN,
         timeout: Optional[float] = DEFAULT_TIMEOUT_IN_MS,
@@ -38,7 +39,7 @@ class Config:
         num_validator = Validators.positive_num()
 
         self._base_url = base_url if isinstance(base_url, BaseUrl) else BaseUrl.of(url=base_url, tenant=tenant, env=env)
-        self._auth = Authorization(api_key=api_key, token=token)
+        self._auth = Authorization(api_key=api_key, token=token, oauth=oauth)
         self._timeout = timeout if num_validator.is_valid(timeout) else DEFAULT_TIMEOUT_IN_MS
         self._max_retries = max_retries if num_validator.is_valid(max_retries) else DEFAULT_MAX_RETRIES
         self._retry_interval = retry_interval if num_validator.is_valid(retry_interval) else DEFAULT_RETRY_INTERVAL
@@ -46,7 +47,8 @@ class Config:
 
         self._options = str(
             {
-                'base_url': self._base_url.value,
+                'base_url': self._base_url.full,
+                'oauth': str(self._auth.oauth) if self._auth.oauth else None,
                 'api_key': self._auth.api_key,
                 'token': self._auth.token,
                 'timeout': self._timeout,
@@ -155,7 +157,7 @@ class BaseUrl:
                 tenant, 'tenant name is missing'
             )  # pyright: ignore[reportUnusedExpression]
 
-        errors = url_validator.errors + str_validator.errors
+        errors = url_validator.errors  # + str_validator.errors
         raise SparkError.sdk(
             message='; '.join(e.message for e in errors)
             if len(errors) > 0

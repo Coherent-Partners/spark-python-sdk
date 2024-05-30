@@ -17,7 +17,7 @@ def is_int(value: Any | None) -> bool:
     if isinstance(value, int):
         return True
     try:
-        int(cast(int, value))
+        int(str(value))
         return True
     except ValueError:
         return False

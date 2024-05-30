@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Optional
 
 from .errors import SparkError
 from .utils import is_positive_int, is_str_empty
@@ -25,11 +25,11 @@ class EmptyStringValidator(BaseValidator):
         cls.instance.reset()
         return cls.instance
 
-    def validate(self, value: str | None, message: str | None = None):
+    def validate(self, value: Optional[str], message: Optional[str] = None):
         if is_str_empty(value):
             raise SparkError.sdk(message or 'must be non-empty string value', cause=value)
 
-    def is_valid(self, value: str | None, message: str | None = None) -> bool:
+    def is_valid(self, value: Optional[str], message: Optional[str] = None) -> bool:
         try:
             self.validate(value, message)
             return True
@@ -45,11 +45,11 @@ class PositiveNumberValidator(BaseValidator):
         cls.instance.reset()
         return cls.instance
 
-    def validate(self, value: int | float | None):
+    def validate(self, value: Optional[int | float]):
         if not is_positive_int(value):
             raise SparkError.sdk('must be a positive number', value)
 
-    def is_valid(self, value: int | float | None) -> bool:
+    def is_valid(self, value: Optional[int | float]) -> bool:
         try:
             self.validate(value)
             return True
@@ -67,14 +67,14 @@ class BaseUrlValidator(BaseValidator):
         cls.instance.reset()
         return cls.instance
 
-    def validate(self, value: str | None):
-        if value is None or str(value).strip() == '':  # FIXME: use utils when available
+    def validate(self, value: Optional[str]):
+        if is_str_empty(value):
             raise SparkError.sdk('base URL is required', value)
 
-        if not self._wildcard.match(value):
+        if not self._wildcard.match(str(value)):
             raise SparkError.sdk('must be a Spark base URL <*.coherent.global>', value)
 
-    def is_valid(self, value: str | None) -> bool:
+    def is_valid(self, value: Optional[str]) -> bool:
         try:
             self.validate(value)
             return True

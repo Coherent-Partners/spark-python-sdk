@@ -1,16 +1,42 @@
 from __future__ import annotations
 
+from typing import Mapping, Optional
+
 import cspark.sdk.resources as API
 
-from .config import Config
+from .config import BaseUrl, Config
 
 __all__ = ['Client']
 
 
 class Client:
-    def __init__(self, config: Config) -> None:
-        self.config = config
+    def __init__(
+        self,
+        *,
+        base_url: Optional[str | BaseUrl] = None,
+        oauth: Optional[Mapping[str, str] | str] = None,
+        api_key: Optional[str] = None,
+        token: Optional[str] = None,
+        timeout: Optional[float] = None,
+        max_retries: Optional[int] = None,
+        retry_interval: Optional[float] = None,
+        tenant: Optional[str] = None,
+        env: Optional[str] = None,
+        logger: Optional[bool] = False,
+    ) -> None:
+        self.config = Config(
+            base_url=base_url,
+            oauth=oauth,
+            api_key=api_key,
+            token=token,
+            timeout=timeout,
+            max_retries=max_retries,
+            retry_interval=retry_interval,
+            tenant=tenant,
+            env=env,
+            logger=logger,
+        )
 
     @property
-    def service(self) -> API.Service:
-        return API.Service(self.config)
+    def services(self) -> API.Services:
+        return API.Services(self.config)
