@@ -30,7 +30,6 @@ format = { chain = ["ruff format", "ruff check --fix ."] }
 lint = { chain = ["format", "pyright" ] }
 demo = "python examples/main.py"
 
-
 [tool.ruff]
 line-length = 120
 output-format = "grouped"

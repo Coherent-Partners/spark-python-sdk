@@ -31,4 +31,4 @@ jobs:
           rye run demo
 
       - name: Run tests
-        run: rye test
+        run: rye run pytest
