@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any, cast
 
 
@@ -33,3 +34,9 @@ def mask(value: str, start: int = 0, end: int = 4, char: str = '*') -> str:
     if not value or start < 0 or end < 0:
         return value
     return value[:start] + char * (len(value) - start - end) + value[-end:]
+
+
+def sanitize_uri(url: str, leading: bool = False) -> str:
+    sanitized = re.sub(r'/{2,}', '/', url)
+    sanitized = sanitized.rstrip('/')
+    return sanitized if leading else sanitized.lstrip('/')
