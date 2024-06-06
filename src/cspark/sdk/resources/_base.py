@@ -36,24 +36,27 @@ class ApiResource:
             'x-spark-ua': sdk_ua_header,
             'x-request-id': uuid.uuid4().hex,
             'x-tenant-name': self.config.base_url.tenant,
+            # TODO: use httpx.Auth instead (https://www.python-httpx.org/advanced/authentication/)
+            # httpx comes with auth flow for different auth schemes.
+            **self.config.auth.as_header,
         }
 
     def request(
         self,
-        url: str,
+        url: Union[str, 'Uri'],
         *,
         method: str = 'GET',
         headers: Mapping[str, str] = {},
         params: Optional[Mapping[str, str]] = None,
-        data=None,
+        body=None,
         files=None,
     ):
         request = self._client.build_request(
             method,
-            url,
+            url.value if isinstance(url, Uri) else url,
             params=params,
             headers={**headers, **self.default_headers},
-            data=data,
+            json=body,
             files=files,
             timeout=self.config.timeout / 1000,
         )
@@ -136,9 +139,7 @@ class Uri:
 
     @staticmethod
     def to_params(uri: Union[str, UriParams]) -> UriParams:
-        if isinstance(uri, str):
-            return Uri.decode(uri)
-        return uri
+        return Uri.decode(uri) if isinstance(uri, str) else uri
 
     @staticmethod
     def decode(uri: str) -> UriParams:

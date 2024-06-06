@@ -40,3 +40,24 @@ def sanitize_uri(url: str, leading: bool = False) -> str:
     sanitized = re.sub(r'/{2,}', '/', url)
     sanitized = sanitized.rstrip('/')
     return sanitized if leading else sanitized.lstrip('/')
+
+
+def read(key_path: str, data: dict, default: Any = None) -> Any:
+    """
+    Walks through a nested dictionary-based dataset and returns the value associated
+    with the key path.
+    """
+    if not isinstance(data, dict):
+        return default
+    try:
+        keys = key_path.split('.')
+    except AttributeError:
+        return default
+    if not keys:
+        return default
+
+    # safe operations
+    value = data.copy()
+    for k in keys:
+        value = cast(dict, value.get(k))
+    return value

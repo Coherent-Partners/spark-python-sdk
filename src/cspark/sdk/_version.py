@@ -2,7 +2,7 @@ from sys import version_info as v
 
 __all__ = ['__version__', 'sdk_version', 'about']
 
-__version__ = '0.1.0-beta.1'
+__version__ = '0.1.0-beta.2'
 
 sdk_version = __version__
 

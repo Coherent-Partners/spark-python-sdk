@@ -13,10 +13,6 @@ from ._validators import Validators
 
 __all__ = ['Config', 'BaseUrl']
 
-BASE_URL = os.getenv(ENV_VARS.BASE_URL)
-API_KEY = os.getenv(ENV_VARS.API_KEY)
-BEARER_TOKEN = os.getenv(ENV_VARS.BEARER_TOKEN)
-
 
 class Config:
     _options: str
@@ -25,18 +21,22 @@ class Config:
     def __init__(
         self,
         *,
-        base_url: Optional[str | BaseUrl] = BASE_URL,
+        base_url: Optional[str | BaseUrl] = None,
+        api_key: Optional[str] = None,
+        token: Optional[str] = None,
         oauth: Optional[Mapping[str, str] | str] = None,
-        api_key: Optional[str] = API_KEY,
-        token: Optional[str] = BEARER_TOKEN,
         timeout: Optional[float] = DEFAULT_TIMEOUT_IN_MS,
         max_retries: Optional[int] = DEFAULT_MAX_RETRIES,
         retry_interval: Optional[float] = DEFAULT_RETRY_INTERVAL,
         tenant: Optional[str] = None,
         env: Optional[str] = None,
-        logger: Optional[bool] = False,
+        logger: Optional[bool] = True,
     ) -> None:
         num_validator = Validators.positive_num()
+
+        base_url = os.getenv(ENV_VARS.BASE_URL) if base_url is None else base_url
+        api_key = os.getenv(ENV_VARS.API_KEY) if api_key is None else api_key
+        token = os.getenv(ENV_VARS.BEARER_TOKEN) if token is None else token
 
         self._base_url = base_url if isinstance(base_url, BaseUrl) else BaseUrl.of(url=base_url, tenant=tenant, env=env)
         self._auth = Authorization(api_key=api_key, token=token, oauth=oauth)
@@ -54,6 +54,7 @@ class Config:
                 'timeout': self._timeout,
                 'max_retries': self._max_retries,
                 'retry_interval': self._retry_interval,
+                'logger': self._logger,
             }
         )
 

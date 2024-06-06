@@ -13,3 +13,4 @@ wheels/
 
 # Misc
 temp/
+.env
