@@ -5,9 +5,9 @@ import os
 import re
 from typing import Mapping, Optional
 
-from .constants import ENV_VARS
-from .errors import SparkError
-from .utils import mask
+from ._constants import ENV_VARS
+from ._errors import SparkError
+from ._utils import mask
 
 __all__ = ['Authorization', 'OAuth']
 

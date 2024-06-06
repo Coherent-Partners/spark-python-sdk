@@ -1,6 +1,6 @@
 import pytest
 from cspark.sdk import Authorization, SparkSdkError
-from cspark.sdk.auth import OAuth
+from cspark.sdk._auth import OAuth
 
 TOKEN = 'some-access-token'
 API_KEY = 'some-api-key'

@@ -5,11 +5,11 @@ import os
 from typing import Mapping, Optional, cast
 from urllib.parse import urlparse
 
-from .auth import Authorization
-from .constants import *
-from .errors import SparkError
-from .utils import is_str_empty
-from .validators import Validators
+from ._auth import Authorization
+from ._constants import *
+from ._errors import SparkError
+from ._utils import is_str_empty
+from ._validators import Validators
 
 __all__ = ['Config', 'BaseUrl']
 

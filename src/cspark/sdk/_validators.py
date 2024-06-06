@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 from typing import List, Optional
 
-from .errors import SparkError
-from .utils import is_positive_int, is_str_empty
+from ._errors import SparkError
+from ._utils import is_positive_int, is_str_empty
 
 __all__ = ['Validators']
 

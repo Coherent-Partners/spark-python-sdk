@@ -1,5 +1,5 @@
 from cspark.sdk import SparkError
-from cspark.sdk.validators import Validators
+from cspark.sdk._validators import Validators
 
 
 def test_invalid_empty_string():

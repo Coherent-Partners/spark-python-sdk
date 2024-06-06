@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 from typing import Mapping, Optional
 
 import cspark.sdk.resources as API
 
-from .config import BaseUrl, Config
+from ._config import BaseUrl, Config
 
 __all__ = ['Client']
 
@@ -40,3 +38,7 @@ class Client:
     @property
     def services(self) -> API.Services:
         return API.Services(self.config)
+
+
+class AsyncClient:
+    pass

@@ -1,6 +1,6 @@
 import pytest
 from cspark.sdk import BaseUrl, Config, SparkSdkError
-from cspark.sdk.constants import *
+from cspark.sdk._constants import *
 
 BASE_URL = 'https://excel.test.coherent.global'
 TENANT_NAME = 'tenant-name'

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, Generic, Mapping, Optional, TypeVar, Union, cast
 
-__all__ = ['SparkError', 'SparkSdkError', 'SparkApiError']
+__all__ = ['SparkError', 'SparkSdkError', 'SparkApiError', 'ErrorMessage']
 
 TReq = TypeVar('TReq')
 TResp = TypeVar('TResp')
