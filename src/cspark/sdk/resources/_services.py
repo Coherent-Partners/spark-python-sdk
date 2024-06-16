@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+from types import TracebackType
 from typing import Any, Dict, List, Optional, Union
 
 from .._config import Config
@@ -13,6 +14,17 @@ __all__ = ['Services', 'ExecuteData']
 class Services(ApiResource):
     def __init__(self, config: Config):
         super().__init__(config)
+
+    def __enter__(self: 'Services') -> 'Services':
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        self.close()
 
     def close(self):
         super().close()
@@ -30,6 +42,58 @@ class Services(ApiResource):
         body = self.__build_exec_body(uri, ExecuteParams(data, inputs, raw))
 
         return self.request(url, method='POST', body=body)
+
+    def validate(
+        self,
+        uri: Union[str, UriParams],
+        *,
+        data: Optional['ExecuteData'] = None,
+        inputs: Optional[Dict[str, Any]] = None,
+        raw: Optional[str] = None,
+    ):
+        uri = Uri.to_params(uri)
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='validation')
+        body = self.__build_exec_body(uri, ExecuteParams(data, inputs, raw))
+
+        return self.request(url, method='POST', body=body)
+
+    def get_schema(
+        self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
+    ):
+        uri = UriParams(folder=folder, service=service) if uri is None else Uri.to_params(uri)
+        endpoint = f'product/{uri.folder}/engines/get/{uri.service}'
+        url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
+
+        return self.request(url)
+
+    def get_metadata(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        service_id: Optional[str] = None,
+        version_id: Optional[str] = None,
+        proxy: Optional[str] = None,
+        public: Optional[bool] = False,
+    ):
+        uri = (
+            UriParams(folder, service, service_id, version_id=version_id, proxy=proxy, public=public)
+            if uri is None
+            else Uri.to_params(uri)
+        )
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='metadata')
+
+        return self.request(url)
+
+    def get_versions(
+        self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
+    ):
+        uri = UriParams(folder, service) if uri is None else Uri.to_params(uri)
+        endpoint = f'product/{uri.folder}/engines/getversions/{uri.service}'
+        url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
+
+        return self.request(url)
 
     def __build_exec_body(self, uri: UriParams, params: 'ExecuteParams') -> Any:
         data = params.data or ExecuteData(service_id=uri.service_id, version_id=uri.version_id)
