@@ -22,12 +22,12 @@ class OAuth2(ApiResource):
         response = self.request(url, method='POST', form=body)
         data = cast(Dict, response.data)
         return AccessToken(
-            access_token=data.get('access_token'),
-            expires_in=data.get('expires_in'),
-            refresh_expires_in=data.get('refresh_expires_in'),
-            token_type=data.get('token_type'),
-            not_before_policy=data.get('not-before-policy'),
-            scope=data.get('scope'),
+            access_token=str(data.get('access_token', '')),
+            expires_in=int(data.get('expires_in', 0)),
+            refresh_expires_in=int(data.get('refresh_expires_in', 0)),
+            token_type=str(data.get('token_type', '')),
+            not_before_policy=int(data.get('not-before-policy', 0)),
+            scope=str(data.get('scope', '')),
         )
 
 

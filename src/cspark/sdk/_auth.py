@@ -93,8 +93,8 @@ class OAuth:
     _access_token: Optional[AccessToken]
 
     def __init__(self, value: Mapping[str, str]) -> None:
-        self._client_id = value.get('client_id')
-        self._client_secret = value.get('client_secret')
+        self._client_id = value.get('client_id', '')
+        self._client_secret = value.get('client_secret', '')
         self._file_path: Optional[str] = value.get('oauth_path')
         self._access_token = None
 
