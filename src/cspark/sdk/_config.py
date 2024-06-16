@@ -5,7 +5,6 @@ import os
 from typing import Mapping, Optional, cast
 from urllib.parse import urlparse
 
-from ._auth import Authorization
 from ._constants import *
 from ._errors import SparkError
 from ._utils import is_str_empty
@@ -32,6 +31,8 @@ class Config:
         env: Optional[str] = None,
         logger: Optional[bool] = True,
     ) -> None:
+        from ._auth import Authorization  # NOTE: help avoid circular import
+
         num_validator = Validators.positive_num()
 
         base_url = os.getenv(ENV_VARS.BASE_URL) if base_url is None else base_url
@@ -67,7 +68,7 @@ class Config:
         return self._base_url
 
     @property
-    def auth(self) -> Authorization:
+    def auth(self):
         return self._auth
 
     @property

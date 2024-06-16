@@ -14,6 +14,9 @@ class Services(ApiResource):
     def __init__(self, config: Config):
         super().__init__(config)
 
+    def close(self):
+        super().close()
+
     def execute(
         self,
         uri: Union[str, UriParams],
@@ -26,10 +29,7 @@ class Services(ApiResource):
         url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='execute')
         body = self.__build_exec_body(uri, ExecuteParams(data, inputs, raw))
 
-        return self.request(url.value, method='POST', body=body)
-
-    def close(self):
-        super().close()
+        return self.request(url, method='POST', body=body)
 
     def __build_exec_body(self, uri: UriParams, params: 'ExecuteParams') -> Any:
         data = params.data or ExecuteData(service_id=uri.service_id, version_id=uri.version_id)
@@ -70,9 +70,9 @@ class ExecuteData:
     active_since: Optional[str] = None
 
     # These fields, if provided as part of the API request, are visible in the API Call History.
+    call_purpose: Optional[str] = 'Single Execution'
     source_system: Optional[str] = SPARK_SDK
     correlation_id: Optional[str] = None
-    call_purpose: Optional[str] = 'Single Execution'
 
     # Parameters to control the response outputs
     outputs: Union[None, str, List[str]] = None
@@ -87,7 +87,10 @@ class ExecuteData:
 
     def metadata(self):
         data = self.__dict__.copy()
+        # inputs are not part of the metadata
         data.pop('inputs', None)
+
+        # rename fields to match the API request
         data['transaction_date'] = data.pop('active_since', None)
         data['array_outputs'] = data.pop('outputs', None)
         data['excel_file'] = data.pop('downloadable', None)
@@ -95,6 +98,8 @@ class ExecuteData:
         data['requested_output_regex'] = data.pop('output_regex', None)
         data['response_data_inputs'] = data.pop('with_inputs', None)
         data['service_category'] = data.pop('subservices', None)
+
+        # validation_type is only for the Validation API.
         validation = data.pop('validation_type', None)
         if validation is not None:
             data['validation_type'] = 'dynamic' if validation == 'dynamic' else 'default_values'

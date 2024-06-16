@@ -212,4 +212,4 @@ class ApiErrorCause(Generic[TReq, TResp]):
         request = TRequest(req['url'], req['method'], req['headers'], req['body'])
         if not res:
             return ApiErrorCause(request)
-        return ApiErrorCause(request, TResponse(res['status'], res['headers'], res['body']))
+        return ApiErrorCause(request, TResponse(res['headers'], res['body'], res['raw']))

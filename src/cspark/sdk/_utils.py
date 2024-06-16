@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import math
+import random
 import re
 from typing import Any, cast
+
+from ._constants import DEFAULT_RETRY_INTERVAL, RETRY_RANDOMIZATION_FACTOR
 
 
 def is_str(value: Any | None) -> bool:
@@ -61,3 +65,8 @@ def read(key_path: str, data: dict, default: Any = None) -> Any:
     for k in keys:
         value = cast(dict, value.get(k))
     return value
+
+
+def get_retry_timeout(retries: int, interval=DEFAULT_RETRY_INTERVAL) -> float:
+    randomization = random.uniform(0, 1) * RETRY_RANDOMIZATION_FACTOR
+    return math.pow(2, retries) * interval * randomization

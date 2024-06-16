@@ -5,9 +5,12 @@ import os
 import re
 from typing import Mapping, Optional
 
+from ._config import Config
 from ._constants import ENV_VARS
 from ._errors import SparkError
 from ._utils import mask
+from .resources import AccessToken
+from .resources import OAuth2 as OAuthManager
 
 __all__ = ['Authorization', 'OAuth']
 
@@ -87,12 +90,13 @@ class Authorization:
 
 
 class OAuth:
-    _access_token: Optional[str]
+    _access_token: Optional[AccessToken]
 
     def __init__(self, value: Mapping[str, str]) -> None:
-        self._client_id = value.get('client_id', '')
-        self._client_secret = value.get('client_secret', '')
+        self._client_id = value.get('client_id')
+        self._client_secret = value.get('client_secret')
         self._file_path: Optional[str] = value.get('oauth_path')
+        self._access_token = None
 
         if 'client_id' not in value or 'client_secret' not in value:
             raise SparkError.sdk(
@@ -119,7 +123,7 @@ class OAuth:
 
     @property
     def access_token(self) -> Optional[str]:
-        return self._access_token
+        return self._access_token.access_token if self._access_token else None
 
     @property
     def client_id(self) -> str:
@@ -138,13 +142,31 @@ class OAuth:
         return 'client_credentials'
 
     def to_dict(self) -> Mapping[str, str]:
-        return {'client_id': self._client_id, 'client_secret': self.client_secret}
+        return {'client_id': self._client_id, 'client_secret': self._client_secret}
 
     def __str__(self) -> str:
         return json.dumps(
             {
                 'client_id': self._client_id,
                 'client_secret': self.client_secret,
-                'access_token': self._access_token,
+                'access_token': self.access_token,
             }
         )
+
+    def retrieve_token(self, config: Config) -> AccessToken:
+        # print('retrieving OAuth2 access token...')  # FIXME: use logger instead
+        manager = OAuthManager(config)
+        try:
+            self._access_token = manager.get_access_token()
+            if not self._access_token:
+                raise SparkError('no access token found')
+            return self._access_token
+        except SparkError as error:
+            # print(error.message)
+            raise
+        except Exception as cause:
+            error = SparkError('cannot retrieve OAuth2 access token', cause)
+            # print(error.message)
+            raise error from cause
+        finally:
+            manager.close()

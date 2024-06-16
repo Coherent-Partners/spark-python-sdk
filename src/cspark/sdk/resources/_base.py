@@ -1,18 +1,19 @@
 import logging
 import re
+import time
 import uuid
 from dataclasses import dataclass
-from typing import Mapping, Optional, Union
+from typing import Any, Mapping, Optional, Union
 
-from httpx import URL, Client
+from httpx import URL, Client, Headers, Request
 
 from .._config import Config
 from .._errors import SparkError
-from .._utils import is_str_empty, sanitize_uri
+from .._utils import get_retry_timeout, is_str_empty, sanitize_uri
 from .._version import about as sdk_info
 from .._version import sdk_ua_header
 
-__all__ = ['ApiResource', 'UriParams', 'Uri']
+__all__ = ['ApiResource', 'UriParams', 'Uri', 'HttpResponse']
 
 
 class ApiResource:
@@ -36,9 +37,6 @@ class ApiResource:
             'x-spark-ua': sdk_ua_header,
             'x-request-id': uuid.uuid4().hex,
             'x-tenant-name': self.config.base_url.tenant,
-            # TODO: use httpx.Auth instead (https://www.python-httpx.org/advanced/authentication/)
-            # httpx comes with auth flow for different auth schemes.
-            **self.config.auth.as_header,
         }
 
     def request(
@@ -49,23 +47,82 @@ class ApiResource:
         headers: Mapping[str, str] = {},
         params: Optional[Mapping[str, str]] = None,
         body=None,
+        form=None,
         files=None,
     ):
+        url = url.value if isinstance(url, Uri) else url
         request = self._client.build_request(
             method,
-            url.value if isinstance(url, Uri) else url,
+            url,
             params=params,
             headers={**headers, **self.default_headers},
+            data=form,
             json=body,
             files=files,
             timeout=self.config.timeout / 1000,
         )
 
         self.logger.debug(f'{method} {url}')
-        return self._client.send(request)
+        return self.__fetch(request)
 
     def close(self):
         self._client.close()
+
+    def __fetch(self, request: Request, retries: int = 0) -> 'HttpResponse':
+        request.headers.update(self.config.auth.as_header)
+        response = self._client.send(request)
+        status = response.status_code
+
+        if status >= 400:
+            if status == 401 and self.config.auth.type == 'oauth' and retries < self.config.max_retries:
+                self.config.auth.oauth.retrieve_token(self.config)  # pyright: ignore[reportOptionalMemberAccess]
+                return self.__fetch(request, retries + 1)
+
+            if (status == 408 or status == 429) and retries < self.config.max_retries:
+                self.logger.debug(f'retrying request due to status code {status}...')
+                delay = get_retry_timeout(retries)
+                time.sleep(delay)
+                return self.__fetch(request, retries + 1)
+
+            url = str(request.url)
+            raise SparkError.api(
+                response.status_code,
+                {
+                    'message': f'failed to fetch <${url}>',
+                    'cause': {
+                        'request': {
+                            'url': url,
+                            'method': request.method,
+                            'headers': request.headers,
+                            'body': request.content,
+                        },
+                        'response': {
+                            'headers': response.request.headers,
+                            'body': response.content,  # FIXME: cast to dict if possible
+                            'raw': response.text,
+                        },
+                    },
+                },
+            )
+
+        # otherwise, ok response
+        http_response = {'status': status, 'data': None, 'buffer': response.content, 'headers': response.headers}
+
+        content_type = response.headers.get('content-type', '')
+        if 'application/json' in content_type:
+            try:
+                http_response['data'] = response.json()
+            except Exception:
+                http_response['data'] = response.text
+        return HttpResponse(**http_response)
+
+
+@dataclass
+class HttpResponse:
+    status: int
+    data: Union[None, Any, str]
+    buffer: bytes
+    headers: Headers
 
 
 @dataclass(frozen=True)
