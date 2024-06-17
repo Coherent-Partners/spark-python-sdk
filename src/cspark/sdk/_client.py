@@ -39,6 +39,10 @@ class Client:
     def services(self) -> API.Services:
         return API.Services(self.config)
 
+    @property
+    def batches(self) -> API.Batches:
+        return API.Batches(self.config)
+
 
 class AsyncClient:
     pass

@@ -11,9 +11,6 @@ class OAuth2(ApiResource):
     def __init__(self, config: Config):
         super().__init__(config)
 
-    def close(self):
-        super().close()
-
     def get_access_token(self) -> 'AccessToken':
         url = Uri.of(base_url=self.config.base_url.oauth2, version='protocol', endpoint='openid-connect/token')
         body = {**self.config.auth.oauth.to_dict()}  # pyright: ignore[reportOptionalMemberAccess]

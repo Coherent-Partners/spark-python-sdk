@@ -75,3 +75,25 @@ def test_decode_string_uri():
     assert Uri.decode('//f/') == UriParams()
     assert Uri.decode('//f') == UriParams()
     assert Uri.decode('///') == UriParams()
+
+
+def test_uri_params_as_service_uri():
+    assert UriParams(folder='f', service='s').service_uri == 'f/s'
+    assert UriParams(folder='f', service='s', version='1.2.3').service_uri == 'f/s[1.2.3]'
+    assert UriParams(service_id='456').service_uri == 'service/456'
+    assert UriParams(version_id='123').service_uri == 'version/123'
+    assert UriParams().service_uri == ''
+
+
+def test_uri_params_pick_class_props():
+    assert UriParams(folder='f', service='s', version='1.2.3').pick('folder') == UriParams(folder='f')
+    assert UriParams(folder='f', service='s').pick('service') == UriParams(service='s')
+    assert UriParams(folder='f', service='s').pick('folder', 'service') == UriParams(folder='f', service='s')
+    assert UriParams(folder='f', service='s').pick('folder', 'service', 'version') == UriParams(folder='f', service='s')
+
+
+def test_uri_params_omit_class_props():
+    assert UriParams(folder='f', service='s', version='1.2.3').omit('folder') == UriParams(service='s', version='1.2.3')
+    assert UriParams(folder='f', service='s').omit('service') == UriParams(folder='f')
+    assert UriParams(folder='f', service='s').omit('folder', 'service') == UriParams()
+    assert UriParams(folder='f', service='s').omit('folder', 'service', 'version') == UriParams()

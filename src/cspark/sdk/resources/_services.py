@@ -1,11 +1,10 @@
 import json
 from dataclasses import dataclass
-from types import TracebackType
 from typing import Any, Dict, List, Optional, Union
 
 from .._config import Config
 from .._constants import SPARK_SDK
-from .._utils import is_str_not_empty, read
+from .._utils import find_value_from_dict, is_str_not_empty, join_list_str
 from ._base import ApiResource, Uri, UriParams
 
 __all__ = ['Services', 'ExecuteData']
@@ -14,20 +13,6 @@ __all__ = ['Services', 'ExecuteData']
 class Services(ApiResource):
     def __init__(self, config: Config):
         super().__init__(config)
-
-    def __enter__(self: 'Services') -> 'Services':
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
-        self.close()
-
-    def close(self):
-        super().close()
 
     def execute(
         self,
@@ -96,22 +81,18 @@ class Services(ApiResource):
         return self.request(url)
 
     def __build_exec_body(self, uri: UriParams, params: 'ExecuteParams') -> Any:
-        data = params.data or ExecuteData(service_id=uri.service_id, version_id=uri.version_id)
+        data = params.data or ExecuteData(service_id=uri.service_id, version_id=uri.version_id, version=uri.version)
         inputs = data.inputs or params.inputs
         metadata = data.metadata()
 
         if inputs is None and is_str_not_empty(params.raw):
             try:
                 json_data = json.loads(str(params.raw))
-
-                request_meta = json_data.get('request_meta', {})
-                metadata = {**metadata, **request_meta}
-                inputs = read('request_data.inputs', json_data, {})
+                inputs = find_value_from_dict('request_data.inputs', json_data, {})
+                metadata.update(json_data.get('request_meta', {}))
             except Exception:
                 self.logger.warn('failed to parse the raw input as JSON')
-            return {'request_data': {'inputs': inputs or {}}, 'request_meta': metadata}
-        else:
-            return {'request_data': {'inputs': inputs or {}}, 'request_meta': metadata}
+        return {'request_data': {'inputs': inputs or {}}, 'request_meta': metadata}
 
 
 @dataclass(frozen=True)
@@ -158,10 +139,10 @@ class ExecuteData:
         data['transaction_date'] = data.pop('active_since', None)
         data['array_outputs'] = data.pop('outputs', None)
         data['excel_file'] = data.pop('downloadable', None)
-        data['requested_output'] = data.pop('output', None)
+        data['requested_output'] = join_list_str(data.pop('output', None))
         data['requested_output_regex'] = data.pop('output_regex', None)
         data['response_data_inputs'] = data.pop('with_inputs', None)
-        data['service_category'] = data.pop('subservices', None)
+        data['service_category'] = join_list_str(data.pop('subservices', None))
 
         # validation_type is only for the Validation API.
         validation = data.pop('validation_type', None)

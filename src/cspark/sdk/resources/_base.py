@@ -3,6 +3,7 @@ import re
 import time
 import uuid
 from dataclasses import dataclass
+from types import TracebackType
 from typing import Any, Mapping, Optional, Union
 
 from httpx import URL, Client, Headers, Request
@@ -28,6 +29,21 @@ class ApiResource:
         )
         # FIXME: Redefine HTTP handler to use the SDK config instead of httpx's.
         self.logger = logging.getLogger()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Optional[type[BaseException]],
+        exc: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        self.close()
+
+    def close(self):
+        if not self._client.is_closed:
+            self._client.close()
 
     @property
     def default_headers(self):
@@ -65,9 +81,6 @@ class ApiResource:
         self.logger.debug(f'{method} {url}')
         return self.__fetch(request)
 
-    def close(self):
-        self._client.close()
-
     def __fetch(self, request: Request, retries: int = 0) -> 'HttpResponse':
         request.headers.update(self.config.auth.as_header)
         response = self._client.send(request)
@@ -86,7 +99,7 @@ class ApiResource:
 
             url = str(request.url)
             raise SparkError.api(
-                response.status_code,
+                status,
                 {
                     'message': f'failed to fetch <${url}>',
                     'cause': {
@@ -134,6 +147,20 @@ class UriParams:
     version_id: Optional[str] = None
     proxy: Optional[str] = None
     public: Optional[bool] = False
+
+    @property
+    def service_uri(self) -> str:
+        """
+        Returns the service URI locator's short format if available.
+        folder/service[version?]
+        """
+        return Uri.encode(self, long=False)
+
+    def pick(self, *args: str) -> 'UriParams':
+        return UriParams(**{k: v for k, v in self.__dict__.items() if k in args})
+
+    def omit(self, *args: str) -> 'UriParams':
+        return UriParams(**{k: v for k, v in self.__dict__.items() if k not in args})
 
 
 class Uri:

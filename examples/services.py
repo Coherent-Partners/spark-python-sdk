@@ -6,7 +6,8 @@ load_dotenv()
 
 
 def execute(services: Spark.Services):
-    response = services.execute('my-folder/my-service')
+    inputs = {}  # inputs data
+    response = services.execute('my-folder/my-service', inputs=inputs)
     print(response.data)
 
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import random
 import re
-from typing import Any, cast
+from typing import Any, List, Union, cast
 
 from ._constants import DEFAULT_RETRY_INTERVAL, RETRY_RANDOMIZATION_FACTOR
 
@@ -46,7 +46,7 @@ def sanitize_uri(url: str, leading: bool = False) -> str:
     return sanitized if leading else sanitized.lstrip('/')
 
 
-def read(key_path: str, data: dict, default: Any = None) -> Any:
+def find_value_from_dict(key_path: str, data: dict, default: Any = None) -> Any:
     """
     Walks through a nested dictionary-based dataset and returns the value associated
     with the key path.
@@ -70,3 +70,7 @@ def read(key_path: str, data: dict, default: Any = None) -> Any:
 def get_retry_timeout(retries: int, interval=DEFAULT_RETRY_INTERVAL) -> float:
     randomization = random.uniform(0, 1) * RETRY_RANDOMIZATION_FACTOR
     return math.pow(2, retries) * interval * randomization
+
+
+def join_list_str(value: Union[None, str, List[str]] = None, sep: str = ',') -> Union[str, None]:
+    return sep.join(value) if isinstance(value, list) else value
