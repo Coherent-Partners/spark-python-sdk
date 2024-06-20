@@ -20,7 +20,7 @@ class Client:
         retry_interval: Optional[float] = None,
         tenant: Optional[str] = None,
         env: Optional[str] = None,
-        logger: Optional[bool] = False,
+        logger: Optional[bool] = True,
     ) -> None:
         self.config = Config(
             base_url=base_url,

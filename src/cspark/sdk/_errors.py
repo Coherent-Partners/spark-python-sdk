@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, Generic, Mapping, Optional, TypeVar, Union, cast
+from typing import Any, Dict, Generic, Optional, TypeVar, cast
+
+from httpx import Headers
 
 __all__ = ['SparkError', 'SparkSdkError', 'SparkApiError', 'ErrorMessage']
 
 TReq = TypeVar('TReq')
 TResp = TypeVar('TResp')
-Headers = Union[Dict[str, str], Mapping[str, str]]
 
 
 class TRequest(Generic[TReq]):
