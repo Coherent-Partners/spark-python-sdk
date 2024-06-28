@@ -137,6 +137,14 @@ class HttpResponse:
     buffer: bytes
     headers: Headers
 
+    def copy_with(self, **kwargs) -> 'HttpResponse':
+        return HttpResponse(
+            status=kwargs.get('status', self.status),
+            data=kwargs.get('data', self.data),
+            buffer=kwargs.get('buffer', self.buffer),
+            headers=kwargs.get('headers', self.headers),
+        )
+
 
 @dataclass(frozen=True)
 class UriParams:
@@ -162,6 +170,9 @@ class UriParams:
     def omit(self, *args: str) -> 'UriParams':
         return UriParams(**{k: v for k, v in self.__dict__.items() if k not in args})
 
+    def encode(self, long: bool = True) -> str:
+        return Uri.encode(self, long=long)
+
 
 class Uri:
     def __init__(self, url: URL):
@@ -184,10 +195,12 @@ class Uri:
         if uri.public:
             path += '/public'
 
-        if uri.folder and uri.service:
-            path += f'/folders/{uri.folder}/services/{uri.service}'
-        elif uri.version_id:
+        if uri.version_id:
             path += f'/version/{uri.version_id}'
+        elif uri.service_id:
+            path += f'/service/{uri.service_id}'
+        elif uri.folder and uri.service:
+            path += f'/folders/{uri.folder}/services/{uri.service}'
         elif uri.proxy:
             path += f'/proxy/{sanitize_uri(uri.proxy)}'
 
@@ -236,6 +249,8 @@ class Uri:
                 return UriParams(version_id=service)
             if folder == 'service':
                 return UriParams(service_id=service)
+            if folder == 'proxy':
+                return UriParams(proxy=service)
             version = None if is_str_empty(version) else version
             return UriParams(folder=folder, service=service, version=version)
         return UriParams()
@@ -243,6 +258,8 @@ class Uri:
     @staticmethod
     def encode(uri: UriParams, long: bool = True) -> str:
         folder, service, version = uri.folder, uri.service, uri.version
+        if uri.proxy:
+            return f'proxy/{uri.proxy}'
         if uri.version_id:
             return f'version/{uri.version_id}'
         if uri.service_id:
@@ -252,6 +269,22 @@ class Uri:
                 return f'folders/{folder}/services/{service}{f"[{version}]" if version else ""}'
             return f'{folder}/{service}{f"[{version}]" if version else ""}'
         return ''
+
+    @staticmethod
+    def validate(uri: Union[str, UriParams], message: Optional[None] = None) -> UriParams:
+        uri_params = Uri.to_params(uri)
+        if is_str_empty(uri_params.service_uri):
+            folder, service = uri_params.folder, uri_params.service
+            if folder and not service:
+                msg = message or 'service name is missing'
+            elif not folder and service:
+                msg = message or 'folder name is missing'
+            else:
+                msg = message or 'service uri locator is required'
+            msg += ' :: a uri needs to be of these formats: \n\t- "folder/service[?version]" \n\t-'
+            msg += ' "service/service_id" \n\t- "version/version_id" \n\t- "proxy/custom-endpoint"\n'
+            raise SparkError.sdk(msg, uri)
+        return uri_params
 
     def __str__(self) -> str:
         return self.value

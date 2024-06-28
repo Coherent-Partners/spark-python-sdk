@@ -41,12 +41,12 @@ service = 'my%20service' # encoding equivalent to 'my service'
 spark.services.execute(UriParams(folder=folder, service=service), inputs={})
 
 # Use case 2: as part of the payload (will fail to locate the service)
-spark.batches.execute(UriParams(folder=folder, service=service), inputs=[])
+spark.services.execute(UriParams(folder=folder, service=service), inputs=[{}])
 ```
 
-Behind the scenes, the `Spark.services.execute` uses the URI locator as part of
+Behind the scenes, the `Use case 1` (single input) uses the URI locator as part of
 the final URL to locate the service to execute. Hence, it works fine whether the
-identifiers are URL encoded or not. However, when using the `Spark.batches.execute`,
+identifiers are URL encoded or not. However, when using list of inputs in `Use case 2`,
 the method uses the URI locator as part of the payload, which will fail to locate
 the service if the identifiers are URL-encoded. Therefore, it is recommended to
 use plain strings when referring to these identifiers.

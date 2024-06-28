@@ -1,13 +1,13 @@
 import json
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
 from .._config import Config
 from .._constants import SPARK_SDK
-from .._utils import find_value_from_dict, is_str_not_empty, join_list_str
-from ._base import ApiResource, Uri, UriParams
+from .._errors import SparkError
+from .._utils import is_str_not_empty, join_list_str
+from ._base import ApiResource, HttpResponse, Uri, UriParams
 
-__all__ = ['Services', 'ExecuteData']
+__all__ = ['Services', 'ServiceExecuted']
 
 
 class Services(ApiResource):
@@ -18,29 +18,54 @@ class Services(ApiResource):
         self,
         uri: Union[str, UriParams],
         *,
-        data: Optional['ExecuteData'] = None,
-        inputs: Optional[Dict[str, Any]] = None,
-        raw: Optional[str] = None,
+        response_format: str = 'alike',  # 'alike', 'typed', 'raw'
+        # data for calculations
+        inputs: Union[None, str, Dict[str, Any], List[Any]] = None,  # TODO: support `pandas.DataFrame`
+        # Metadata for calculations
+        active_since: Optional[str] = None,
+        source_system: Optional[str] = SPARK_SDK,
+        correlation_id: Optional[str] = None,
+        call_purpose: Optional[str] = None,
+        compiler_type: Optional[str] = None,
+        subservices: Union[None, str, List[str]] = None,
+        # Available only in v3 (legacy)
+        debug_solve: Optional[bool] = None,
+        downloadable: Optional[bool] = False,
+        echo_inputs: Optional[bool] = False,
+        tables_as_array: Union[None, str, List[str]] = None,
+        selected_outputs: Union[None, str, List[str]] = None,
+        outputs_filter: Optional[str] = None,
     ):
-        uri = Uri.to_params(uri)
-        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='execute')
-        body = self.__build_exec_body(uri, ExecuteParams(data, inputs, raw))
+        uri = Uri.validate(uri)
 
-        return self.request(url, method='POST', body=body)
+        executable = _ExecuteInputs(inputs)
+        metadata = _ExecuteMeta(
+            uri,
+            is_batch=executable.is_batch,
+            active_since=active_since,
+            source_system=source_system,
+            correlation_id=correlation_id,
+            call_purpose=call_purpose,
+            compiler_type=compiler_type,
+            subservices=subservices,
+            debug_solve=debug_solve,
+            downloadable=downloadable,
+            echo_inputs=echo_inputs,
+            tables_as_array=tables_as_array,
+            selected_outputs=selected_outputs,
+            outputs_filter=outputs_filter,
+        )
 
-    def validate(
-        self,
-        uri: Union[str, UriParams],
-        *,
-        data: Optional['ExecuteData'] = None,
-        inputs: Optional[Dict[str, Any]] = None,
-        raw: Optional[str] = None,
-    ):
-        uri = Uri.to_params(uri)
-        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='validation')
-        body = self.__build_exec_body(uri, ExecuteParams(data, inputs, raw))
+        if executable.is_batch:
+            url = Uri.of(uri.pick('public'), base_url=self.config.base_url.full, version='api/v4', endpoint='execute')
+            body = {'inputs': executable.inputs, **metadata.value}
+        else:
+            endpoint = '' if uri.version_id or uri.service_id else 'execute'
+            url = Uri.of(uri, base_url=self.config.base_url.full, endpoint=endpoint)
+            body = {'request_data': {'inputs': executable.inputs}, 'request_meta': metadata.value}
 
-        return self.request(url, method='POST', body=body)
+        response = self.request(url, method='POST', body=body)
+        return ServiceExecuted(response, executable.is_batch, response_format)
 
     def get_schema(
         self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
@@ -55,6 +80,7 @@ class Services(ApiResource):
         self,
         uri: Union[None, str, UriParams] = None,
         *,
+        response_format: str = 'alike',  # 'alike', 'typed', 'raw'
         folder: Optional[str] = None,
         service: Optional[str] = None,
         service_id: Optional[str] = None,
@@ -69,7 +95,8 @@ class Services(ApiResource):
         )
         url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='metadata')
 
-        return self.request(url)
+        response = self.request(url)
+        return ServiceExecuted(response, False, response_format)
 
     def get_versions(
         self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
@@ -78,74 +105,127 @@ class Services(ApiResource):
         endpoint = f'product/{uri.folder}/engines/getversions/{uri.service}'
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
 
-        return self.request(url)
-
-    def __build_exec_body(self, uri: UriParams, params: 'ExecuteParams') -> Any:
-        data = params.data or ExecuteData(service_id=uri.service_id, version_id=uri.version_id, version=uri.version)
-        inputs = data.inputs or params.inputs
-        metadata = data.metadata()
-
-        if inputs is None and is_str_not_empty(params.raw):
-            try:
-                json_data = json.loads(str(params.raw))
-                inputs = find_value_from_dict('request_data.inputs', json_data, {})
-                metadata.update(json_data.get('request_meta', {}))
-            except Exception:
-                self.logger.warn('failed to parse the raw input as JSON')
-        return {'request_data': {'inputs': inputs or {}}, 'request_meta': metadata}
+        response = self.request(url)
+        return response.copy_with(data=response.data.get('data', []) if isinstance(response.data, dict) else [])
 
 
-@dataclass(frozen=True)
-class ExecuteParams:
-    data: Optional['ExecuteData'] = None
-    inputs: Optional[Dict[str, Any]] = None
-    raw: Optional[str] = None
+class ServiceExecuted(HttpResponse):
+    def __init__(self, response: HttpResponse, is_batch: bool, format: str = 'alike'):
+        if format == 'raw':
+            data = json.dumps(response.data)
+        elif format == 'typed' or is_batch:
+            data = response.data
+        else:
+            resp_data = response.data.get('response_data', {}) if isinstance(response.data, dict) else {}
+            resp_meta = response.data.get('response_meta', {}) if isinstance(response.data, dict) else {}
+            data = {
+                'outputs': [resp_data.get('outputs')],
+                'errors': [resp_data.get('errors')],
+                'warnings': [resp_data.get('warnings')],
+                **resp_meta,
+            }
+        super().__init__(response.status, data, response.buffer, response.headers)
 
 
-@dataclass(frozen=True)
-class ExecuteData:
-    # Input definitions for calculations
-    inputs: Optional[Dict[str, Any]] = None
+class _ExecuteInputs:
+    def __init__(self, data: Union[None, str, Dict[str, Any], List[Any]] = None):
+        if data is None or (isinstance(data, list) and len(data) == 0):
+            data = {}
+        if is_str_not_empty(data):
+            data = json.loads(str(data))
 
-    # Parameters to identify the correct service and version to use
-    service_uri: Optional[str] = None
-    service_id: Optional[str] = None
-    version: Optional[str] = None
-    version_id: Optional[str] = None
-    active_since: Optional[str] = None
+        self.inputs = data
+        if isinstance(data, dict):
+            self.length = 1
+            self.is_batch = False
+        elif isinstance(data, list):
+            self.length = len(data)
+            self.is_batch = True
+        else:
+            message = 'invalid data format\nexpected input data formats are string, dict or a list'
+            raise SparkError.sdk(message, data)
 
-    # These fields, if provided as part of the API request, are visible in the API Call History.
-    call_purpose: Optional[str] = 'Single Execution'
-    source_system: Optional[str] = SPARK_SDK
-    correlation_id: Optional[str] = None
 
-    # Parameters to control the response outputs
-    outputs: Union[None, str, List[str]] = None
-    compiler_type: Optional[str] = 'Neuron'
-    debug_solve: Optional[bool] = None
-    downloadable: Optional[bool] = False
-    output: Union[None, str, List[str]] = None
-    output_regex: Optional[str] = None
-    with_inputs: Optional[bool] = False
-    subservices: Union[None, str, List[str]] = None
-    validation_type: Optional[str] = None
+class _ExecuteMeta:
+    def __init__(
+        self,
+        uri: UriParams,
+        is_batch: bool,
+        *,
+        # Metadata for calculations
+        active_since: Optional[str] = None,
+        source_system: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+        call_purpose: Optional[str] = None,
+        compiler_type: Optional[str] = None,
+        subservices: Union[None, str, List[str]] = None,
+        # Available only in v3 (legacy)
+        debug_solve: Optional[bool] = None,
+        downloadable: Optional[bool] = False,
+        echo_inputs: Optional[bool] = False,
+        tables_as_array: Union[None, str, List[str]] = None,
+        selected_outputs: Union[None, str, List[str]] = None,
+        outputs_filter: Optional[str] = None,
+    ):
+        self._uri = uri
+        self._is_batch = is_batch
+        self._active_since = active_since
+        self._source_system = source_system or SPARK_SDK
+        self._correlation_id = correlation_id
 
-    def metadata(self):
-        data = self.__dict__.copy()
-        # inputs are not part of the metadata
-        data.pop('inputs', None)
+        self._call_purpose = (
+            call_purpose
+            if is_str_not_empty(call_purpose)
+            else 'Sync Batch Execution'
+            if is_batch
+            else 'Single Execution'
+        )
+        self._compiler_type = (
+            str(compiler_type).capitalize()
+            if is_str_not_empty(compiler_type)
+            and str(compiler_type).lower() in ('neuron', 'type3', 'type2', 'type1', 'xconnector')
+            else 'Neuron'
+        )
 
-        # rename fields to match the API request
-        data['transaction_date'] = data.pop('active_since', None)
-        data['array_outputs'] = data.pop('outputs', None)
-        data['excel_file'] = data.pop('downloadable', None)
-        data['requested_output'] = join_list_str(data.pop('output', None))
-        data['requested_output_regex'] = data.pop('output_regex', None)
-        data['response_data_inputs'] = data.pop('with_inputs', None)
-        data['service_category'] = join_list_str(data.pop('subservices', None))
+        self._subservices = join_list_str(subservices)
+        self._debug_solve = debug_solve
+        self._downloadable = downloadable
+        self._echo_inputs = echo_inputs
+        self._tables_as_array = join_list_str(tables_as_array)
+        self._selected_outputs = join_list_str(selected_outputs)
+        self._outputs_filter = outputs_filter
 
-        # validation_type is only for the Validation API.
-        validation = data.pop('validation_type', None)
-        if validation is not None:
-            data['validation_type'] = 'dynamic' if validation == 'dynamic' else 'default_values'
-        return data
+    @property
+    def value(self) -> Dict[str, Any]:
+        if self._is_batch:
+            service_uri = self._uri.pick('folder', 'service', 'version').encode(long=False)
+            return {
+                'service': self._uri.service_id or service_uri or None,
+                'version_id': self._uri.version_id,
+                'version_by_timestamp': self._active_since,
+                'subservice': self._subservices,
+                'output': self._selected_outputs,
+                'call_purpose': self._call_purpose,
+                'source_system': self._source_system,
+                'correlation_id': self._correlation_id,
+            }
+
+        return {
+            # URI locator via metadata (v3 also supports URI in url path)
+            'service_id': self._uri.service_id,
+            'version_id': self._uri.version_id,
+            'version': self._uri.version,
+            # v3 expects extra metadata
+            'transaction_date': self._active_since,
+            'call_purpose': self._call_purpose,
+            'source_system': self._source_system,
+            'correlation_id': self._correlation_id,
+            'array_outputs': self._tables_as_array,
+            'compiler_type': self._compiler_type,
+            'debug_solve': self._debug_solve,
+            'excel_file': self._downloadable,
+            'requested_output': self._selected_outputs,
+            'requested_output_regex': self._outputs_filter,
+            'response_data_inputs': self._echo_inputs,
+            'service_category': self._subservices,
+        }

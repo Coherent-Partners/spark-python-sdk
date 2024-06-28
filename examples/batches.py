@@ -5,13 +5,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def execute_sync(batches: Spark.Batches):
+def execute_sync(services: Spark.Services):
     inputs = []  # inputs data
-    response = batches.execute('my-folder/my-service', inputs=inputs)
+    response = services.execute('my-folder/my-service', inputs=inputs)
     print(response.data)
 
 
 if __name__ == '__main__':
     spark = Spark.Client()
-    with spark.batches as batches:
-        execute_sync(batches)
+    with spark.services as services:
+        execute_sync(services)

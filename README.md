@@ -109,9 +109,9 @@ spark = Spark.Client(token='Bearer 123')
   to the JSON file containing the credentials.
 
 ```py
-spark = Spark.Client(oauth={ client_id: 'my-client-id', client_secret: 'my-client-secret' });
+spark = Spark.Client(oauth={ client_id: 'my-client-id', client_secret: 'my-client-secret' })
 # or
-spark = Spark.Client(oauth='path/to/oauth/credentials.json');
+spark = Spark.Client(oauth='path/to/oauth/credentials.json')
 ```
 
 - `timeout` (default: `60000`): indicates the maximum amount of time (in milliseconds)
@@ -126,7 +126,7 @@ spark = Spark.Client(oauth='path/to/oauth/credentials.json');
 - `logger` (default: `True`): enables or disables logs for the SDK.
 
 ```py
-spark = Spark.Client(logger=False);
+spark = Spark.Client(logger=False)
 ```
 
 ## Client Errors
@@ -170,14 +170,9 @@ OAuth2.0 Client Credentials flow:
 [Service API](./docs/services.md) - manages Spark services:
 
 - `Spark.services.execute(uri, inputs)` executes a Spark service.
-- `Spark.services.validate(uri, inputs)` validates input data using static or dynamic validations.
 - `Spark.services.get_versions(uri)` lists all the versions of a service.
 - `Spark.services.get_schema(uri)` gets the schema of a service.
 - `Spark.services.get_metadata(uri)` gets the metadata of a service.
-
-[Batch API](./docs/batches.md) - manages large volumes of input data:
-
-- `Spark.batches.execute(uri, inputs)` executes multiple records synchronously.
 
 > **PRO TIP:**
 > A service URI locator can be combined with other parameters to locate a specific
@@ -188,7 +183,7 @@ OAuth2.0 Client Credentials flow:
 ```py
 import cspark.sdk as Spark
 
-spark = Spark.Client(env='my-env', tenant='my-tenant', api_key='open');
+spark = Spark.Client(env='my-env', tenant='my-tenant', api_key='open')
 
 with spark.services as services:
     uri = Spark.UriParams(folder='my-folder', service='my-service', public=True)
