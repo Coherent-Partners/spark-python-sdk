@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import random
 import re
+import uuid
 from typing import Any, List, Union, cast
 
 from ._constants import DEFAULT_RETRY_INTERVAL, RETRY_RANDOMIZATION_FACTOR
@@ -74,3 +75,11 @@ def get_retry_timeout(retries: int, interval=DEFAULT_RETRY_INTERVAL) -> float:
 
 def join_list_str(value: Union[None, str, List[str]] = None, sep: str = ',') -> Union[str, None]:
     return sep.join(value) if isinstance(value, list) else value
+
+
+def is_not_empty_list(value: Any | None) -> bool:
+    return isinstance(value, list) and len(value) > 0
+
+
+def get_uuid() -> str:
+    return str(uuid.uuid4())

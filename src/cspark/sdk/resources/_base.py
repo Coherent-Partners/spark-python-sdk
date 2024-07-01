@@ -1,7 +1,6 @@
 import logging
 import re
 import time
-import uuid
 from dataclasses import dataclass
 from types import TracebackType
 from typing import Any, Mapping, Optional, Union
@@ -10,7 +9,7 @@ from httpx import URL, Client, Headers, Request
 
 from .._config import Config
 from .._errors import SparkError
-from .._utils import get_retry_timeout, is_str_empty, sanitize_uri
+from .._utils import get_retry_timeout, get_uuid, is_str_empty, sanitize_uri
 from .._version import about as sdk_info
 from .._version import sdk_ua_header
 
@@ -28,7 +27,8 @@ class ApiResource:
             level=logging.INFO,
         )
         # FIXME: Redefine HTTP handler to use the SDK config instead of httpx's.
-        self.logger = logging.getLogger()
+        logger = 'cspark.sdk' if not self.config.logger else None  # hack to enable or disable logging
+        self.logger = logging.getLogger(logger)
 
     def __enter__(self):
         return self
@@ -51,7 +51,7 @@ class ApiResource:
             **self.config.extra_headers,
             'User-Agent': sdk_info,
             'x-spark-ua': sdk_ua_header,
-            'x-request-id': uuid.uuid4().hex,
+            'x-request-id': get_uuid(),
             'x-tenant-name': self.config.base_url.tenant,
         }
 
@@ -101,7 +101,7 @@ class ApiResource:
             raise SparkError.api(
                 status,
                 {
-                    'message': f'failed to fetch <${url}>',
+                    'message': f'failed to fetch <{url}>',
                     'cause': {
                         'request': {
                             'url': url,

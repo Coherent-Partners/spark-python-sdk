@@ -83,6 +83,10 @@ class Config:
     def retry_interval(self) -> float:
         return cast(float, self._retry_interval)
 
+    @property
+    def logger(self) -> bool:
+        return cast(bool, self._logger or False)
+
     def copy_with(
         self,
         *,
