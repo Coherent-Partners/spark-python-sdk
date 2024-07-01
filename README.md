@@ -174,6 +174,18 @@ OAuth2.0 Client Credentials flow:
 - `Spark.services.get_schema(uri)` gets the schema of a service.
 - `Spark.services.get_metadata(uri)` gets the metadata of a service.
 
+[Batch API](./docs/batches.md) - manages asynchronous batch processing:
+
+- `Spark.batches.describe()` describes the batch pipelines across a tenant.
+- `Spark.batches.create(params, [options])` creates a new batch pipeline.
+- `Spark.batches.of(id)` defines a batch pipeline by ID.
+- `Spark.batches.of(id).get()` gets the details of the batch pipeline.
+- `Spark.batches.of(id).get_status()` gets the status of a batch pipeline.
+- `Spark.batches.of(id).push(data)` adds input data to a batch pipeline.
+- `Spark.batches.of(id).pull([options])` retrieves the output data from a batch pipeline.
+- `Spark.batches.of(id).dispose()` closes a batch pipeline.
+- `Spark.batches.of(id).cancel()` cancels a batch pipeline.
+
 > **PRO TIP:**
 > A service URI locator can be combined with other parameters to locate a specific
 > service (or version of it) when it's not a string. For example, you may execute

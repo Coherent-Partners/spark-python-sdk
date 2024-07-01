@@ -4,13 +4,14 @@
 
 | Verb                                      | Description                            |
 | ----------------------------------------- | -------------------------------------- |
+| `Spark.batches.describe()`                | Describes the batch pipelines across a tenant.|
 | `Spark.batches.create(params, [options])` | Create a new batch pipeline.           |
-| `Spark.batches.of(id)`                    | Sets the batch pipeline ID to be used in subsequent operations. |
+| `Spark.batches.of(id)`                    | Define a batch pipeline by ID.         |
 | `Spark.batches.of(id).get()`              | Get the details of the batch pipeline. |
-| `Spark.batches.of(id).get_status()`       | Get the status of the batch pipeline.  |
-| `Spark.batches.of(id).push(data)`         | Add input data to the batch pipeline.  |
-| `Spark.batches.of(id).pull([options])`    | Retrieve the output data from the batch pipeline. |
-| `Spark.batches.of(id).close()`            | Close the batch pipeline.              |
-| `Spark.batches.of(id).cancel()`           | Cancel the batch pipeline.             |
+| `Spark.batches.of(id).get_status()`       | Get the status of a batch pipeline.  |
+| `Spark.batches.of(id).push(data)`         | Add input data to a batch pipeline.  |
+| `Spark.batches.of(id).pull([options])`    | Retrieve the output data from a batch pipeline. |
+| `Spark.batches.of(id).dispose()`          | Close a batch pipeline.              |
+| `Spark.batches.of(id).cancel()`           | Cancel a batch pipeline.             |
 
-> NOTE: Note: Currently being developed. Please check back soon for updates.
+> NOTE: Currently being documented. Please check back soon for updates.
