@@ -146,17 +146,16 @@ class BaseUrl:
         url_validator = Validators.base_url()
 
         if url_validator.is_valid(url):
-            _url = urlparse(url)
-            paths = str(_url.path).split('/')
-            _tenant = paths[1] if len(paths) > 1 else tenant
+            parsed_url = urlparse(url)
+            paths = str(parsed_url.path).split('/')
+            maybe_tenant = paths[1] if len(paths) > 1 else tenant
 
-            if str_validator.is_valid(_tenant, 'tenant name is required'):
-                base_url = f'{_url.scheme}://{_url.netloc}'
-                return BaseUrl(url=base_url, tenant=str(_tenant))
+            if str_validator.is_valid(maybe_tenant, 'tenant name is required'):
+                base_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
+                return BaseUrl(url=base_url, tenant=str(maybe_tenant))
         elif not is_str_empty(tenant) and not is_str_empty(env):
-            _tenant = str(tenant).strip().lower()
-            _base_url = f'https://excel.{str(env).strip().lower()}.coherent.global'
-            return BaseUrl(url=_base_url, tenant=_tenant)
+            base_url = f'https://excel.{str(env).strip().lower()}.coherent.global'
+            return BaseUrl(url=base_url, tenant=str(tenant).strip().lower())
         else:
             # capture errors for missing parameters
             str_validator.is_valid(env, 'environment name is missing') and str_validator.is_valid(

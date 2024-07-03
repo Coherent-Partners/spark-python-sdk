@@ -1,15 +1,13 @@
 # Coherent Spark Python SDK
 
-The Coherent Spark Python SDK (currently in Beta) is designed to elevate the developer
-experience and provide a convenient access to the Coherent Spark APIs.
+The Coherent Spark Python SDK (currently in **Beta**) is designed to elevate the developer
+experience and provide convenient access to the Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 
 This SDK is supported by the community. If you encounter any bumps while using it,
-please report them [here](https://github.com/c-spark/spark-py-sdk/issues)
+please report them [here](https://github.com/c-spark/cspark-py-sdk/issues)
 by creating a new issue.
-
-> **Note:** Currently being developed. Please check back soon for updates.
 
 ## Installation
 
@@ -23,7 +21,7 @@ pip install -U cspark
 
 To use the SDK, you need a Coherent Spark account that lets you access the following:
 
-- User authentication ([API key][api-key-docs], [bearer token][bearer-token-docs]
+- User authentication ([API key][api-key-docs], [bearer token][bearer-token-docs],
   or [OAuth2.0 client credentials][oauth2-docs] details)
 - Base URL (including the environment and tenant name)
 - Spark service URI (to locate a specific resource):
@@ -31,16 +29,16 @@ To use the SDK, you need a Coherent Spark account that lets you access the follo
   - `service` - the service name
   - `version` - the semantic version a.k.a revision number (e.g., 0.4.2)
 
-A `folder` contains one or more `service`s, and a `service` can have
-multiple `version`s. Technically speaking, when you're operating with a service,
-you're actually interacting with a specific version of that service (the latest
-version by default - unless specified otherwise).
+A `folder` contains one or more `service`s, which can have multiple `version`s.
+Technically speaking, when you're operating with a service, you're actually
+interacting with a specific version of that service (the latest version by default -
+unless specified otherwise).
 
 Hence, there are various ways to indicate a Spark service URI:
 
 - `{folder}/{service}[?{version}]` - _version_ is optional.
-- `service/{serviceId}`
-- `version/{versionId}`
+- `service/{service_id}`
+- `version/{version_id}`
 
 > **IMPORTANT:** Avoid using URL-encoded characters in the service URI.
 
@@ -81,7 +79,7 @@ spark = Spark.Client(env='my-env', tenant='my-tenant')
 
 ### Authentication
 
-The SDK supports three types of authentication mechanisms:
+The SDK supports three types of authentication schemes:
 
 - `api_key` (default: `os.getenv['CSPARK_API_KEY']`): indicates the API key
   (also known as synthetic key), which is sensitive and should be kept secure.
@@ -105,20 +103,20 @@ spark = Spark.Client(token='Bearer 123')
 
 - `oauth` (default: `os.getenv['CSPARK_CLIENT_ID']` and `os.getenv['CSPARK_CLIENT_SECRET']` or
   `os.getenv['CSPARK_OAUTH_PATH']`): indicates the OAuth2.0 client credentials.
-  You can either provide the client ID and secret directly or provide the file path
-  to the JSON file containing the credentials.
+  You can either provide the client ID and secret directly or the file path to
+  the JSON file containing the credentials.
 
 ```py
-spark = Spark.Client(oauth={ client_id: 'my-client-id', client_secret: 'my-client-secret' })
+spark = Spark.Client(oauth={'client_id': 'my-client-id', 'client_secret': 'my-client-secret'})
 # or
 spark = Spark.Client(oauth='path/to/oauth/credentials.json')
 ```
 
-- `timeout` (default: `60000`): indicates the maximum amount of time (in milliseconds)
-  that the client should wait for a response from Spark servers before timing out a request.
+- `timeout` (default: `60000`): indicates the maximum time (in milliseconds) that
+  the client should wait for a response from Spark servers before timing out a request.
 
 - `max_retries` (default: `2`): indicates the maximum number of times that the client
-  will retry a request in case of a temporary failure, such as a unauthorized
+  will retry a request in case of a temporary failure, such as an unauthorized
   response or a status code greater than 400.
 
 - `retry_interval` (default: `1` second): indicates the delay between each retry.
@@ -135,8 +133,8 @@ spark = Spark.Client(logger=False)
 two types of it:
 
 - `SparkSdkError`: usually thrown when an argument (user entry) fails to comply
-  with the expected format. Because it's a client-side error, it will include in
-  the majority of cases the invalid entry as `cause`.
+  with the expected format. Because it's a client-side error, it will include the invalid
+  entry as the `cause` in most cases.
 - `SparkApiError`: when attempting to communicate with the API, the SDK will wrap
   any sort of failure (any error during the roundtrip) into `SparkApiError`, which
   includes the HTTP `status` code of the response and the `request_id`, a unique
@@ -144,22 +142,22 @@ two types of it:
 
 Some of the derived `SparkApiError` are:
 
-| Type                      | Status      | When                           |
-| ------------------------- | ----------- | ------------------------------ |
-| `InternetError`           | 0           | no internet access             |
-| `BadRequestError`         | 400         | invalid request                |
-| `UnauthorizedError`       | 401         | missing or invalid credentials |
-| `ForbiddenError`          | 403         | insufficient permissions       |
-| `NotFoundError`           | 404         | resource not found             |
-| `ConflictError`           | 409         | resource already exists        |
-| `RateLimitError`          | 429         | too many requests              |
-| `InternalServerError`     | 500         | server-side error              |
-| `ServiceUnavailableError` | 503         | server is down                 |
-| `UnknownApiError`         | `undefined` | unknown error                  |
+| Type                      | Status | When                           |
+| ------------------------- | ------ | ------------------------------ |
+| `InternetError`           | 0      | no internet access             |
+| `BadRequestError`         | 400    | invalid request                |
+| `UnauthorizedError`       | 401    | missing or invalid credentials |
+| `ForbiddenError`          | 403    | insufficient permissions       |
+| `NotFoundError`           | 404    | resource not found             |
+| `ConflictError`           | 409    | resource already exists        |
+| `RateLimitError`          | 429    | too many requests              |
+| `InternalServerError`     | 500    | server-side error              |
+| `ServiceUnavailableError` | 503    | server is down                 |
+| `UnknownApiError`         | `None` | unknown error                  |
 
 ## API Parity
 
-The SDK aims to provide over time full parity with the Spark APIs. Below is a list
+The SDK aims to provide full parity with the Spark APIs over time. Below is a list
 of the currently supported APIs.
 
 [Authentication API](./docs/authentication.md) - manages access tokens using
@@ -167,21 +165,21 @@ OAuth2.0 Client Credentials flow:
 
 - `Authorization.oauth.retrieve_token(config)` generates new access token.
 
-[Service API](./docs/services.md) - manages Spark services:
+[Services API](./docs/services.md) - manages Spark services:
 
 - `Spark.services.execute(uri, inputs)` executes a Spark service.
 - `Spark.services.get_versions(uri)` lists all the versions of a service.
 - `Spark.services.get_schema(uri)` gets the schema of a service.
 - `Spark.services.get_metadata(uri)` gets the metadata of a service.
 
-[Batch API](./docs/batches.md) - manages asynchronous batch processing:
+[Batches API](./docs/batches.md) - manages asynchronous batch processing:
 
 - `Spark.batches.describe()` describes the batch pipelines across a tenant.
 - `Spark.batches.create(params, [options])` creates a new batch pipeline.
-- `Spark.batches.of(id)` defines a batch pipeline by ID.
-- `Spark.batches.of(id).get()` gets the details of the batch pipeline.
+- `Spark.batches.of(id)` defines a client-side batch pipeline by ID.
+- `Spark.batches.of(id).get_info()` gets the details of a batch pipeline.
 - `Spark.batches.of(id).get_status()` gets the status of a batch pipeline.
-- `Spark.batches.of(id).push(data)` adds input data to a batch pipeline.
+- `Spark.batches.of(id).push(data, [options])` adds input data to a batch pipeline.
 - `Spark.batches.of(id).pull([options])` retrieves the output data from a batch pipeline.
 - `Spark.batches.of(id).dispose()` closes a batch pipeline.
 - `Spark.batches.of(id).cancel()` cancels a batch pipeline.
@@ -206,14 +204,14 @@ with spark.services as services:
 #    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
 ```
 
-See the [Uri and UriParams](./src/cspark/sdk/resources/_base.py) class for more details.
+See the [Uri and UriParams](./src/cspark/sdk/resources/_base.py) classes for more details.
 
 ## Contributing
 
 Feeling motivated enough to contribute? Great! Your help is always appreciated.
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on the code of
-conduct, and the process for submitting pull requests.
+conduct and the process for submitting pull requests.
 
 ## Copyright and License
 

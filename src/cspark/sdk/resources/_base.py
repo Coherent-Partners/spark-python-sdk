@@ -110,7 +110,7 @@ class ApiResource:
                             'body': request.content,
                         },
                         'response': {
-                            'headers': response.request.headers,
+                            'headers': response.headers,
                             'body': response.content,  # FIXME: cast to dict if possible
                             'raw': response.text,
                         },
@@ -229,9 +229,9 @@ class Uri:
             resource = f'{base_url}/{resource}'
 
             return Uri(URL(resource))
+        except SparkError as error:
+            raise SparkError.sdk(f'invalid service URI <{resource}>', error) from error
         except Exception as cause:
-            if isinstance(cause, SparkError):
-                raise SparkError.sdk(f'invalid service URI <{resource}>', cause) from cause
             raise SparkError(f'failed to build Spark endpoint from <{resource}>', cause) from cause
 
     @staticmethod
@@ -271,7 +271,7 @@ class Uri:
         return ''
 
     @staticmethod
-    def validate(uri: Union[str, UriParams], message: Optional[None] = None) -> UriParams:
+    def validate(uri: Union[str, UriParams], message: Optional[str] = None) -> UriParams:
         uri_params = Uri.to_params(uri)
         if is_str_empty(uri_params.service_uri):
             folder, service = uri_params.folder, uri_params.service

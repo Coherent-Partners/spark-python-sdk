@@ -11,7 +11,7 @@ The SDK supports three types of authentication schemes:
 A Spark API key is a synthetic key that allows you to authenticate to the platform
 and access the following APIs:
 
-- [Batch APIs][batch-apis]
+- [Batches APIs][batch-apis]
 - [Execute API][execute-api]
 - [Metadata API][metadata-api]
 - [Validation API][validation-api]
@@ -86,7 +86,7 @@ spark = Spark.Client(oauth='path/to/my/credentials.json')
 
 ## Using Environment Variables (recommended)
 
-As you already guess, the SDK will attempt to read the API key, bearer token, and
+As you already guessed, the SDK will attempt to read the API key, bearer token, and
 OAuth credentials from the environment variables. This is the recommended way to
 store your sensitive information.
 
@@ -116,7 +116,7 @@ to load them into your application.
 Creating a `Spark.Client` instance now becomes as simple as:
 
 ```py
-spark = new Spark.Client()
+spark = Spark.Client()
 ```
 
 ## Good to know
@@ -136,6 +136,9 @@ print(f'access token: {spark.config.auth.oauth.access_token}')
 If more than one authentication mechanisms are provided, the SDK will prioritize in
 the following order: API key > Bearer token > and OAuth2.0 client credentials grant.
 
+[Back to top](#authentication) or [Next: Services API](./services.md)
+
+<!-- References  -->
 [batch-apis]: https://docs.coherent.global/spark-apis/batch-apis
 [execute-api]: https://docs.coherent.global/spark-apis/execute-api
 [metadata-api]: https://docs.coherent.global/spark-apis/metadata-api

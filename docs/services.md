@@ -1,18 +1,18 @@
 <!-- markdownlint-disable-file MD024 -->
 
-# Service API
+# Services API
 
-| Verb                                        | Description                                                                        |
-| -----------------------------------------   | ---------------------------------------------------------------------------------- |
-| `Spark.services.execute(uri, inputs)`       | [Execute a Spark service](#execute-a-spark-service).                               |
-| `Spark.services.get_versions(uri)`          | [Get all the versions of a service](#get-all-the-versions-of-a-service).           |
-| `Spark.services.get_schema(uri)`            | [Get the schema for a given service](#get-the-schema-for-a-service).               |
-| `Spark.services.get_metadata(uri)`          | [Get the metadata of a service](#get-the-metadata-of-a-service).                   |
+| Verb                                   | Description                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| `Spark.services.execute(uri, inputs)`  | [Execute a Spark service](#execute-a-spark-service).                     |
+| `Spark.services.get_versions(uri)`     | [Get all the versions of a service](#get-all-the-versions-of-a-service). |
+| `Spark.services.get_schema(uri)`       | [Get the schema for a given service](#get-the-schema-for-a-service).     |
+| `Spark.services.get_metadata(uri)`     | [Get the metadata of a service](#get-the-metadata-of-a-service).         |
 
 ## Execute a Spark service
 
-This method executes a Spark service with the given input data and returns the output
-data. It's the most common method you will use to interact with Spark services.
+This method executes a Spark service with the input data and returns the output data.
+It's the most common method for interacting with Spark services.
 
 Currently, Spark supports two versions of the API: v3 and v4. The SDK will use
 the [v3 format][v3-format] for a single input and the [v4 format][v4-format]
@@ -31,7 +31,7 @@ which include the input data and metadata. See the use cases below.
 
 - **Default inputs**:
   the following example demonstrates how to execute a service with default values.
-  Obviously, the SDK ignores what those default values are. Under the hood, the SDK
+  Obviously, the SDK ignores those default values. Under the hood, the SDK
   uses an empty object `{}` as the input data, which is an indicator for Spark to
   use the default inputs defined in the Excel file.
 
@@ -117,35 +117,35 @@ As you can tell, there are multiple flavors when it comes to locating a Spark
 service and executing it. You can choose the one that suits best your needs. Here's
 a summary of the parameters you can use for this method:
 
-For the first argument, the service URI locator as `string` or `UriParams` object:
+For the first argument, the service URI locator as a `string` or `UriParams` object:
 
-| Property     | Type   | Description                                      |
-| -----------  | ------ | ------------------------------------------------ |
-| _folder_     | `str`  | The folder name.                                 |
-| _service_    | `str`  | The service name.                                |
-| _version\_id_| `str`  | The UUID of a particular version of the service. |
-| _service\_id_| `str`  | The service UUID (points to the latest version). |
-| _version_    | `str`  | The user-friendly semantic version of the service.|
-| _proxy_      | `str`  | The custom endpoint associated with the service. |
-| _public_     | `bool` | Whether to use the public endpoint.              |
+| Property     | Type           | Description                                      |
+| -----------  | -------------- | ------------------------------------------------ |
+| _folder_     | `None \| str`  | The folder name.                                 |
+| _service_    | `None \| str`  | The service name.                                |
+| _version_    | `None \| str`  | The user-friendly semantic version of a service. |
+| _version\_id_| `None \| str`  | The UUID of a particular version of the service. |
+| _service\_id_| `None \| str`  | The service UUID (points to the latest version). |
+| _proxy_      | `None \| str`  | The custom endpoint associated with the service. |
+| _public_     | `None \| bool` | Whether to use the public endpoint.              |
 
 For the other keyword arguments:
 
 | Property             | Type          | Description                                      |
 | -------------------- | ------------- | ------------------------------------------------ |
-| _inputs_             | `None \| str \| Dict[str, Any] \| List[Any]` | The input data.   |
+| _inputs_             | `None \| str \| Dict \| List` | The input data (single or many). |
 | _response\_format_   | `raw \| typed \| alike` | Response data format to use (defaults to `alike`).|
-| _active\_since_      | `None \| str` | The transaction date.                            |
-| _source\_system_     | `None \| str` | The source system.                               |
+| _active\_since_      | `None \| str` | The transaction date (helps pinpoint a version). |
+| _source\_system_     | `None \| str` | The source system (defaults to `Spark Python SDK`).|
 | _correlation\_id_    | `None \| str` | The correlation ID.                              |
 | _call\_purpose_      | `None \| str` | The call purpose.                                |
 | _tables\_as\_array_  | `None \| str \| List[str]`| Filter which table to output as JSON array.|
-| _compiler\_type_     | `None \| str` | The compiler type (e.g., `Neuron`).              |
+| _compiler\_type_     | `None \| str` | The compiler type (defaults to `Neuron`).        |
 | _debug\_solve_       | `None \| bool`| Enable debugging for solve functions.            |
 | _selected\_outputs_  | `None \| str \| List[str]`| Select which output to return.       |
-| _outputs\_filter_    | `None \| str` | Use to perform advance filtering of outputs .    |
+| _outputs\_filter_    | `None \| str` | Use to perform advanced filtering of outputs .   |
 | _echo\_inputs_       | `None \| bool`| Whether to echo the input data (alongside the outputs). |
-| _subservices_        | `None \| str \| List[str]`| The list of subservice to output. |
+| _subservices_        | `None \| str \| List[str]`| The list of sub-services to output.    |
 | _downloadable_       | `None \| bool`| Produce a downloadable rehydrated Excel file for the inputs. |
 
 ### Returns
@@ -188,7 +188,7 @@ to `raw` or `typed`.
 
 > [!IMPORTANT]
 > Executing multiple inputs is a synchronous operation and may take some time to complete.
-> The default timeout for this client is 60 seconds, and Spark servers, 55 seconds.
+> The default timeout for this client is 60 seconds, and for Spark servers, it is 55 seconds.
 > Another good practice is to split the batch into smaller chunks and submit separate requests.
 
 ## Get all the versions of a service
@@ -249,7 +249,7 @@ spark.services.get_versions(folder='my-folder', service='my-service')
 ## Get the schema for a service
 
 This method returns the schema of a service. A service schema is a JSON object
-that describes the structure of the input and output data of a service. It includes
+that describes the structure of a service's input and output data. It includes
 but not limited to the following information:
 
 - Book summary
@@ -317,6 +317,8 @@ as the [execute method](#execute-a-spark-service).
   "request_timestamp": "1970-01-23T00:58:20.752Z"
 }
 ```
+
+[Back to top](#services-api) or [Next: Batches API](./batches.md)
 
 <!-- References -->
 [v3-format]: https://docs.coherent.global/spark-apis/execute-api/execute-api-v3

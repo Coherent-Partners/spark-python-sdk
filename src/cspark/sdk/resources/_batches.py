@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Union, cast
 from .._config import Config
 from .._constants import SPARK_SDK
 from .._errors import SparkError
-from .._utils import get_uuid, is_not_empty_list, is_str_empty, is_str_not_empty, join_list_str
+from .._utils import get_uuid, is_not_empty_list, is_str_empty, join_list_str
 from ._base import ApiResource, Uri, UriParams
 
 __all__ = ['Batches', 'Pipeline', 'BatchChunk', 'ChunkData', 'create_chunks']
@@ -68,7 +68,7 @@ class Batches(ApiResource):
         call_purpose: Optional[str] = None,
         subservices: Union[None, str, List[str]] = None,
         selected_outputs: Union[None, str, List[str]] = None,
-        unique_record_key: Optional[str] = None,
+        unique_record_key: Union[None, str, List[str]] = None,
         # Experimental parameters (likely to change/be deprecated in future releases)
         min_runners: Optional[int] = None,
         max_runners: Optional[int] = None,
@@ -87,10 +87,10 @@ class Batches(ApiResource):
             'version_by_timestamp': active_since,
             'subservice': join_list_str(subservices),
             'output': join_list_str(selected_outputs),
-            'call_purpose': call_purpose if is_str_not_empty(call_purpose) else 'Async Batch Execution',
+            'call_purpose': call_purpose or 'Async Batch Execution',
             'source_system': source_system or SPARK_SDK,
             'correlation_id': correlation_id,
-            'unique_record_key': unique_record_key,
+            'unique_record_key': join_list_str(unique_record_key),
             # experimental pipeline options
             'initial_workers': min_runners,
             'max_workers': max_runners,
@@ -132,7 +132,7 @@ class Pipeline(ApiResource):
     def stats(self):
         return {'chunks': len(self._chunks), 'records': sum(self._chunks.values())}
 
-    def get(self):
+    def get_info(self):
         """Retrieves the batch pipeline info."""
         return self.request(Uri.of(None, endpoint=f'batch/{self._id}', **self._base_uri))
 
@@ -218,7 +218,7 @@ class Pipeline(ApiResource):
             )
         except SparkError as error:
             self.logger.error(error.message)
-            raise error from error
+            raise
         except Exception as cause:
             raise SparkError.sdk('failed to build push data for batch pipeline', cause) from cause
 
@@ -250,8 +250,14 @@ class Pipeline(ApiResource):
         return assessed
 
 
-def create_chunks(dataset: List[Any], chunk_size: int = 200) -> List[BatchChunk]:
-    """Creates a list of batch chunks from dictionary-based data."""
+def create_chunks(
+    dataset: List[Any],
+    *,
+    chunk_size: int = 200,
+    parameters: Optional[Dict[str, Any]] = None,
+    summary: Optional[Dict[str, Any]] = None,
+) -> List[BatchChunk]:
+    """Creates a list of batch chunks from a given dataset."""
     if not isinstance(dataset, list):
         raise SparkError.sdk('invalid data format\nexpecting a list of inputs', dataset)
 
@@ -264,5 +270,5 @@ def create_chunks(dataset: List[Any], chunk_size: int = 200) -> List[BatchChunk]
         start = i * chunk_size
         end = min(start + chunk_size, length)
         inputs = dataset[start:end]
-        chunks.append(BatchChunk(id=get_uuid(), data=ChunkData(inputs, {}), size=len(inputs)))
+        chunks.append(BatchChunk(id=get_uuid(), data=ChunkData(inputs, parameters or {}, summary), size=len(inputs)))
     return chunks
