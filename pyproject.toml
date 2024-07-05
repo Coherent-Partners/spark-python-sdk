@@ -1,17 +1,37 @@
 [project]
 name = "cspark"
-version = "0.1.0-beta.0"
+version = "0.1.1"
 description = "A Python SDK for interacting with Coherent Spark APIs"
 license = "Apache-2.0"
 authors = [{ name = "Coherent", email = "team@coherent.global" }]
 keywords = ["coherent", "spark", "sdk", "restful", "api"]
-dependencies = []
+dependencies = [
+  "dataclasses",
+  "httpx>=0.23.0, <1"
+]
 readme = "README.md"
 requires-python = ">= 3.7"
+classifiers = [
+  "Typing :: Typed",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+  "Operating System :: POSIX",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: Microsoft :: Windows",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "License :: OSI Approved :: Apache Software License"
+]
 
 [project.urls]
-Homepage = "https://github.com/c-spark/cspark-py-sdk"
-Repository = "https://github.com/c-spark/cspark-py-sdk"
+Homepage = "https://github.com/Coherent-Partners/spark-python-sdk/blob/main/docs/readme.md"
+Repository = "https://github.com/Coherent-Partners/spark-python-sdk"
 
 [build-system]
 requires = ["hatchling"]
@@ -20,16 +40,16 @@ build-backend = "hatchling.build"
 [tool.rye]
 managed = true
 dev-dependencies = [
-    "pytest>=8.1.2",
-    "ruff>=0.4.2",
-    "pyright>=1.1.360",
+  "pytest>=8.1.2",
+  "ruff>=0.4.2",
+  "pyright>=1.1.363",
+  "python-dotenv >= 1.0.0",
 ]
 
 [tool.rye.scripts]
 format = { chain = ["ruff format", "ruff check --fix ."] }
 lint = { chain = ["format", "pyright" ] }
 demo = "python examples/main.py"
-
 
 [tool.ruff]
 line-length = 120

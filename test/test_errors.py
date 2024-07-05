@@ -14,7 +14,7 @@ def test_base_error():
 
 
 def test_error_of_sdk_type():
-    error = SparkError.sdk({'message': 'sample message', 'cause': Exception('other error')})
+    error = SparkError.sdk(message='sample message', cause=Exception('other error'))
     assert isinstance(error, SparkSdkError)
     assert repr(error) == '<SparkSdkError>'
     assert str(error) == 'SparkSdkError: sample message (other error)'

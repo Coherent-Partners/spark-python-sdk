@@ -1,11 +1,29 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, Generic, Optional, cast
+from typing import Any, Dict, Generic, Optional, TypeVar, cast
 
-from .types import TReq, TRequest, TResp, TResponse
+from httpx import Headers
 
-__all__ = ['SparkError', 'SparkSdkError', 'SparkApiError']
+__all__ = ['SparkError', 'SparkSdkError', 'SparkApiError', 'ErrorMessage']
+
+TReq = TypeVar('TReq')
+TResp = TypeVar('TResp')
+
+
+class TRequest(Generic[TReq]):
+    def __init__(self, url: str, method: str, headers: Headers, body: Optional[TReq]):
+        self.url = url
+        self.method = method
+        self.headers = headers
+        self.body = body
+
+
+class TResponse(Generic[TResp]):
+    def __init__(self, headers: Headers, body: TResp, raw: str):
+        self.headers = headers
+        self.body = body
+        self.raw = raw
 
 
 class SparkError(Exception):
@@ -38,8 +56,8 @@ class SparkError(Exception):
         return ''
 
     @staticmethod
-    def sdk(error: str | Dict[str, Any]) -> SparkSdkError:
-        return SparkSdkError(ErrorMessage(error) if isinstance(error, str) else ErrorMessage.from_dict(error))
+    def sdk(message: str, cause: Optional[Any] = None) -> SparkSdkError:
+        return SparkSdkError(ErrorMessage(message, cause))
 
     @staticmethod
     def api(status: int, error: Dict[str, Any]) -> SparkApiError:
@@ -73,7 +91,7 @@ class SparkApiError(SparkError):
 
     When attempting to communicate with the API, the SDK will wrap any sort of failure
     (any error during the round trip) into `SparkApiError`. The `status` is the HTTP
-    status code of the response, and the `requestId`, a unique identifier of the request.
+    status code of the response, and the `request_id`, a unique identifier of the request.
     """
 
     def __init__(self, error: ErrorMessage, status: Optional[int] = None):
@@ -117,15 +135,11 @@ class SparkApiError(SparkError):
         elif status == 504:
             return GatewayTimeoutError(error, 504)
         else:
-            return ApiUnknownError(error)
+            return UnknownApiError(error)
 
 
 class InternetError(SparkApiError):
     status = 0
-
-    @property
-    def details(self) -> str:
-        return super().details or 'no internet access'
 
 
 class BadRequestError(SparkApiError):
@@ -172,7 +186,7 @@ class GatewayTimeoutError(SparkApiError):
     status = 504
 
 
-class ApiUnknownError(SparkApiError):
+class UnknownApiError(SparkApiError):
     status = None
 
 
@@ -199,4 +213,4 @@ class ApiErrorCause(Generic[TReq, TResp]):
         request = TRequest(req['url'], req['method'], req['headers'], req['body'])
         if not res:
             return ApiErrorCause(request)
-        return ApiErrorCause(request, TResponse(res['status'], res['headers'], res['body']))
+        return ApiErrorCause(request, TResponse(res['headers'], res['body'], res['raw']))
