@@ -1,6 +1,6 @@
 [project]
 name = "cspark"
-version = "0.1.0"
+version = "0.1.1"
 description = "A Python SDK for interacting with Coherent Spark APIs"
 license = "Apache-2.0"
 authors = [{ name = "Coherent", email = "team@coherent.global" }]
@@ -30,8 +30,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/c-spark/cspark-py-sdk/blob/dev/docs/readme.md"
-Repository = "https://github.com/c-spark/cspark-py-sdk"
+Homepage = "https://github.com/Coherent-Partners/spark-python-sdk/blob/main/docs/readme.md"
+Repository = "https://github.com/Coherent-Partners/spark-python-sdk"
 
 [build-system]
 requires = ["hatchling"]

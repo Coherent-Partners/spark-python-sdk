@@ -24,7 +24,7 @@ processing tasks.
 
 > [!NOTE]
 > It is important to note that the Batches API is recommended when dealing with
-> datasets consisting of more than 10,000, with a calculation time of about 500ms or more.
+> datasets consisting of more than 10,000 records, with a calculation time longer than 500ms.
 > Unless you have specific requirements or reasons to use a different approach,
 > such as [Services API](./services.md) as an alternative, this API is the way to go.
 
@@ -37,13 +37,13 @@ It helps you keep track of your batch pipelines and their statuses. Remember tha
 this will only provide information about batches that are in progress or recently
 completed (i.e., within the past hour).
 
-```py
-spark.batches.describe()
-```
-
 ### Arguments
 
 This method does not require any arguments.
+
+```py
+spark.batches.describe()
+```
 
 ### Returns
 
@@ -208,7 +208,7 @@ pushing and pulling data, you may retrieve details such as the total number of
 records processed, the state of the pipeline, and so on.
 
 ```py
-print(pipeline.state) # 'open' (or 'closed' or 'cancelled')
+print(pipeline.state) # 'open' (other values: 'closed' or 'cancelled')
 print(pipeline.stats) # { 'chunk_uuid_1': 123, 'chunk_uuid_2': 456 }
 ```
 
