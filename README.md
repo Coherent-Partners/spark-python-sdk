@@ -58,6 +58,28 @@ with spark.services as services:
 Explore the [examples](./examples/main.py) and [documentation](./docs) folders
 to find out more about the SDK's capabilities.
 
+> **PRO TIP:**
+> A service URI locator can be combined with other parameters to locate a specific
+> service (or version of it) when it's not a string. For example, you may execute
+> a public service using an object containing the `folder`, `service`, and `public`
+> properties.
+
+```py
+import cspark.sdk as Spark
+
+spark = Spark.Client(env='my-env', tenant='my-tenant', api_key='open')
+
+with spark.services as services:
+    uri = Spark.UriParams(folder='my-folder', service='my-service', public=True)
+    response = services.execute(uri, inputs={'value': 42})
+    print(response.data)
+
+# The final URI in this case is:
+#    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
+```
+
+See the [Uri and UriParams](./src/cspark/sdk/resources/_base.py) classes for more details.
+
 ## Client Options
 
 As shown in the examples above, the `Spark.Client` is your entry point to the SDK.
@@ -114,7 +136,7 @@ spark = Spark.Client(oauth={'client_id': 'my-client-id', 'client_secret': 'my-cl
 spark = Spark.Client(oauth='path/to/oauth/credentials.json')
 ```
 
-- `timeout` (default: `60000`): indicates the maximum time (in milliseconds) that
+- `timeout` (default: `60000` milliseconds): indicates the maximum time that
   the client should wait for a response from Spark servers before timing out a request.
 
 - `max_retries` (default: `2`): indicates the maximum number of times that the client
@@ -186,28 +208,6 @@ OAuth2.0 Client Credentials flow:
 - `Spark.batches.of(id).dispose()` closes a batch pipeline.
 - `Spark.batches.of(id).cancel()` cancels a batch pipeline.
 
-> **PRO TIP:**
-> A service URI locator can be combined with other parameters to locate a specific
-> service (or version of it) when it's not a string. For example, you may execute
-> a public service using an object containing the `folder`, `service`, and `public`
-> properties.
-
-```py
-import cspark.sdk as Spark
-
-spark = Spark.Client(env='my-env', tenant='my-tenant', api_key='open')
-
-with spark.services as services:
-    uri = Spark.UriParams(folder='my-folder', service='my-service', public=True)
-    response = services.execute(uri, inputs={ 'value': 42 })
-    print(response.data)
-
-# The final URI in this case is:
-#    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
-```
-
-See the [Uri and UriParams](./src/cspark/sdk/resources/_base.py) classes for more details.
-
 ## Contributing
 
 Feeling motivated enough to contribute? Great! Your help is always appreciated.
@@ -217,10 +217,10 @@ conduct and the process for submitting pull requests.
 
 ## Copyright and License
 
-[version-img]: https://badge.fury.io/py/cspark.svg
-[version-url]: https://pypi.python.org/pypi/cspark
 [Apache-2.0](./LICENSE)
 
+[version-img]: https://badge.fury.io/py/cspark.svg
+[version-url]: https://pypi.python.org/pypi/cspark
 [api-key-docs]: https://docs.coherent.global/spark-apis/authorization-api-keys
 [bearer-token-docs]: https://docs.coherent.global/spark-apis/authorization-bearer-token
 [oauth2-docs]: https://docs.coherent.global/spark-apis/authorization-client-credentials

@@ -47,13 +47,18 @@ spark.services.execute(UriParams(folder='my-folder', service='my-service'))
   object as the second argument.
 
 ```py
-spark.services.execute('my-folder/my-service', inputs={ 'my_input': 42 })
+spark.services.execute('my-folder/my-service', inputs={'my_input': 42})
 ```
 
 - **Inputs with metadata**: you can also provide metadata along with the input data.
 
 ```py
-spark.services.execute('my-folder/my-service', inputs={'my_input': 13 }, subservices=['sub1', 'sub2'], call_purpose='Demo')
+spark.services.execute(
+    'my-folder/my-service',
+    inputs={'my_input': 13},
+    subservices=['sub1', 'sub2'],
+    call_purpose='Demo',
+)
 ```
 
 - **String data**:
@@ -62,7 +67,7 @@ spark.services.execute('my-folder/my-service', inputs={'my_input': 13 }, subserv
   string and follows the API v3 format.
 
 ```py
-spark.services.execute('my-folder/my-service', inputs="""{ "my_input": 13 }""")
+spark.services.execute('my-folder/my-service', inputs='{"my_input": 13}')
 ```
 
 The previous examples will execute the latest version of a service using this
@@ -153,8 +158,7 @@ For the other keyword arguments:
 This method returns the output data of the service execution in the following
 format:
 
-- `raw`: the output data as a string in its original format (as returned by the API).
-- `typed`: the output data as dictionary in its original format (as returned by the API).
+- `original`: the output data as dictionary in its original format (as returned by the API).
 - `alike`: the output data as dictionary in the v4 format whether it's a single or multiple inputs.
 
 For instance, the output data of a service execution for a single input looks like this
@@ -162,20 +166,17 @@ when the `response_format` is set to `alike`:
 
 ```json
 {
-  "outputs": [{ "my_output": 42 }],
+  "outputs": [{"my_output": 42}],
+  "process_time": [2],
   "warnings": [null],
   "errors": [null],
+  "service_chain": [null],
   "service_id": "uuid",
   "version_id": "uuid",
   "version": "1.2.3",
-  "process_time": 0,
   "call_id": "uuid",
-  "compiler_type": "Neuron",
   "compiler_version": "1.2.0",
-  "source_hash": null,
-  "engine_id": "hash-info",
   "correlation_id": null,
-  "system": "SPARK",
   "request_timestamp": "1970-01-23T00:58:20.752Z"
 }
 ```
@@ -184,7 +185,7 @@ You may wonder why the output data is wrapped in an array for a single input.
 This is because the `alike` format is designed to work with both single and multiple
 inputs. This should help maintain consistency in the output data format. But if you
 prefer the original format emitted by the API, you can set the `response_format`
-to `raw` or `typed`.
+to `original`.
 
 > [!IMPORTANT]
 > Executing multiple inputs is a synchronous operation and may take some time to complete.

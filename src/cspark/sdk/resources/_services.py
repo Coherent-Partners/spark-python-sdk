@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from .._config import Config
 from .._constants import SPARK_SDK
@@ -18,12 +18,12 @@ class Services(ApiResource):
         self,
         uri: Union[str, UriParams],
         *,
-        response_format: str = 'alike',  # 'alike', 'typed', 'raw'
+        response_format: Literal['original', 'alike'] = 'alike',
         # data for calculations
         inputs: Union[None, str, Dict[str, Any], List[Any]] = None,  # TODO: support `pandas.DataFrame`
         # Metadata for calculations
         active_since: Optional[str] = None,
-        source_system: Optional[str] = SPARK_SDK,
+        source_system: Optional[str] = None,
         correlation_id: Optional[str] = None,
         call_purpose: Optional[str] = None,
         compiler_type: Optional[str] = None,
@@ -80,7 +80,7 @@ class Services(ApiResource):
         self,
         uri: Union[None, str, UriParams] = None,
         *,
-        response_format: str = 'alike',  # 'alike', 'typed', 'raw'
+        response_format: Literal['original', 'alike'] = 'alike',
         folder: Optional[str] = None,
         service: Optional[str] = None,
         service_id: Optional[str] = None,
@@ -111,18 +111,24 @@ class Services(ApiResource):
 
 class ServiceExecuted(HttpResponse):
     def __init__(self, response: HttpResponse, is_batch: bool, format: str = 'alike'):
-        if format == 'raw':
-            data = json.dumps(response.data)
-        elif format == 'typed' or is_batch:
+        if format == 'original' or is_batch:
             data = response.data
         else:
             resp_data = response.data.get('response_data', {}) if isinstance(response.data, dict) else {}
             resp_meta = response.data.get('response_meta', {}) if isinstance(response.data, dict) else {}
             data = {
                 'outputs': [resp_data.get('outputs')],
-                'errors': [resp_data.get('errors')],
+                'process_time': [resp_meta.get('process_time')],
                 'warnings': [resp_data.get('warnings')],
-                **resp_meta,
+                'errors': [resp_data.get('errors')],
+                'service_chain': [resp_meta.get('service_chain')],
+                'service_id': resp_meta.get('service_id'),
+                'version_id': resp_meta.get('version_id'),
+                'version': resp_meta.get('version'),
+                'call_id': resp_meta.get('call_id'),
+                'compiler_version': resp_meta.get('compiler_version'),
+                'correlation_id': resp_meta.get('correlation_id'),
+                'request_timestamp': resp_meta.get('request_timestamp'),
             }
         super().__init__(response.status, data, response.buffer, response.headers)
 
