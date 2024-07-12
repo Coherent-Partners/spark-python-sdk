@@ -38,7 +38,7 @@ outline the roadmap for the SDK:
 - **Development**
   - [x] Git repository on GitHub
     - [x] Branch protection rules: main, dev
-    - [ ] Environment variables and secrets for CI/CD
+    - [x] Environment variables and secrets for CI/CD
   - [x] Git commit [message convention](https://www.conventionalcommits.org/)
   - [ ] Git hooks (pre-commit, pre-push, etc.)
   - [x] Code linting
@@ -54,7 +54,7 @@ outline the roadmap for the SDK:
 - **Deployments**
   - [x] Scripts for building and packaging
   - [x] CI/CD with GitHub Actions
-    - [ ] Run jobs on push, pull request and cron schedule
+    - [x] Run jobs on push, pull request and cron schedule
     - [ ] Job for environment setup (Python versions, dependencies, etc.)
     - [x] Job for source code robustness (linting, formatting, etc.)
     - [ ] Job for automated releases with [release-please](https://github.com/googleapis/release-please-action)
@@ -64,7 +64,7 @@ outline the roadmap for the SDK:
     - [x] Technical governance (collaborators)
     - [x] Publications
       - [x] Manual releases
-      - [ ] Automated releases
+      - [x] Automated releases
     - [ ] Branding and marketing
 
 - **Documentation**
