@@ -9,17 +9,17 @@
 | `Spark.services.get_schema(uri)`       | [Get the schema for a given service](#get-the-schema-for-a-service).     |
 | `Spark.services.get_metadata(uri)`     | [Get the metadata of a service](#get-the-metadata-of-a-service).         |
 
+A Spark service is the representation of your Excel file in the Spark platform.
+
 ## Execute a Spark service
 
-This method executes a Spark service with the input data and returns the output data.
-It's the most common method for interacting with Spark services.
+This method allows you to execute a Spark service.
 
-Currently, Spark supports two versions of the API: v3 and v4. The SDK will use
-the [v3 format][v3-format] for a single input and the [v4 format][v4-format]
-for multiple inputs.
-
-By default, the SDK uses the v4 format for the output data. You may specify the
-desired response format to retrieve the original format emitted by the API.
+Currently, Spark supports two versions of Execute API: v3 and v4. The SDK will use
+the [v3 format][v3-format] for a single input and the [v4 format][v4-format] for
+multiple inputs.
+By default, the SDK will return the output data in the [v4 format][v4-format]
+unless you prefer to work with the original format emitted by the API.
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/execute-api)
 to learn more about Services API.
@@ -43,14 +43,16 @@ spark.services.execute(UriParams(folder='my-folder', service='my-service'))
 
 - **Inputs only**:
   the above example is the simplest form of executing a service. In most cases, you
-  will need to provide input data to the service. You can do so by passing an `inputs`
-  object as the second argument.
+  will want to provide input data. You can do so by passing an `inputs` object as
+  a keyword argument.
 
 ```py
 spark.services.execute('my-folder/my-service', inputs={'my_input': 42})
 ```
 
-- **Inputs with metadata**: you can also provide metadata along with the input data.
+- **Inputs with metadata**: metadata can be provided along with the `inputs` data.
+  Keep in mind that some metadata fields only apply to the v3 format and will
+  have no effect on the service execution.
 
 ```py
 spark.services.execute(
@@ -61,18 +63,15 @@ spark.services.execute(
 )
 ```
 
-- **String data**:
-  you may use JSON string data as shown in the [API Tester](https://docs.coherent.global/navigation/api-tester).
-  Basically, you are free to work with string data as long as it's a valid JSON
-  string and follows the API v3 format.
+- **String data**: you may use string data as long as it's a valid JSON string and
+  follows either the v3 or v4 format.
 
 ```py
 spark.services.execute('my-folder/my-service', inputs='{"my_input": 13}')
 ```
 
-The previous examples will execute the latest version of a service using this
-`folder/service[?version]` URI format. If you intend to execute a specific version,
-you can do the following:
+The previous examples will execute the latest version of a service. If you want
+to execute a specific version, you can do the following:
 
 - using **version_id** (the fastest):
   `version_id` is the UUID of a particular version of the service.
@@ -98,8 +97,8 @@ spark.services.execute(UriParams(service_id='uuid'))
 
 - using semantic **version**:
   `version` also known as revision number is the semantic version of the service.
-  Keep in mind that using only `version` is not enough to locate a service. You must
-  provide the `folder` and `service` names or the `service_id`.
+  However, using only `version` is not enough to locate a service. You must provide
+  either the `folder` and `service` names or the `service_id`.
 
 ```py
 from cspark.sdk import UriParams
@@ -118,9 +117,9 @@ spark.services.execute('proxy/custom-endpoint')
 spark.services.execute(UriParams(proxy='custom-endpoint'))
 ```
 
-As you can tell, there are multiple flavors when it comes to locating a Spark
-service and executing it. You can choose the one that suits best your needs. Here's
-a summary of the parameters you can use for this method:
+As you can tell, there are multiple flavors when it comes to locating and executing
+a Spark service. You can choose the one that suits best your needs. Here's a summary
+of the parameters you can use for this method:
 
 For the first argument, the service URI locator as a `string` or `UriParams` object:
 
@@ -150,7 +149,7 @@ For the other keyword arguments:
 | _selected\_outputs_  | `None \| str \| List[str]`| Select which output to return.       |
 | _outputs\_filter_    | `None \| str` | Use to perform advanced filtering of outputs .   |
 | _echo\_inputs_       | `None \| bool`| Whether to echo the input data (alongside the outputs). |
-| _subservices_        | `None \| str \| List[str]`| The list of sub-services to output.    |
+| _subservices_        | `None \| str \| List[str]`| The list of sub-services to output.  |
 | _downloadable_       | `None \| bool`| Produce a downloadable rehydrated Excel file for the inputs. |
 
 ### Returns

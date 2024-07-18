@@ -99,7 +99,7 @@ This method allows you to start a new batch pipeline, which is a necessary step
 before you can perform any operations on it.
 
 > [!IMPORTANT]
-> It is a good practice to retain the `id` of the newly created pipeline.
+> It is good practice to retain the `id` of the newly created pipeline.
 > This identifier will be used to reference the pipeline in subsequent operations.
 
 ### Arguments
@@ -176,8 +176,8 @@ or the [`cancel` method](#cancel-a-batch-pipeline).
 ```
 
 > [!TIP]
-> It is recommended that you close the pipeline once you have finished processing
-> the data. This will help free up resources and ensure optimal performance.
+> Remember to close the pipeline once you have finished processing the data.
+> This will help free up resources and ensure optimal performance.
 
 ## Define a client-side batch pipeline by ID
 
@@ -339,7 +339,7 @@ The method accepts 3 mutually exclusive keyword arguments:
   in complete control of the data submission process: chunking and partitioning.
 
 ```py
-pipeline.push(inputs=[{ 'value': 42 }, { 'value': 43 }])
+pipeline.push(inputs=[{'value': 42}, {'value': 43}])
 ```
 
 - `data`: an object of `ChunkData` type. Sometimes, you may want to perform certain
@@ -450,7 +450,7 @@ pipeline will also be included in the response.
       "outputs": [{ "value": 42 }, { "value": 43 }],
       "warnings": [null, null],
       "errors": [null, null],
-      "process_time": [1, 1],
+      "process_time": [1, 1]
     },
     {
       "id": "uuid",
@@ -458,7 +458,7 @@ pipeline will also be included in the response.
       "outputs": [{ "value": 44 }, { "value": 45 }, { "value": 46 }],
       "warnings": [null, null, null],
       "errors": [null, null, null],
-      "process_time": [1, 1, 1],
+      "process_time": [1, 1, 1]
     }
   ],
   "status": {
@@ -606,7 +606,7 @@ tasks:
 - retrieving the output data from the pipeline when available;
 - and finally, closing the pipeline.
 
-The script will continue to interacting with Spark till all data has been processed
+The script will continue to interact with Spark till all data has been processed
 unless an error occurs, which will force an early closure of the pipeline.
 
 ```py
@@ -683,7 +683,7 @@ if __name__ == '__main__':
 > If you were to "productionize" this script, you would need to add graceful error handling,
 > logging, among other capabilities to make it more robust and reliable. You may also want
 > to consider how you read and feed the input data to the pipeline and how to handle
-> the output data that is returned.
+> the pulled output data.
 
 Happy coding! 🚀
 
