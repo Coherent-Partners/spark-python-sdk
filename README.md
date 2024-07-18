@@ -3,7 +3,7 @@
 [![PyPI version][version-img]][version-url]
 
 The Coherent Spark Python SDK (currently in **Beta**) is designed to elevate the developer
-experience and provide convenient access to the Coherent Spark APIs.
+experience and provide convenient access to Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 
@@ -61,8 +61,8 @@ to find out more about the SDK's capabilities.
 > **PRO TIP:**
 > A service URI locator can be combined with other parameters to locate a specific
 > service (or version of it) when it's not a string. For example, you may execute
-> a public service using an object containing the `folder`, `service`, and `public`
-> properties.
+> a public service using an `UriParams` object by specifying the `folder`, `service`,
+> and `public` properties.
 
 ```py
 import cspark.sdk as Spark
@@ -88,7 +88,7 @@ It is quite flexible and can be configured with the following options:
 ### Base URL
 
 `base_url` (default: `os.getenv['CSPARK_BASE_URL']`): indicates the base URL of
-the Coherent Spark APIs. It should include the tenant and environment information.
+Coherent Spark APIs. It should include the tenant and environment information.
 
 ```py
 spark = Spark.Client(base_url='https://excel.my-env.coherent.global/my-tenant')
@@ -136,8 +136,10 @@ spark = Spark.Client(oauth={'client_id': 'my-client-id', 'client_secret': 'my-cl
 spark = Spark.Client(oauth='path/to/oauth/credentials.json')
 ```
 
-- `timeout` (default: `60000` milliseconds): indicates the maximum time that
-  the client should wait for a response from Spark servers before timing out a request.
+### Additional Settings
+
+- `timeout` (default: `60000` ms): indicates the maximum amount of time that the
+  client should wait for a response from Spark servers before timing out a request.
 
 - `max_retries` (default: `2`): indicates the maximum number of times that the client
   will retry a request in case of a temporary failure, such as an unauthorized
@@ -187,7 +189,7 @@ of the currently supported APIs.
 [Authentication API](./docs/authentication.md) - manages access tokens using
 OAuth2.0 Client Credentials flow:
 
-- `Authorization.oauth.retrieve_token(config)` generates new access token.
+- `Authorization.oauth.retrieve_token(config)` generates new access tokens.
 
 [Services API](./docs/services.md) - manages Spark services:
 
@@ -212,15 +214,17 @@ OAuth2.0 Client Credentials flow:
 
 Feeling motivated enough to contribute? Great! Your help is always appreciated.
 
-Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on the code of
-conduct and the process for submitting pull requests.
+Please read [CONTRIBUTING.md][contributing-url] for details on the code of
+conduct, and the process for submitting pull requests.
 
 ## Copyright and License
 
-[Apache-2.0](./LICENSE)
+[Apache-2.0][license-url]
 
 [version-img]: https://badge.fury.io/py/cspark.svg
 [version-url]: https://pypi.python.org/pypi/cspark
 [api-key-docs]: https://docs.coherent.global/spark-apis/authorization-api-keys
 [bearer-token-docs]: https://docs.coherent.global/spark-apis/authorization-bearer-token
 [oauth2-docs]: https://docs.coherent.global/spark-apis/authorization-client-credentials
+[contributing-url]: https://github.com/Coherent-Partners/spark-python-sdk/CONTRIBUTING.md
+[license-url]: https://github.com/Coherent-Partners/spark-python-sdk/LICENSE
