@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from .._config import Config
 from .._constants import SPARK_SDK
@@ -18,7 +18,7 @@ class Services(ApiResource):
         self,
         uri: Union[str, UriParams],
         *,
-        response_format: Literal['original', 'alike'] = 'alike',
+        response_format: Optional[str] = None,
         # data for calculations
         inputs: Union[None, str, Dict[str, Any], List[Any]] = None,  # TODO: support `pandas.DataFrame`
         # Metadata for calculations
@@ -65,7 +65,7 @@ class Services(ApiResource):
             body = {'request_data': {'inputs': executable.inputs}, 'request_meta': metadata.value}
 
         response = self.request(url, method='POST', body=body)
-        return ServiceExecuted(response, executable.is_batch, response_format)
+        return ServiceExecuted(response, executable.is_batch, response_format or 'alike')
 
     def get_schema(
         self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
@@ -80,7 +80,7 @@ class Services(ApiResource):
         self,
         uri: Union[None, str, UriParams] = None,
         *,
-        response_format: Literal['original', 'alike'] = 'alike',
+        response_format: Optional[str] = None,
         folder: Optional[str] = None,
         service: Optional[str] = None,
         service_id: Optional[str] = None,
@@ -96,7 +96,7 @@ class Services(ApiResource):
         url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='metadata')
 
         response = self.request(url)
-        return ServiceExecuted(response, False, response_format)
+        return ServiceExecuted(response, False, response_format or 'alike')
 
     def get_versions(
         self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
