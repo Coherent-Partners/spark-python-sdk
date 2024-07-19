@@ -65,7 +65,7 @@ jobs:
       - name: Install package
         run: |
           ls .
-          pip install dist/*.whl
+          pip install cspark-*.whl
 
       - name: Ensure importability
         run: |
