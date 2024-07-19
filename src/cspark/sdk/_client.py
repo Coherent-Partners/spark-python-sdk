@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Mapping, Optional
 
 import cspark.sdk.resources as API

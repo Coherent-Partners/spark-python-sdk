@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
-## 0.1.0 (2024-07-03)
+## 0.1.2 (2024-07-19)
+
+- Fix `TypeError: 'type' object is not subscriptable` error for Python 3.7.x
+- Refactor in `response_format` to handle only `original` and `alike` formats in Services API
+- Apply documentation improvements
+- Add fixtures to enable testing for API resources
+- Add tests for Services API
+
+## 0.1.1 (2024-07-03)
 
 - Add support for Services API
   - Execute a Spark service

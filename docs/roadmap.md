@@ -16,8 +16,10 @@ outline the roadmap for the SDK:
 - **Architecture**
   - [x] Basic project structure (src, test, docs, examples, etc.)
   - [x] Distribution layers
-    - [x] SDK layer: exposes basic API client and resources
-    - [ ] Utils layer: exposes data (de)serialization, (de)compression, memoization, among other helpers.
+    - [x] SDK layer: exposes basic API client and resources for the SaaS platform
+    - [ ] Utils layer: exposes data (de)serialization, (de)compression, memoization, among other helpers
+    - [ ] Wasm layer: exposes basic API client and resources for hybrid/on-prem deployments
+    - [ ] CLI layer: exposes a command-line interface for the SDK
   - [x] Core HTTP module built on top of [httpx](https://pypi.org/project/httpx/)
     - [x] Support synchronous requests
     - [ ] Support asynchronous requests
