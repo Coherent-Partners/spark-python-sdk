@@ -1,6 +1,6 @@
 [project]
 name = "cspark"
-version = "0.1.1"
+version = "0.1.2"
 description = "A Python SDK for interacting with Coherent Spark APIs"
 license = "Apache-2.0"
 authors = [{ name = "Coherent", email = "team@coherent.global" }]
@@ -30,8 +30,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Coherent-Partners/spark-python-sdk/blob/main/docs/readme.md"
-Repository = "https://github.com/Coherent-Partners/spark-python-sdk"
+repository = "https://github.com/Coherent-Partners/spark-python-sdk"
+homepage = "https://github.com/Coherent-Partners/spark-python-sdk/blob/main/docs/readme.md"
+changelog = "https://github.com/Coherent-Partners/spark-python-sdk/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]
@@ -43,12 +44,14 @@ dev-dependencies = [
   "pytest>=8.1.2",
   "ruff>=0.4.2",
   "pyright>=1.1.363",
-  "python-dotenv >= 1.0.0",
+  "python-dotenv>=1.0.0",
+  "uvicorn>=0.30.1",
+  "anyio>=4.4.0",
 ]
 
 [tool.rye.scripts]
 format = { chain = ["ruff format", "ruff check --fix ."] }
-lint = { chain = ["format", "pyright" ] }
+lint = { chain = ["format", "pyright"] }
 demo = "python examples/main.py"
 
 [tool.ruff]
@@ -81,6 +84,7 @@ docstring-code-format = true
 
 [tool.pyright]
 include = ["src", "test", "examples"]
+exclude = ["test/resources"] # Otherwise, pyright will complain about missing casting
 
 [tool.hatch.metadata]
 allow-direct-references = true

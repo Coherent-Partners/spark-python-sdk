@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  workflow_dispatch: # Manually trigger a release.
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+' # Or whenever a new tag is pushed.
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rye
+        run: |
+          curl -sSf https://rye.astral.sh/get | bash
+          echo "$HOME/.rye/shims" >> $GITHUB_PATH
+        env:
+          RYE_VERSION: 0.24.0
+          RYE_INSTALL_OPTION: '--yes'
+
+      - name: Install dependencies
+        run: rye sync --all-features
+
+      - name: Build distribution
+        run: rye build --clean
+
+      - name: Publish to PyPI
+        run: rye publish --yes --token=$PYPI_TOKEN
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}

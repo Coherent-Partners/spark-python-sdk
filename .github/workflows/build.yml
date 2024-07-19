@@ -1,0 +1,45 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore: ['**.md', 'LICENSE', '.python-version']
+  schedule:
+    - cron: '0 2 1 * *' # Run at 2:00 am on the first of every month.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rye
+        run: |
+          curl -sSf https://rye.astral.sh/get | bash
+          echo "$HOME/.rye/shims" >> $GITHUB_PATH
+        env:
+          RYE_VERSION: 0.24.0
+          RYE_INSTALL_OPTION: '--yes'
+
+      - name: Install dependencies
+        run: rye sync --all-features
+
+      - name: Run linters
+        run: rye run lint
+
+      - name: Ensure importability
+        run: rye run demo
+
+      - name: Run tests
+        run: rye run pytest -v
+
+      - name: Build distribution
+        run: rye build --clean
+
+      - name: Persist build results
+        uses: actions/upload-artifact@v4
+        with:
+          name: spark-python-sdk
+          path: dist
+          retention-days: 3

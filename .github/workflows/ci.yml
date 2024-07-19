@@ -3,9 +3,10 @@ name: CI
 on:
   push:
     branches: [dev]
+    paths-ignore: ['**.md', 'LICENSE', '.python-version']
 
 jobs:
-  test:
+  unit-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,4 +32,46 @@ jobs:
           rye run demo
 
       - name: Run tests
-        run: rye run pytest
+        run: rye run pytest # test Python 3.11
+
+      - name: Build local distribution
+        run: rye build --clean
+
+      - name: Persist build as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*.whl
+
+  ecosystem-test:
+    needs: unit-test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Download build from artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+
+      - name: Install package
+        run: pip install cspark-*.whl
+
+      - name: Ensure importability
+        run: |
+          python -c 'import cspark'
+          python examples/main.py
+
+      - name: Run tests
+        run: |
+          pip install pytest uvicorn anyio
+          pytest test/ -v

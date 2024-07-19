@@ -80,12 +80,12 @@ class Authorization:
 
     @property
     def as_header(self) -> Mapping[str, str]:
+        if self._oauth:
+            return {'Authorization': f'Bearer {self._oauth.access_token}'}
         if self._api_key and not self.is_open:
             return {'x-synthetic-key': self._api_key}
         if self._token and not self.is_open:
             return {'Authorization': f'Bearer {self._token}'}
-        if self._oauth:
-            return {'Authorization': f'Bearer {self._oauth.access_token}'}
         return {}
 
 

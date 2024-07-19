@@ -16,8 +16,10 @@ outline the roadmap for the SDK:
 - **Architecture**
   - [x] Basic project structure (src, test, docs, examples, etc.)
   - [x] Distribution layers
-    - [x] SDK layer: exposes basic API client and resources
-    - [ ] Utils layer: exposes data (de)serialization, (de)compression, memoization, among other helpers.
+    - [x] SDK layer: exposes basic API client and resources for the SaaS platform
+    - [ ] Utils layer: exposes data (de)serialization, (de)compression, memoization, among other helpers
+    - [ ] Wasm layer: exposes basic API client and resources for hybrid/on-prem deployments
+    - [ ] CLI layer: exposes a command-line interface for the SDK
   - [x] Core HTTP module built on top of [httpx](https://pypi.org/project/httpx/)
     - [x] Support synchronous requests
     - [ ] Support asynchronous requests
@@ -36,9 +38,9 @@ outline the roadmap for the SDK:
   - [x] Dependency management and build system: [rye](https://rye.astral.sh/)
 
 - **Development**
-  - [ ] Git repository on GitHub
-    - [ ] Branch protection rules: main, dev
-    - [ ] Environment variables and secrets for CI/CD
+  - [x] Git repository on GitHub
+    - [x] Branch protection rules: main, dev
+    - [x] Environment variables and secrets for CI/CD
   - [x] Git commit [message convention](https://www.conventionalcommits.org/)
   - [ ] Git hooks (pre-commit, pre-push, etc.)
   - [x] Code linting
@@ -47,16 +49,16 @@ outline the roadmap for the SDK:
 
 - **Testing**
   - [x] Unit tests for utility functions
-  - [ ] Unit tests for API resources
+  - [x] Unit tests for API resources
   - [ ] Test coverage: 80%+
   - [ ] Usability testing (early adopters)
 
 - **Deployments**
   - [x] Scripts for building and packaging
   - [x] CI/CD with GitHub Actions
-    - [ ] Run jobs on push, pull request and cron schedule
+    - [x] Run jobs on push, pull request and cron schedule
     - [ ] Job for environment setup (Python versions, dependencies, etc.)
-    - [ ] Job for source code robustness (linting, formatting, etc.)
+    - [x] Job for source code robustness (linting, formatting, etc.)
     - [ ] Job for automated releases with [release-please](https://github.com/googleapis/release-please-action)
 
   - [x] PyPI distribution
@@ -64,7 +66,7 @@ outline the roadmap for the SDK:
     - [x] Technical governance (collaborators)
     - [x] Publications
       - [x] Manual releases
-      - [ ] Automated releases
+      - [x] Automated releases
     - [ ] Branding and marketing
 
 - **Documentation**
@@ -79,9 +81,9 @@ outline the roadmap for the SDK:
   - [ ] Issue templates
   - [ ] Pull request templates
   - [ ] Security policy
-  - [ ] Support channels
+  - [x] Support channels
     - [ ] Company promoted support (website, forums, etc.)
-    - [ ] GitHub Discussions
+    - [x] GitHub Discussions
     - [ ] Slack workspace
     - [ ] Reddit
     - [ ] Twitter

@@ -3,9 +3,7 @@
 This guide should serve as a comprehensive reference for the SDK. It covers all
 the verbs (or methods) and parameters available in the SDK.
 
-There's no need to look up API-related information on Spark's [User Guide](https://docs.coherent.global).
-The SDK provides a simple interface to interact with Spark's supported APIs,
-which shall help you save time and streamline your development process.
+Additional information can be found on [Spark's User Guide](https://docs.coherent.global).
 
 ## Table of Contents
 
@@ -22,7 +20,7 @@ environment and tenant. I term this _Service URI_ locator.
 Given that this locator may be part of either the final URL or the request payload,
 it is recommended to use plain strings (i.e., not URL-encoded) when referring to
 these identifiers.
-The SDK will take encode them when necessary. Otherwise, you risk running into
+The SDK will take care of encoding them when necessary. Otherwise, you risk running
 into issues when trying to locate a resource.
 
 For instance, executing a Spark service using these identifiers
@@ -54,17 +52,25 @@ the service if the identifiers are URL-encoded.
 ## HTTP Response
 
 The SDK is built on top of the [httpx](https://pypi.org/project/httpx) library,
-which provides an elegant, feature-rich HTTP module. As of now, I only leverage
-the synchronous methods. Hence, all the methods under `Spark.Client()` are synchronous
-and return an `HttpResponse` object with the following properties:
+which provides an elegant, feature-rich HTTP module. The SDK built a layer
+on top of it to simplify the process of making HTTP requests to the Spark platform.
+
+Presently, only the synchronous HTTP methods are supported. Hence, all the methods
+under `Spark.Client()` are synchronous and return an `HttpResponse` object with
+the following properties:
 
 - `status`: HTTP status code
 - `data`: Data returned by the API if any (usually JSON)
 - `buffer`: Binary content returned by the API if any
 - `headers`: Response headers
 
-As a side note, I intend to leverage the asynchronous methods [in the future](./roadmap.md)
-to provide a more efficient way to interact with the Spark platform.
+> [!NOTE]
+> Sometimes, the SDK may return a modified version of the Spark API response for
+> better readability and ease of use. Keep an eye out on the `data` property
+> when accessing the response data.
+>
+> As a side note, we intend to leverage the asynchronous methods [in the future](./roadmap.md)
+> to provide a more efficient way to interact with the Spark platform.
 
 ## HTTP Error
 
@@ -75,7 +81,7 @@ of the request. The most common errors are:
 
 - `UnauthorizedError`: when the user is not authenticated/authorized
 - `NotFoundError`: when the requested resource is not found
-- `BadRequestError`: when the request or payload is invalid
+- `BadRequestError`: when the request or payload is invalid.
 
 The following properties are available in a `SparkApiError`:
 
@@ -95,10 +101,10 @@ The Spark platform offers a wide range of functionalities that can be accessed
 programmatically via RESTful APIs. For now, the SDK only supports [Services API](./services.md)
 and [Batches API](./batches.md).
 
-Even though the SDK does not cover all the APIs available in the platform, it provides
-a good starting point for developers to interact with it. So, if there's an API resource
-you need to consume that's not available in the SDK, you can always extend this
-`ApiResource` class to include it. Here's an example of how you can do it:
+Since the SDK does not cover all the endpoints in the platform, it provides a way
+to cover additional endpoints. So, if there's an API resource you would like to
+consume that's not available in the SDK, you can always extend this `ApiResource`
+to include it.
 
 ```py
 from cspark.sdk import Client, Config, ApiResource, Uri

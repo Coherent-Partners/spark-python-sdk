@@ -209,8 +209,8 @@ class ApiErrorCause(Generic[TReq, TResp]):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> ApiErrorCause:
-        req, res = cast(dict[str, Any], data.get('request')), data.get('response')
-        request = TRequest(req['url'], req['method'], req['headers'], req['body'])
+        req, res = data.get('request', {}), data.get('response')
+        request = TRequest(req.get('url', ''), req.get('method', ''), req.get('headers', {}), req.get('body', ''))
         if not res:
             return ApiErrorCause(request)
         return ApiErrorCause(request, TResponse(res['headers'], res['body'], res['raw']))
