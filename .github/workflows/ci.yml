@@ -40,8 +40,8 @@ jobs:
       - name: Persist build as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: sdk
-          path: dist
+          name: dist
+          path: dist/*.whl
 
   ecosystem-test:
     needs: unit-test
@@ -61,9 +61,11 @@ jobs:
       - name: Download build from artifact
         uses: actions/download-artifact@v3
         with:
-          name: sdk
-      - name: Install build
-        run: pip install dist/*.whl
+          name: dist
+      - name: Install package
+        run: |
+          ls .
+          pip install dist/*.whl
 
       - name: Ensure importability
         run: |
