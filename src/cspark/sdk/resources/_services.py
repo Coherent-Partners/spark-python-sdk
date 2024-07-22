@@ -80,7 +80,6 @@ class Services(ApiResource):
         self,
         uri: Union[None, str, UriParams] = None,
         *,
-        response_format: Optional[str] = None,
         folder: Optional[str] = None,
         service: Optional[str] = None,
         service_id: Optional[str] = None,
@@ -96,7 +95,7 @@ class Services(ApiResource):
         url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='metadata')
 
         response = self.request(url)
-        return ServiceExecuted(response, False, response_format or 'alike')
+        return ServiceExecuted(response, False, 'original')
 
     def get_versions(
         self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None

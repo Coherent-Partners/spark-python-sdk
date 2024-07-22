@@ -64,7 +64,9 @@ def test_copied_with_new_values():
 def test_build_base_url_from_parts():
     VALID_URL = 'https://excel.test.coherent.global/tenant'
     assert BaseUrl.of(url='https://excel.test.coherent.global/tenant').full == VALID_URL
+    assert BaseUrl.of(url='https://spark.test.coherent.global/tenant').full == VALID_URL
     assert BaseUrl.of(url='https://excel.test.coherent.global', tenant='tenant').full == VALID_URL
+    assert BaseUrl.of(url='https://spark.test.coherent.global', tenant='tenant').full == VALID_URL
     assert BaseUrl.of(env='test', tenant='tenant').full == VALID_URL
 
 

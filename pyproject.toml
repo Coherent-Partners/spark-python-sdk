@@ -30,9 +30,9 @@ classifiers = [
 ]
 
 [project.urls]
-repository = "https://github.com/Coherent-Partners/spark-python-sdk"
-homepage = "https://github.com/Coherent-Partners/spark-python-sdk/blob/main/docs/readme.md"
-changelog = "https://github.com/Coherent-Partners/spark-python-sdk/blob/main/CHANGELOG.md"
+Repository = "https://github.com/Coherent-Partners/spark-python-sdk"
+Homepage = "https://github.com/Coherent-Partners/spark-python-sdk/blob/main/docs/readme.md"
+Changelog = "https://github.com/Coherent-Partners/spark-python-sdk/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]

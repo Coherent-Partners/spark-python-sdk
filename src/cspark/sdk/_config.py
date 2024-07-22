@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Mapping, Optional, cast
 from urllib.parse import urlparse
 
@@ -45,6 +46,7 @@ class Config:
         self._max_retries = max_retries if num_validator.is_valid(max_retries) else DEFAULT_MAX_RETRIES
         self._retry_interval = retry_interval if num_validator.is_valid(retry_interval) else DEFAULT_RETRY_INTERVAL
         self._logger = logger
+        self._env = self._base_url.env
 
         self._options = str(
             {
@@ -56,6 +58,7 @@ class Config:
                 'max_retries': self._max_retries,
                 'retry_interval': self._retry_interval,
                 'logger': self._logger,
+                'env': self._env,
             }
         )
 
@@ -101,7 +104,7 @@ class Config:
     ) -> Config:
         base_url = base_url or self._base_url.value
         tenant = tenant or self._base_url.tenant
-        env = env or self._base_url.tenant
+        env = env or self._env
         url = base_url if isinstance(base_url, BaseUrl) else BaseUrl.of(url=base_url, tenant=tenant, env=env)
         return Config(
             base_url=url,
@@ -117,13 +120,34 @@ class Config:
 
 
 class BaseUrl:
+    __services = ['excel', 'keycloak', 'utility', 'entitystore']
+    _service: Optional[str]
+    _env: Optional[str]
+
     def __init__(self, url: str, tenant: str):
-        self._base: str = url
-        self._tenant: str = tenant
+        match = re.match(r'https://([^\.]+)\.((?:[^\.]+\.)?[^\.]+)\.coherent\.global', url)
+        if match:
+            service, env = match.groups()
+            self._env = str(env).strip().lower() if env else None
+            self._service = str(service).strip().lower() in self.__services and service or 'excel'
+            self._base = f'https://{self._service}.{self._env}.coherent.global'
+        else:
+            self._env = None
+            self._service = None
+            self._base = url
+        self._tenant = tenant
 
     @property
     def tenant(self) -> str:
         return self._tenant
+
+    @property
+    def env(self) -> Optional[str]:
+        return self._env
+
+    @property
+    def service(self) -> Optional[str]:
+        return self._service
 
     @property
     def full(self) -> str:
