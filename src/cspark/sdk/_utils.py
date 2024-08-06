@@ -68,7 +68,7 @@ def find_value_from_dict(key_path: str, data: dict, default: Any = None) -> Any:
     return value
 
 
-def get_retry_timeout(retries: int, interval=DEFAULT_RETRY_INTERVAL) -> float:
+def get_retry_timeout(retries: int, interval: float = DEFAULT_RETRY_INTERVAL) -> float:
     randomization = random.uniform(0, 1) * RETRY_RANDOMIZATION_FACTOR
     return math.pow(2, retries) * interval * randomization
 
