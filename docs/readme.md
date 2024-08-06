@@ -13,7 +13,7 @@ Additional information can be found on [Spark's User Guide](https://docs.coheren
 
 ## Getting Started
 
-You may notice by now that `folder` and `service` when combined form a
+You may notice by now that `folder` and `service` names when combined form a
 base identifier to locate a resource in the Spark platform for a particular
 environment and tenant. I term this _Service URI_ locator.
 

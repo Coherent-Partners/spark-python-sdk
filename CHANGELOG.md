@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.1.3 (2024-08-06)
+
+- Fix publish issue with Rye
+- Add members `env` and `service` to `BaseUrl` class
+
 ## 0.1.2 (2024-07-19)
 
 - Fix `TypeError: 'type' object is not subscriptable` error for Python 3.7.x

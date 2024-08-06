@@ -2,9 +2,9 @@ name: Release
 
 on:
   workflow_dispatch: # Manually trigger a release.
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+' # Or whenever a new tag is pushed.
+  # push:
+  #   tags:
+  #     - '[0-9]+.[0-9]+.[0-9]+' # Or whenever a new tag is pushed.
 
 jobs:
   publish:
@@ -18,7 +18,7 @@ jobs:
           curl -sSf https://rye.astral.sh/get | bash
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
         env:
-          RYE_VERSION: 0.24.0
+          RYE_VERSION: '0.35.0'
           RYE_INSTALL_OPTION: '--yes'
 
       - name: Install dependencies

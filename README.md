@@ -55,13 +55,12 @@ with spark.services as services:
     print(response.data)
 ```
 
-Explore the [examples](./examples/main.py) and [documentation](./docs) folders
-to find out more about the SDK's capabilities.
+Explore the [examples] and [documentation] folders to find out more about the SDK's capabilities.
 
 > **PRO TIP:**
 > A service URI locator can be combined with other parameters to locate a specific
 > service (or version of it) when it's not a string. For example, you may execute
-> a public service using an `UriParams` object by specifying the `folder`, `service`,
+> a public service using a `UriParams` object by specifying the `folder`, `service`,
 > and `public` properties.
 
 ```py
@@ -122,7 +121,9 @@ spark = Spark.Client(api_key='my-api-key')
   limited time and should be refreshed periodically.
 
 ```py
-spark = Spark.Client(token='Bearer 123')
+spark = Spark.Client(token='Bearer my-access-token') # with prefix
+# or
+spark = Spark.Client(token='my-access-token') # without prefix
 ```
 
 - `oauth` (default: `os.getenv['CSPARK_CLIENT_ID']` and `os.getenv['CSPARK_CLIENT_SECRET']` or
@@ -221,10 +222,13 @@ conduct, and the process for submitting pull requests.
 
 [Apache-2.0][license-url]
 
+<!-- References -->
 [version-img]: https://badge.fury.io/py/cspark.svg
 [version-url]: https://pypi.python.org/pypi/cspark
 [api-key-docs]: https://docs.coherent.global/spark-apis/authorization-api-keys
 [bearer-token-docs]: https://docs.coherent.global/spark-apis/authorization-bearer-token
 [oauth2-docs]: https://docs.coherent.global/spark-apis/authorization-client-credentials
-[contributing-url]: https://github.com/Coherent-Partners/spark-python-sdk/CONTRIBUTING.md
-[license-url]: https://github.com/Coherent-Partners/spark-python-sdk/LICENSE
+[contributing-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/CONTRIBUTING.md
+[license-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/LICENSE
+[examples]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/examples
+[documentation]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/docs

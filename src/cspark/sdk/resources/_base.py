@@ -95,7 +95,7 @@ class ApiResource:
 
             if (status == 408 or status == 429) and retries < self.config.max_retries:
                 self.logger.debug(f'retrying request due to status code {status}...')
-                delay = get_retry_timeout(retries)
+                delay = get_retry_timeout(retries, self.config.retry_interval)
                 time.sleep(delay)
                 return self.__fetch(request, retries + 1)
 
