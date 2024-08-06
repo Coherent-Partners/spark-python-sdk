@@ -2,9 +2,6 @@ name: Release
 
 on:
   workflow_dispatch: # Manually trigger a release.
-  # push:
-  #   tags:
-  #     - '[0-9]+.[0-9]+.[0-9]+' # Or whenever a new tag is pushed.
 
 jobs:
   publish:
@@ -17,6 +14,7 @@ jobs:
         run: |
           curl -sSf https://rye.astral.sh/get | bash
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
+          ~/.rye/self/bin/pip install importlib_metadata==7.2.1
         env:
           RYE_VERSION: '0.35.0'
           RYE_INSTALL_OPTION: '--yes'
