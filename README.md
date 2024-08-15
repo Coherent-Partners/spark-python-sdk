@@ -211,6 +211,11 @@ OAuth2.0 Client Credentials flow:
 - `Spark.batches.of(id).dispose()` closes a batch pipeline.
 - `Spark.batches.of(id).cancel()` cancels a batch pipeline.
 
+[Other APIs](./docs/misc.md) - for other functionalities:
+
+- `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
+- `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
+
 ## Contributing
 
 Feeling motivated enough to contribute? Great! Your help is always appreciated.

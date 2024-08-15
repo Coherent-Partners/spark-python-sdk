@@ -113,8 +113,8 @@ class ApiResource:
                         },
                         'response': {
                             'headers': response.headers,
-                            'body': response.content,  # FIXME: cast to dict if possible
-                            'raw': response.text,
+                            'body': response.text,
+                            'raw': response.content,
                         },
                     },
                 },
@@ -129,6 +129,52 @@ class ApiResource:
                 http_response['data'] = response.json()
             except Exception:
                 http_response['data'] = response.text
+        return HttpResponse(**http_response)
+
+
+def download(
+    url: str,
+    *,
+    method: str = 'GET',
+    headers: Mapping[str, str] = {},
+    params: Optional[Mapping[str, str]] = None,
+    body=None,
+    form=None,
+    timeout: Optional[float] = 60,
+):
+    with Client() as client:
+        request = client.build_request(
+            method,
+            url,
+            params=params,
+            headers=headers,
+            data=form,
+            json=body,
+            timeout=timeout,
+        )
+        response = client.send(request)
+        status = response.status_code
+        if status >= 400:
+            raise SparkError.api(
+                response.status_code,
+                {
+                    'message': f'failed to download content from <{request.url}>',
+                    'cause': {
+                        'request': {
+                            'url': str(request.url),
+                            'method': request.method,
+                            'headers': request.headers,
+                            'body': request.content,
+                        },
+                        'response': {
+                            'headers': response.headers,
+                            'body': response.text,
+                            'raw': response.content,
+                        },
+                    },
+                },
+            )
+        http_response = {'status': status, 'data': None, 'buffer': response.content, 'headers': response.headers}
         return HttpResponse(**http_response)
 
 

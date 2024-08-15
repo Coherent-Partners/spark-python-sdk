@@ -2,7 +2,7 @@ from sys import version_info as v
 
 __all__ = ['__version__', '__title__', 'sdk_version', 'about']
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 __title__ = 'Coherent Spark Python SDK'
 
