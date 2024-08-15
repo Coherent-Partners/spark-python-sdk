@@ -8,6 +8,7 @@ for commit guidelines.
 
 - Add support for downloading WebAssembly modules
 - Add support for downloading Spark files
+- Add support for rehydrating service execution logs
 
 ## 0.1.3 (2024-08-06)
 

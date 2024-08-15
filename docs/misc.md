@@ -41,12 +41,12 @@ spark.wasm.download('version/uuid')
 
 Alternatively, you can pass in the following parameters as an `object`.
 
-| Property      | Type     | Description                      |
-| ------------- | -------- | -------------------------------- |
-| _folder_      | `string` | The folder name.                 |
-| _service_     | `string` | The service name.                |
-| _version\_id_ | `string` | The version UUID of the service. |
-| _service\_id_ | `string` | The service UUID.                |
+| Property      | Type          | Description                      |
+| ------------- | ------------- | -------------------------------- |
+| _folder_      | `str \| None` | The folder name.                 |
+| _service_     | `str \| None` | The service name.                |
+| _version\_id_ | `str \| None` | The version UUID of the service. |
+| _service\_id_ | `str \| None` | The service UUID.                |
 
 > [!NOTE]
 > As of now, only the `version_id` should be used to download the WebAssembly module.

@@ -48,6 +48,10 @@ class Client:
         return API.Batches(self.config)
 
     @property
+    def logs(self) -> API.History:
+        return API.History(self.config)
+
+    @property
     def files(self) -> API.Files:
         return API.Files(self.config)
 

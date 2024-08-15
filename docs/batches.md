@@ -687,7 +687,7 @@ if __name__ == '__main__':
 
 Happy coding! 🚀
 
-[Back to top](#batches-api)
+[Back to top](#batches-api) or [Next: Log History API](./history.md)
 
 <!-- References -->
 [batch-apis]: https://docs.coherent.global/spark-apis/batch-apis
