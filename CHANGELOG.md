@@ -6,9 +6,11 @@ for commit guidelines.
 
 ## 0.1.4 (2024-08-15)
 
-- Add support for downloading WebAssembly modules
-- Add support for downloading Spark files
-- Add support for rehydrating service execution logs
+- Add support for:
+  - downloading WebAssembly modules and Spark files
+  - rehydrating service execution logs into the original Excel file
+  - recompiling services
+- Fix copy issue in `BaseUrl` and `Config` classes
 
 ## 0.1.3 (2024-08-06)
 

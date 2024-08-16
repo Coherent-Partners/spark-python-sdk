@@ -54,20 +54,44 @@ def test_created_with_default_values_if_not_provided():
 
 def test_copied_with_new_values():
     config = Config(base_url=f'{BASE_URL}/{TENANT_NAME}', api_key=API_KEY)
-    new_config = config.copy_with(api_key='new-key', tenant='new-tenant')
-    assert new_config is not None
-    assert new_config.base_url.value == BASE_URL
-    assert new_config.auth.api_key == '***-key'
-    assert new_config.base_url.tenant == 'new-tenant'
+    copy = config.copy_with(api_key='new-key', tenant='new-tenant', env='prod')
+    assert config.base_url.value == BASE_URL
+    assert config.base_url.tenant == TENANT_NAME
+    assert config.auth.api_key == '********-key'
+
+    assert isinstance(copy, Config)
+    assert copy.base_url.value == 'https://excel.prod.coherent.global'
+    assert copy.auth.api_key == '***-key'
+    assert copy.base_url.tenant == 'new-tenant'
 
 
 def test_build_base_url_from_parts():
     VALID_URL = 'https://excel.my.env.coherent.global/tenant'
+    assert BaseUrl.of(url='https://excel.my.env.coherent.global///', tenant='tenant').full == VALID_URL
     assert BaseUrl.of(url='https://excel.my.env.coherent.global/tenant').full == VALID_URL
     assert BaseUrl.of(url='https://spark.my.env.coherent.global/tenant').full == VALID_URL
     assert BaseUrl.of(url='https://excel.my.env.coherent.global', tenant='tenant').full == VALID_URL
     assert BaseUrl.of(url='https://spark.my.env.coherent.global', tenant='tenant').full == VALID_URL
     assert BaseUrl.of(env='my.env', tenant='tenant').full == VALID_URL
+
+
+def test_copy_base_url_with_new_values():
+    base_url = BaseUrl.of(url='https://excel.my.env.coherent.global/tenant')
+    assert base_url.copy_with().full == 'https://excel.my.env.coherent.global/tenant'
+    assert base_url.copy_with(env='new-env').full == 'https://excel.new-env.coherent.global/tenant'
+    assert base_url.copy_with(tenant='new-tenant').full == 'https://excel.my.env.coherent.global/new-tenant'
+    assert (
+        base_url.copy_with(env='new-env', tenant='new-tenant').full
+        == 'https://excel.new-env.coherent.global/new-tenant'
+    )
+    assert (
+        base_url.copy_with(url='https://excel.new-env.coherent.global').full
+        == 'https://excel.new-env.coherent.global/tenant'
+    )
+    assert (
+        base_url.copy_with(url='https://excel.new-env.coherent.global', tenant='new-tenant').full
+        == 'https://excel.new-env.coherent.global/new-tenant'
+    )
 
 
 def test_throw_error_when_params_are_incorrect():

@@ -198,6 +198,8 @@ OAuth2.0 Client Credentials flow:
 - `Spark.services.get_versions(uri)` lists all the versions of a service.
 - `Spark.services.get_schema(uri)` gets the schema of a service.
 - `Spark.services.get_metadata(uri)` gets the metadata of a service.
+- `Spark.services.download(uri)` downloads the excel file of a service.
+- `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
 
 [Batches API](./docs/batches.md) - manages asynchronous batch processing:
 

@@ -1,10 +1,11 @@
 import json
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 from .._config import Config
 from .._constants import SPARK_SDK
 from .._errors import SparkError
-from .._utils import is_str_not_empty, join_list_str
+from .._utils import DateUtils, is_str_not_empty, join_list_str
 from ._base import ApiResource, HttpResponse, Uri, UriParams
 
 __all__ = ['Services', 'ServiceExecuted']
@@ -106,6 +107,54 @@ class Services(ApiResource):
 
         response = self.request(url)
         return response.copy_with(data=response.data.get('data', []) if isinstance(response.data, dict) else [])
+
+    def download(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        version: Optional[str] = None,
+        file_name: Optional[str] = None,
+        type: Optional[str] = None,  # 'original' or 'configured'
+    ):
+        uri = Uri.validate(UriParams(folder, service, version=version) if uri is None else Uri.to_params(uri))
+        endpoint = f'product/{uri.folder}/engines/{uri.service}/download/{uri.version or ""}'
+        url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
+        params = {'filename': file_name or '', 'type': 'withmetadata' if type == 'configured' else ''}
+
+        return self.request(url, params=params)
+
+    def recompile(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        version_id: Optional[str] = None,
+        compiler: Optional[str] = None,
+        release_notes: Optional[str] = None,
+        label: Optional[str] = None,
+        start_date: Optional[Union[str, int, datetime]] = None,
+        end_date: Optional[Union[str, int, datetime]] = None,
+        upgrade: Optional[str] = None,  # 'major' | 'minor' | 'patch'
+        tags: Union[None, str, List[str]] = None,
+    ):
+        uri = Uri.validate(UriParams(folder, service, version_id=version_id) if uri is None else Uri.to_params(uri))
+        url = Uri.of(uri.pick('folder', 'service'), base_url=self.config.base_url.full, endpoint='recompileNodgen')
+        startdate, enddate = DateUtils.parse(start_date, end_date)
+        data = {
+            'versionId': uri.version_id,
+            'upgradeType': upgrade or 'patch',
+            'neuronCompilerVersion': compiler or 'StableLatest',
+            'releaseNotes': release_notes or f'Recompiled via {SPARK_SDK}',
+            'label': label,
+            'effectiveStartDate': startdate.isoformat(),
+            'effectiveEndDate': enddate.isoformat(),
+            'tags': join_list_str(tags),
+        }
+
+        return self.request(url, method='POST', body={'request_data': data})
 
 
 class ServiceExecuted(HttpResponse):

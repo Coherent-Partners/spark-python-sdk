@@ -26,6 +26,18 @@ def get_versions(services: Spark.Services):
     print(response.data)
 
 
+def download(services: Spark.Services):
+    response = services.download('my-folder/my-service', type='configured')
+    with open('my-excel-file.xlsx', 'wb') as file:
+        file.write(response.buffer)
+        print(f'file downloaded successfully 🎉')
+
+
+def recompile(services: Spark.Services):
+    response = services.recompile('my-folder/my-service')
+    print(response.data)
+
+
 if __name__ == '__main__':
     spark = Spark.Client()
     with spark.services as services:
@@ -33,3 +45,5 @@ if __name__ == '__main__':
         get_schema(services)
         get_metadata(services)
         get_versions(services)
+        download(services)
+        recompile(services)
