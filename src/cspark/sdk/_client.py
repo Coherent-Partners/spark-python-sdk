@@ -4,7 +4,9 @@ from typing import Mapping, Optional
 
 import cspark.sdk.resources as API
 
+from ._auth import Authorization
 from ._config import BaseUrl, Config
+from .resources._base import download as download_file
 
 __all__ = ['Client']
 
@@ -44,6 +46,22 @@ class Client:
     @property
     def batches(self) -> API.Batches:
         return API.Batches(self.config)
+
+    @property
+    def logs(self) -> API.History:
+        return API.History(self.config)
+
+    @property
+    def files(self) -> API.Files:
+        return API.Files(self.config)
+
+    @property
+    def wasm(self) -> API.Wasm:
+        return API.Wasm(self.config)
+
+    @staticmethod
+    def download(url: str, auth: Optional[Authorization] = None) -> bytes:
+        return download_file(url, headers=auth.as_header if auth else {}).buffer
 
 
 class AsyncClient:

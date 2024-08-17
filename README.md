@@ -198,6 +198,8 @@ OAuth2.0 Client Credentials flow:
 - `Spark.services.get_versions(uri)` lists all the versions of a service.
 - `Spark.services.get_schema(uri)` gets the schema of a service.
 - `Spark.services.get_metadata(uri)` gets the metadata of a service.
+- `Spark.services.download(uri)` downloads the excel file of a service.
+- `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
 
 [Batches API](./docs/batches.md) - manages asynchronous batch processing:
 
@@ -210,6 +212,15 @@ OAuth2.0 Client Credentials flow:
 - `Spark.batches.of(id).pull([options])` retrieves the output data from a batch pipeline.
 - `Spark.batches.of(id).dispose()` closes a batch pipeline.
 - `Spark.batches.of(id).cancel()` cancels a batch pipeline.
+
+[Log History API](./docs/history.md) - manages service execution logs:
+
+- `Spark.logs.rehydrate(uri, call_id)` rehydrates the executed model into the original Excel file.
+
+[Other APIs](./docs/misc.md) - for other functionalities:
+
+- `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
+- `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
 
 ## Contributing
 

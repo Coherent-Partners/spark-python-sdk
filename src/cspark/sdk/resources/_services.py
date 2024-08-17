@@ -1,10 +1,15 @@
+from __future__ import annotations
+
+import gzip
 import json
-from typing import Any, Dict, List, Optional, Union
+import zlib
+from datetime import datetime
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from .._config import Config
 from .._constants import SPARK_SDK
 from .._errors import SparkError
-from .._utils import is_str_not_empty, join_list_str
+from .._utils import DateUtils, is_str_not_empty, join_list_str
 from ._base import ApiResource, HttpResponse, Uri, UriParams
 
 __all__ = ['Services', 'ServiceExecuted']
@@ -19,6 +24,7 @@ class Services(ApiResource):
         uri: Union[str, UriParams],
         *,
         response_format: Optional[str] = None,
+        encoding: Optional[str] = None,  # 'gzip' | 'deflate'
         # data for calculations
         inputs: Union[None, str, Dict[str, Any], List[Any]] = None,  # TODO: support `pandas.DataFrame`
         # Metadata for calculations
@@ -64,7 +70,11 @@ class Services(ApiResource):
             url = Uri.of(uri, base_url=self.config.base_url.full, endpoint=endpoint)
             body = {'request_data': {'inputs': executable.inputs}, 'request_meta': metadata.value}
 
-        response = self.request(url, method='POST', body=body)
+        if encoding:
+            content = self.__encode(data=body, encoding=encoding)
+            response = self.request(url, method='POST', content=content, headers=self.__encoding_headers(encoding))
+        else:
+            response = self.request(url, method='POST', body=body)
         return ServiceExecuted(response, executable.is_batch, response_format or 'alike')
 
     def get_schema(
@@ -106,6 +116,67 @@ class Services(ApiResource):
 
         response = self.request(url)
         return response.copy_with(data=response.data.get('data', []) if isinstance(response.data, dict) else [])
+
+    def download(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        version: Optional[str] = None,
+        file_name: Optional[str] = None,
+        type: Optional[str] = None,  # 'original' or 'configured'
+    ):
+        uri = Uri.validate(UriParams(folder, service, version=version) if uri is None else Uri.to_params(uri))
+        endpoint = f'product/{uri.folder}/engines/{uri.service}/download/{uri.version or ""}'
+        url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
+        params = {'filename': file_name or '', 'type': 'withmetadata' if type == 'configured' else ''}
+
+        return self.request(url, params=params)
+
+    def recompile(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        version_id: Optional[str] = None,
+        compiler: Optional[str] = None,
+        release_notes: Optional[str] = None,
+        label: Optional[str] = None,
+        start_date: Optional[Union[str, int, datetime]] = None,
+        end_date: Optional[Union[str, int, datetime]] = None,
+        upgrade: Optional[str] = None,  # 'major' | 'minor' | 'patch'
+        tags: Union[None, str, List[str]] = None,
+    ):
+        uri = Uri.validate(UriParams(folder, service, version_id=version_id) if uri is None else Uri.to_params(uri))
+        url = Uri.of(uri.pick('folder', 'service'), base_url=self.config.base_url.full, endpoint='recompileNodgen')
+        startdate, enddate = DateUtils.parse(start_date, end_date)
+        data = {
+            'versionId': uri.version_id,
+            'upgradeType': upgrade or 'patch',
+            'neuronCompilerVersion': compiler or 'StableLatest',
+            'releaseNotes': release_notes or f'Recompiled via {SPARK_SDK}',
+            'label': label,
+            'effectiveStartDate': startdate.isoformat(),
+            'effectiveEndDate': enddate.isoformat(),
+            'tags': join_list_str(tags),
+        }
+
+        return self.request(url, method='POST', body={'request_data': data})
+
+    def __encode(self, *, data: Any, encoding: str = 'gzip') -> bytes:
+        if encoding == 'gzip':
+            return gzip.compress(json.dumps(data).encode('utf-8'))
+        if encoding == 'deflate':
+            return zlib.compress(json.dumps(data).encode('utf-8'))
+        else:
+            raise SparkError.sdk('encoding is not supported', {'encoding': encoding})
+
+    def __encoding_headers(
+        self, encoding: str, *, content_type: str = 'application/json', extras: Mapping[str, str] = {}
+    ) -> Dict[str, str]:
+        return {'Content-Type': content_type, 'Content-Encoding': encoding, 'Accept-Encoding': encoding, **extras}
 
 
 class ServiceExecuted(HttpResponse):
@@ -152,6 +223,8 @@ class _ExecuteInputs:
 
 
 class _ExecuteMeta:
+    __COMPILER_TYPES = ('neuron', 'type3', 'type2', 'type1', 'xconnector')
+
     def __init__(
         self,
         uri: UriParams,
@@ -187,8 +260,7 @@ class _ExecuteMeta:
         )
         self._compiler_type = (
             str(compiler_type).capitalize()
-            if is_str_not_empty(compiler_type)
-            and str(compiler_type).lower() in ('neuron', 'type3', 'type2', 'type1', 'xconnector')
+            if is_str_not_empty(compiler_type) and str(compiler_type).lower() in self.__COMPILER_TYPES
             else 'Neuron'
         )
 

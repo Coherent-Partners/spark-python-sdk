@@ -93,21 +93,24 @@ class Config:
     def copy_with(
         self,
         *,
-        tenant: Optional[str] = None,
         base_url: Optional[str] = None,
+        tenant: Optional[str] = None,
+        env: Optional[str] = None,
+        oauth: Optional[Mapping[str, str] | str] = None,
         api_key: Optional[str] = None,
         token: Optional[str] = None,
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
-        env: Optional[str] = None,
     ) -> Config:
-        base_url = base_url or self._base_url.value
-        tenant = tenant or self._base_url.tenant
-        env = env or self._env
-        url = base_url if isinstance(base_url, BaseUrl) else BaseUrl.of(url=base_url, tenant=tenant, env=env)
+        url = (
+            base_url.copy_with(tenant=tenant, env=env)
+            if isinstance(base_url, BaseUrl)
+            else self.base_url.copy_with(url=base_url, tenant=tenant, env=env)
+        )
         return Config(
             base_url=url,
+            oauth=oauth or self._auth.oauth.to_dict() if self._auth.oauth else None,
             api_key=api_key or self._auth.api_key,
             token=token or self._auth.token,
             timeout=timeout or self._timeout,
@@ -164,13 +167,19 @@ class BaseUrl:
     def to(self, service: str = 'excel', with_tenant: bool = False) -> str:
         return (self.full if with_tenant else self.value).replace('excel', service)
 
+    def copy_with(
+        self, *, url: Optional[str] = None, tenant: Optional[str] = None, env: Optional[str] = None
+    ) -> BaseUrl:
+        tenant, env = tenant or self._tenant, env or self._env
+        return BaseUrl.of(url=url, tenant=tenant) if url else BaseUrl.of(tenant=tenant, env=env)
+
     @staticmethod
     def of(*, url: Optional[str] = None, tenant: Optional[str] = None, env: Optional[str] = None) -> BaseUrl:
         str_validator = Validators.empty_str()
         url_validator = Validators.base_url()
 
         if url_validator.is_valid(url):
-            parsed_url = urlparse(url)
+            parsed_url = urlparse(url.rstrip('/'))  # pyright: ignore[reportOptionalMemberAccess]
             paths = str(parsed_url.path).split('/')
             maybe_tenant = paths[1] if len(paths) > 1 else tenant
 

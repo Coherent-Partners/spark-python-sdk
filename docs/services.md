@@ -2,12 +2,14 @@
 
 # Services API
 
-| Verb                                   | Description                                                              |
-| -------------------------------------- | ------------------------------------------------------------------------ |
-| `Spark.services.execute(uri, inputs)`  | [Execute a Spark service](#execute-a-spark-service).                     |
-| `Spark.services.get_versions(uri)`     | [Get all the versions of a service](#get-all-the-versions-of-a-service). |
-| `Spark.services.get_schema(uri)`       | [Get the schema for a given service](#get-the-schema-for-a-service).     |
-| `Spark.services.get_metadata(uri)`     | [Get the metadata of a service](#get-the-metadata-of-a-service).         |
+| Verb                                   | Description                                                                   |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| `Spark.services.execute(uri, inputs)`  | [Execute a Spark service](#execute-a-spark-service).                          |
+| `Spark.services.get_versions(uri)`     | [Get all the versions of a service](#get-all-the-versions-of-a-service).      |
+| `Spark.services.get_schema(uri)`       | [Get the schema for a given service](#get-the-schema-for-a-service).          |
+| `Spark.services.get_metadata(uri)`     | [Get the metadata of a service](#get-the-metadata-of-a-service).              |
+| `Spark.services.download(uri)`         | [Download the excel file of a service](#download-the-excel-file-of-a-service).|
+| `Spark.services.recompile(uri)`        | [Recompile a service using specific compiler version](#recompile-a-service).  |
 
 A Spark service is the representation of your Excel file in the Spark platform.
 
@@ -138,7 +140,8 @@ For the other keyword arguments:
 | Property             | Type          | Description                                      |
 | -------------------- | ------------- | ------------------------------------------------ |
 | _inputs_             | `None \| str \| Dict \| List` | The input data (single or many). |
-| _response\_format_   | `raw \| typed \| alike` | Response data format to use (defaults to `alike`).|
+| _response\_format_   | `original \| alike` | Response data format to use (defaults to `alike`).|
+| _encoding_           | `gzip \| deflate`   | Compress the payload using this encoding. |
 | _active\_since_      | `None \| str` | The transaction date (helps pinpoint a version). |
 | _source\_system_     | `None \| str` | The source system (defaults to `Spark Python SDK`).|
 | _correlation\_id_    | `None \| str` | The correlation ID.                              |
@@ -211,11 +214,11 @@ spark.services.get_versions(folder='my-folder', service='my-service')
 [
   {
     "id": "uuid",
-    "createdAt": "1970-12-03T04:56:78.186Z",
+    "createdAt": "1970-12-03T04:56:56.186Z",
     "engine": "my-service",
     "revision": "0.2.0",
-    "effectiveStartDate": "1970-12-03T04:56:78.186Z",
-    "effectiveEndDate": "1990-12-03T04:56:78.186Z",
+    "effectiveStartDate": "1970-12-03T04:56:56.186Z",
+    "effectiveEndDate": "1990-12-03T04:56:56.186Z",
     "isActive": true,
     "releaseNote": "some release note",
     "childEngines": null,
@@ -228,11 +231,11 @@ spark.services.get_versions(folder='my-folder', service='my-service')
   },
   {
     "id": "86451865-dc5e-4c7c-a7f6-c35435f57dd1",
-    "createdAt": "1970-12-03T04:56:78.186Z",
+    "createdAt": "1970-12-03T04:56:56.186Z",
     "engine": "my-service",
     "revision": "0.1.0",
-    "effectiveStartDate": "1970-12-03T04:56:78.186Z",
-    "effectiveEndDate": "1980-12-03T04:56:78.186Z",
+    "effectiveStartDate": "1970-12-03T04:56:56.186Z",
+    "effectiveEndDate": "1980-12-03T04:56:56.186Z",
     "isActive": false,
     "releaseNote": null,
     "childEngines": null,
@@ -317,6 +320,125 @@ as the [execute method](#execute-a-spark-service).
   "request_timestamp": "1970-01-23T00:58:20.752Z"
 }
 ```
+
+## Download the Excel file of a service
+
+During the conversion process, Spark builds a service from the Excel file and keeps
+a _configured_ version of the service for version control. This configured version
+is nothing but the Excel file that was uploaded to Spark with some additional
+metadata for version control.
+
+This method lets you download either the configured version or the original Excel
+file of a service.
+
+### Arguments
+
+The method accepts a string or keyword arguments `folder`, `service` and `version`.
+
+```python
+spark.services.download('my-folder/my-service[0.4.2]')
+# or
+spark.services.download(folder='my-folder', service='my-service', version='0.4.2')
+```
+
+> **Note:** The version piece is optional. If not provided, the latest version
+> will be downloaded.
+
+You may use additional options to indicate whether you intend to download the
+original Excel file or the configured version of it.
+
+| Property     | Type                     | Description                                           |
+| ------------ | ------------------------ | ----------------------------------------------------- |
+| _file\_name_ | `str \| None`            | Save the downloaded file with a different name.       |
+| _type_       | `original \| configured` | The type of file to download (defaults to `original`).|
+
+```python
+spark.services.download('my-folder/my-service', type='configured')
+```
+
+### Returns
+
+When successful, the method returns an `HttpResponse` object with the buffer
+containing the Excel file.
+
+## Recompile a service
+
+Every service in Spark is compiled using a specific compiler version -- usually
+the latest one. However, you may want to recompile a service using a specific
+compiler version for various reasons. Keep in mind that a service recompilation
+is considered an update to the underlying Spark service but not to the Excel file
+itself.
+
+### Arguments
+
+The method accepts a string or keyword arguments `folder`, `service` and `version_id`
+to locate the service.
+
+```python
+spark.services.recompile('my-folder/my-service')
+# or
+spark.services.recompile(folder='my-folder', service='my-service')
+```
+
+When using `string`-based service URIs, the method recompiles the service using the
+latest compiler version and a `patch` update. If you want to recompile the service
+using a specific compiler version, you must use additional parameters.
+
+| Property         | Type                       | Description                                                |
+| --------------   | -------------------------- | ---------------------------------------------------------- |
+| _version\_id_    | `str \| None`              | The UUID of a particular version of the service.           |
+| _compiler_       | `str \| None`              | The compiler version to use (do not confuse with type).    |
+| _upgrade_        | `major \| minor \| patch`  | which type of versioning to apply (defaults to `patch`).   |
+| _label_          | `str \| None`              | The version label.                                         |
+| _release\_notes_ | `str \| None`              | The release notes.                                         |
+| _tags_           | `str \| List[str] \| None` | The comma-separted tags to apply to the service if string. |
+| _start\_date_    | `int \| str \| datetime \| None` | The effective start date in ISO format.              |
+| _end\_date_      | `int \| str \| datetime \| None` | The effective end date in ISO format.                |
+
+The supported compiler versions include but not limited to:
+
+- `Neuron_vM.m.p` (e.g., `Neuron_v1.13.0`)
+- `StableLatest`
+- `TenantDefault`
+- `ReleaseCandidate`
+
+Here's an example of how to recompile a service using a specific compiler version.
+
+```python
+spark.services.recompile(
+    'my-folder/my-service',
+    version_id='123e4567-e89b-12d3-a456-426614174000',
+    compiler='Neuron_v1.13.0',
+    upgrade='minor',
+    label='recompilation',
+    release_notes='some release notes',
+    tags=['tag1', 'tag2']
+)
+```
+
+## Returns
+
+Recompiling a service will start a background compilation job. If the operation
+is successful, this method returns a JSON with the job details.
+
+```json
+{
+  "status": "Success",
+  "error": null,
+  "response_data": {
+    "versionId": "uuid",
+    "revision": "1.2.3",
+    "jobId": "uuid"
+  },
+  "response_meta": {
+    "system": "SPARK",
+    "request_timestamp": "1970-01-23T21:12:27.698Z"
+  }
+}
+```
+
+A recompilation job is asynchronous and may take some time to complete. You may
+want to poll the job status before using the updated service.
 
 [Back to top](#services-api) or [Next: Batches API](./batches.md)
 

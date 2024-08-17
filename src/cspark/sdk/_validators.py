@@ -73,7 +73,7 @@ class BaseUrlValidator(BaseValidator):
         if is_str_empty(value):
             raise SparkError.sdk('base URL is required', value)
 
-        if not self._wildcard.match(str(value)):
+        if not self._wildcard.match(str(value).rstrip('/')):
             raise SparkError.sdk('must be a Spark base URL <*.coherent.global>', value)
 
     def is_valid(self, value: Optional[str]) -> bool:

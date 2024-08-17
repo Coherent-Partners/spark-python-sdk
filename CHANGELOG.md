@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.1.4 (2024-08-15)
+
+- Add support for:
+  - downloading WebAssembly modules and Spark files
+  - rehydrating service execution logs into the original Excel file
+  - recompiling services
+- Fix copy issue in `BaseUrl` and `Config` classes
+- Enable `gzip` and `deflate` encoding for request payload during service execution
+
 ## 0.1.3 (2024-08-06)
 
 - Fix publish issue with Rye

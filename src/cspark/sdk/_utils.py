@@ -4,7 +4,8 @@ import math
 import random
 import re
 import uuid
-from typing import Any, List, Union, cast
+from datetime import datetime, timedelta
+from typing import Any, List, Optional, Tuple, Union, cast
 
 from ._constants import DEFAULT_RETRY_INTERVAL, RETRY_RANDOMIZATION_FACTOR
 
@@ -83,3 +84,68 @@ def is_not_empty_list(value: Any | None) -> bool:
 
 def get_uuid() -> str:
     return str(uuid.uuid4())
+
+
+class DateUtils:
+    @staticmethod
+    def is_date(value: Optional[int | str | datetime]) -> bool:
+        if isinstance(value, datetime):
+            return True
+        if isinstance(value, (str, int)):
+            try:
+                if isinstance(value, int):
+                    datetime.fromtimestamp(value / 1000)  # Treat value as a Unix timestamp in milliseconds.
+                else:
+                    datetime.fromisoformat(value)  # Handles ISO strings like "YYYY-MM-DD"
+                return True
+            except ValueError:
+                return False
+        return False
+
+    @staticmethod
+    def parse(
+        start: Optional[int | str | datetime] = None,
+        end: Optional[int | str | datetime] = None,
+        *,
+        years: int = 10,
+        months: int = 0,
+        days: int = 0,
+    ) -> Tuple[datetime, datetime]:
+        start_date = DateUtils._to_datetime(start) if start else datetime.now()
+
+        # Calculate the end date
+        if end and DateUtils.is_after(end, start_date):
+            end_date = DateUtils._to_datetime(end)
+        else:
+            # Handling months overflow manually
+            year = start_date.year + years
+            month = start_date.month + months
+            day = start_date.day + days
+
+            while month > 12:
+                month -= 12
+                year += 1
+
+            end_date = start_date.replace(year=year, month=month) + timedelta(days=day)
+
+        return start_date, end_date
+
+    @staticmethod
+    def is_before(date: Union[str, int, datetime], when: datetime) -> bool:
+        return DateUtils._to_datetime(date) < when
+
+    @staticmethod
+    def is_after(date: Union[str, int, datetime], when: datetime) -> bool:
+        return DateUtils._to_datetime(date) > when
+
+    @staticmethod
+    def _to_datetime(value: Union[str, int, datetime]) -> datetime:
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, int):
+            return datetime.fromtimestamp(value / 1000)  # Unix timestamp in milliseconds
+        if isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value)
+            except ValueError:
+                return datetime.strptime(value, '%Y-%m-%d')
