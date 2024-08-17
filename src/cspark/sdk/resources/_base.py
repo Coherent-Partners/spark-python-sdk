@@ -64,10 +64,11 @@ class ApiResource:
         method: str = 'GET',
         headers: Mapping[str, str] = {},
         params: Optional[Mapping[str, str]] = None,
-        body=None,
+        body: Optional[Any] = None,
+        content: Optional[bytes] = None,
         form=None,
         files=None,
-    ):
+    ) -> HttpResponse:
         url = url.value if isinstance(url, Uri) else url
         request = self._client.build_request(
             method,
@@ -76,6 +77,7 @@ class ApiResource:
             headers={**headers, **self.default_headers},
             data=form,
             json=body,
+            content=content,
             files=files,
             timeout=self.config.timeout / 1000,
         )
@@ -83,9 +85,9 @@ class ApiResource:
         self.logger.debug(f'{method} {url}')
         return self.__fetch(request)
 
-    def __fetch(self, request: Request, retries: int = 0) -> 'HttpResponse':
+    def __fetch(self, request: Request, retries: int = 0) -> HttpResponse:
         request.headers.update(self.config.auth.as_header)
-        response = self._client.send(request)
+        response = self._client.send(request)  # FIXME: handling errors (httpx.RequestError | httpx.HTTPStatusError)
         status = response.status_code
 
         if status >= 400:

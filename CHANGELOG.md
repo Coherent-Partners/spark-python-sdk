@@ -11,6 +11,7 @@ for commit guidelines.
   - rehydrating service execution logs into the original Excel file
   - recompiling services
 - Fix copy issue in `BaseUrl` and `Config` classes
+- Enable `gzip` and `deflate` encoding for request payload during service execution
 
 ## 0.1.3 (2024-08-06)
 

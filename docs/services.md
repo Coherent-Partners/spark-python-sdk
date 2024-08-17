@@ -140,7 +140,8 @@ For the other keyword arguments:
 | Property             | Type          | Description                                      |
 | -------------------- | ------------- | ------------------------------------------------ |
 | _inputs_             | `None \| str \| Dict \| List` | The input data (single or many). |
-| _response\_format_   | `raw \| typed \| alike` | Response data format to use (defaults to `alike`).|
+| _response\_format_   | `original \| alike` | Response data format to use (defaults to `alike`).|
+| _encoding_           | `gzip \| deflate`   | Compress the payload using this encoding. |
 | _active\_since_      | `None \| str` | The transaction date (helps pinpoint a version). |
 | _source\_system_     | `None \| str` | The source system (defaults to `Spark Python SDK`).|
 | _correlation\_id_    | `None \| str` | The correlation ID.                              |

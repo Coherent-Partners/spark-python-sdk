@@ -1,6 +1,10 @@
+from __future__ import annotations
+
+import gzip
 import json
+import zlib
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from .._config import Config
 from .._constants import SPARK_SDK
@@ -20,6 +24,7 @@ class Services(ApiResource):
         uri: Union[str, UriParams],
         *,
         response_format: Optional[str] = None,
+        encoding: Optional[str] = None,  # 'gzip' | 'deflate'
         # data for calculations
         inputs: Union[None, str, Dict[str, Any], List[Any]] = None,  # TODO: support `pandas.DataFrame`
         # Metadata for calculations
@@ -65,7 +70,11 @@ class Services(ApiResource):
             url = Uri.of(uri, base_url=self.config.base_url.full, endpoint=endpoint)
             body = {'request_data': {'inputs': executable.inputs}, 'request_meta': metadata.value}
 
-        response = self.request(url, method='POST', body=body)
+        if encoding:
+            content = self.__encode(data=body, encoding=encoding)
+            response = self.request(url, method='POST', content=content, headers=self.__encoding_headers(encoding))
+        else:
+            response = self.request(url, method='POST', body=body)
         return ServiceExecuted(response, executable.is_batch, response_format or 'alike')
 
     def get_schema(
@@ -156,6 +165,19 @@ class Services(ApiResource):
 
         return self.request(url, method='POST', body={'request_data': data})
 
+    def __encode(self, *, data: Any, encoding: str = 'gzip') -> bytes:
+        if encoding == 'gzip':
+            return gzip.compress(json.dumps(data).encode('utf-8'))
+        if encoding == 'deflate':
+            return zlib.compress(json.dumps(data).encode('utf-8'))
+        else:
+            raise SparkError.sdk('encoding is not supported', {'encoding': encoding})
+
+    def __encoding_headers(
+        self, encoding: str, *, content_type: str = 'application/json', extras: Mapping[str, str] = {}
+    ) -> Dict[str, str]:
+        return {'Content-Type': content_type, 'Content-Encoding': encoding, 'Accept-Encoding': encoding, **extras}
+
 
 class ServiceExecuted(HttpResponse):
     def __init__(self, response: HttpResponse, is_batch: bool, format: str = 'alike'):
@@ -201,6 +223,8 @@ class _ExecuteInputs:
 
 
 class _ExecuteMeta:
+    __COMPILER_TYPES = ('neuron', 'type3', 'type2', 'type1', 'xconnector')
+
     def __init__(
         self,
         uri: UriParams,
@@ -236,8 +260,7 @@ class _ExecuteMeta:
         )
         self._compiler_type = (
             str(compiler_type).capitalize()
-            if is_str_not_empty(compiler_type)
-            and str(compiler_type).lower() in ('neuron', 'type3', 'type2', 'type1', 'xconnector')
+            if is_str_not_empty(compiler_type) and str(compiler_type).lower() in self.__COMPILER_TYPES
             else 'Neuron'
         )
 
