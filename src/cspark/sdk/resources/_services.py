@@ -34,7 +34,7 @@ class Services(ApiResource):
         call_purpose: Optional[str] = None,
         compiler_type: Optional[str] = None,
         subservices: Union[None, str, List[str]] = None,
-        # Available only in v3 (legacy)
+        # Available only in v3
         debug_solve: Optional[bool] = None,
         downloadable: Optional[bool] = False,
         echo_inputs: Optional[bool] = False,
@@ -64,11 +64,11 @@ class Services(ApiResource):
 
         if executable.is_batch:
             url = Uri.of(uri.pick('public'), base_url=self.config.base_url.full, version='api/v4', endpoint='execute')
-            body = {'inputs': executable.inputs, **metadata.value}
+            body = {'inputs': executable.inputs, **metadata.values}
         else:
             endpoint = '' if uri.version_id or uri.service_id else 'execute'
             url = Uri.of(uri, base_url=self.config.base_url.full, endpoint=endpoint)
-            body = {'request_data': {'inputs': executable.inputs}, 'request_meta': metadata.value}
+            body = {'request_data': {'inputs': executable.inputs}, 'request_meta': metadata.values}
 
         if encoding:
             content = self.__encode(data=body, encoding=encoding)
@@ -77,10 +77,117 @@ class Services(ApiResource):
             response = self.request(url, method='POST', body=body)
         return ServiceExecuted(response, executable.is_batch, response_format or 'alike')
 
+    def transform(
+        self,
+        uri: Union[str, UriParams],
+        *,
+        # data for calculations
+        inputs: Any,  # required
+        using: Optional[str] = None,
+        api_version: str = 'v3',  # 'v3' | 'v4'
+        encoding: Optional[str] = None,  # 'gzip' | 'deflate'
+        # Metadata for calculations
+        active_since: Optional[str] = None,
+        source_system: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+        call_purpose: Optional[str] = None,
+        compiler_type: Optional[str] = None,
+        subservices: Union[None, str, List[str]] = None,
+        # Only for api/v3
+        debug_solve: Optional[bool] = None,
+        downloadable: Optional[bool] = False,
+        echo_inputs: Optional[bool] = False,
+        tables_as_array: Union[None, str, List[str]] = None,
+        selected_outputs: Union[None, str, List[str]] = None,
+        outputs_filter: Optional[str] = None,
+    ):
+        uri = Uri.validate(uri)
+
+        metadata = _ExecuteMeta(
+            uri,
+            is_batch=api_version == 'v4',
+            active_since=active_since,
+            source_system=source_system,
+            correlation_id=correlation_id,
+            call_purpose=call_purpose,
+            compiler_type=compiler_type,
+            subservices=subservices,
+            debug_solve=debug_solve,
+            downloadable=downloadable,
+            echo_inputs=echo_inputs,
+            tables_as_array=tables_as_array,
+            selected_outputs=selected_outputs,
+            outputs_filter=outputs_filter,
+        )
+
+        endpoint = f'transforms/{using or uri.service}/for/{uri.pick("folder", "service").encode()}'
+        url = Uri.of(base_url=self.config.base_url.full, version='api/v4', endpoint=endpoint)
+
+        if encoding:
+            content = self.__encode(data=inputs or {}, encoding=encoding)
+            headers = self.__encoding_headers(encoding, extras=metadata.as_header)
+            response = self.request(url, method='POST', content=content, headers=headers)
+        else:
+            response = self.request(url, method='POST', body=inputs or {}, headers=metadata.as_header)
+        return response
+
+    def validate(
+        self,
+        uri: Union[str, UriParams],
+        *,
+        # data for validations
+        inputs: Union[None, str, Dict[str, Any]] = None,
+        validation_type: Optional[str] = None,  # 'dynamic' | 'static'
+        # Metadata for validations
+        active_since: Optional[str] = None,
+        source_system: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+        call_purpose: Optional[str] = None,
+        compiler_type: Optional[str] = None,
+        subservices: Union[None, str, List[str]] = None,
+        # Available only in v3
+        debug_solve: Optional[bool] = None,
+        downloadable: Optional[bool] = False,
+        echo_inputs: Optional[bool] = False,
+        tables_as_array: Union[None, str, List[str]] = None,
+        selected_outputs: Union[None, str, List[str]] = None,
+        outputs_filter: Optional[str] = None,
+    ):
+        uri = Uri.validate(uri)
+        validation_type = is_str_not_empty(validation_type) and str(validation_type).lower() or None
+
+        executable = _ExecuteInputs(inputs)
+        metadata = _ExecuteMeta(
+            uri,
+            is_batch=False,
+            active_since=active_since,
+            source_system=source_system,
+            correlation_id=correlation_id,
+            call_purpose=call_purpose,
+            compiler_type=compiler_type,
+            subservices=subservices,
+            debug_solve=debug_solve,
+            downloadable=downloadable,
+            echo_inputs=echo_inputs,
+            tables_as_array=tables_as_array,
+            selected_outputs=selected_outputs,
+            outputs_filter=outputs_filter,
+        )
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='validation')
+        body = {
+            'request_data': {'inputs': executable.inputs},
+            'request_meta': {
+                **metadata.values,
+                'validation_type': 'dynamic' if validation_type == 'dynamic' else 'default_values',
+            },
+        }
+
+        return self.request(url, method='POST', body=body)
+
     def get_schema(
         self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
     ):
-        uri = UriParams(folder=folder, service=service) if uri is None else Uri.to_params(uri)
+        uri = Uri.validate(UriParams(folder=folder, service=service) if uri is None else Uri.to_params(uri))
         endpoint = f'product/{uri.folder}/engines/get/{uri.service}'
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
 
@@ -102,7 +209,7 @@ class Services(ApiResource):
             if uri is None
             else Uri.to_params(uri)
         )
-        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='metadata')
+        url = Uri.of(Uri.validate(uri), base_url=self.config.base_url.full, endpoint='metadata')
 
         response = self.request(url)
         return ServiceExecuted(response, False, 'original')
@@ -110,7 +217,7 @@ class Services(ApiResource):
     def get_versions(
         self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
     ):
-        uri = UriParams(folder, service) if uri is None else Uri.to_params(uri)
+        uri = Uri.validate(UriParams(folder, service) if uri is None else Uri.to_params(uri))
         endpoint = f'product/{uri.folder}/engines/getversions/{uri.service}'
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
 
@@ -144,8 +251,8 @@ class Services(ApiResource):
         compiler: Optional[str] = None,
         release_notes: Optional[str] = None,
         label: Optional[str] = None,
-        start_date: Optional[Union[str, int, datetime]] = None,
-        end_date: Optional[Union[str, int, datetime]] = None,
+        start_date: Union[None, str, int, datetime] = None,
+        end_date: Union[None, str, int, datetime] = None,
         upgrade: Optional[str] = None,  # 'major' | 'minor' | 'patch'
         tags: Union[None, str, List[str]] = None,
     ):
@@ -273,7 +380,7 @@ class _ExecuteMeta:
         self._outputs_filter = outputs_filter
 
     @property
-    def value(self) -> Dict[str, Any]:
+    def values(self) -> Dict[str, Any]:
         if self._is_batch:
             service_uri = self._uri.pick('folder', 'service', 'version').encode(long=False)
             return {
@@ -306,3 +413,9 @@ class _ExecuteMeta:
             'response_data_inputs': self._echo_inputs,
             'service_category': self._subservices,
         }
+
+    @property
+    def as_header(self) -> Dict[str, str]:
+        # NOTE: this has to be a single line string: "'{\"call_purpose\":\"Single Execution\"}'"
+        value = json.dumps({k: v for k, v in self.values.items() if v is not None}, separators=(',', ':'))
+        return {'x-meta' if self._is_batch else 'x-request-meta': "'{}'".format(value)}

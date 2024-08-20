@@ -10,6 +10,8 @@ Additional information can be found on [Spark's User Guide](https://docs.coheren
 - [Authentication](./authentication.md)
 - [Services API](./services.md)
 - [Batches API](./batches.md)
+- [Log History API](./history.md)
+- [Other APIs](./misc.md)
 
 ## Getting Started
 
