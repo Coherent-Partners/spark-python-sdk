@@ -47,6 +47,7 @@ dev-dependencies = [
   "python-dotenv>=1.0.0",
   "uvicorn>=0.30.1",
   "anyio>=4.4.0",
+  "trio"
 ]
 
 [tool.rye.scripts]

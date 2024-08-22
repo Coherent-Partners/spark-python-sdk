@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from types import TracebackType
 from typing import Any, Mapping, Optional, Union
 
-from httpx import URL, Client, Headers, Request
+from httpx import URL, AsyncClient, Client, Headers, Request
 
 from .._config import Config
 from .._errors import SparkError
@@ -15,13 +15,12 @@ from .._utils import get_retry_timeout, get_uuid, is_str_empty, sanitize_uri
 from .._version import about as sdk_info
 from .._version import sdk_ua_header
 
-__all__ = ['ApiResource', 'UriParams', 'Uri', 'HttpResponse']
+__all__ = ['ApiResource', 'AsyncApiResource', 'UriParams', 'Uri', 'HttpResponse']
 
 
-class ApiResource:
+class _BaseApiResource:
     def __init__(self, config: Config):
         self.config = config
-        self._client = Client()
 
         logging.basicConfig(
             format='[%(name)s] %(asctime)s [%(levelname)s] - %(message)s',
@@ -31,6 +30,119 @@ class ApiResource:
         # FIXME: Redefine HTTP handler to use the SDK config instead of httpx's.
         logger = 'cspark.sdk' if not self.config.logger else None  # hack to enable or disable logging
         self.logger = logging.getLogger(logger)
+
+    @property
+    def default_headers(self):
+        return {
+            **self.config.extra_headers,
+            'User-Agent': sdk_info,
+            'x-spark-ua': sdk_ua_header,
+            'x-request-id': get_uuid(),
+            'x-tenant-name': self.config.base_url.tenant,
+        }
+
+
+class AsyncApiResource(_BaseApiResource):
+    def __init__(self, config: Config):
+        super().__init__(config)
+        self._client = AsyncClient()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        await self.close()
+
+    async def close(self):
+        if not self._client.is_closed:
+            await self._client.aclose()
+
+    async def request(
+        self,
+        url: Union[str, 'Uri'],
+        *,
+        method: str = 'GET',
+        headers: Mapping[str, str] = {},
+        params: Optional[Mapping[str, str]] = None,
+        body: Optional[Any] = None,
+        content: Optional[bytes] = None,
+        form=None,
+        files=None,
+    ) -> HttpResponse:
+        url = url.value if isinstance(url, Uri) else url
+        request = self._client.build_request(
+            method,
+            url,
+            params=params,
+            headers={**headers, **self.default_headers},
+            data=form,
+            json=body,
+            content=content,
+            files=files,
+            timeout=self.config.timeout / 1000,
+        )
+
+        self.logger.debug(f'{method} {url}')
+        return await self.__fetch(request)
+
+    async def __fetch(self, request: Request, retries: int = 0) -> HttpResponse:
+        request.headers.update(self.config.auth.as_header)
+        response = await self._client.send(request)
+        status = response.status_code
+
+        if status >= 400:
+            if status == 401 and self.config.auth.type == 'oauth' and retries < self.config.max_retries:
+                self.config.auth.oauth.retrieve_token(self.config)  # pyright: ignore[reportOptionalMemberAccess]
+                return await self.__fetch(request, retries + 1)
+
+            if (status == 408 or status == 429) and retries < self.config.max_retries:
+                self.logger.debug(f'retrying request due to status code {status}...')
+                delay = get_retry_timeout(retries, self.config.retry_interval)
+                time.sleep(delay)
+                return await self.__fetch(request, retries + 1)
+
+            url = str(request.url)
+            raise SparkError.api(
+                status,
+                {
+                    'message': f'failed to fetch <{url}>',
+                    'cause': {
+                        'request': {
+                            'url': url,
+                            'method': request.method,
+                            'headers': request.headers,
+                            'body': request.content,
+                        },
+                        'response': {
+                            'headers': response.headers,
+                            'body': response.text,
+                            'raw': response.content,
+                        },
+                    },
+                },
+            )
+
+        # otherwise, ok response
+        http_response = {'status': status, 'data': None, 'buffer': response.content, 'headers': response.headers}
+
+        content_type = response.headers.get('content-type', '')
+        if 'application/json' in content_type:
+            try:
+                http_response['data'] = response.json()
+            except Exception:
+                http_response['data'] = response.text
+        return HttpResponse(**http_response)
+
+
+class ApiResource(_BaseApiResource):
+    def __init__(self, config: Config):
+        super().__init__(config)
+        self._client = Client()
 
     def __enter__(self):
         return self
@@ -46,16 +158,6 @@ class ApiResource:
     def close(self):
         if not self._client.is_closed:
             self._client.close()
-
-    @property
-    def default_headers(self):
-        return {
-            **self.config.extra_headers,
-            'User-Agent': sdk_info,
-            'x-spark-ua': sdk_ua_header,
-            'x-request-id': get_uuid(),
-            'x-tenant-name': self.config.base_url.tenant,
-        }
 
     def request(
         self,

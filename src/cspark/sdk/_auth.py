@@ -9,7 +9,7 @@ from ._config import Config
 from ._constants import ENV_VARS
 from ._errors import SparkError
 from ._utils import mask
-from .resources import AccessToken
+from .resources import AccessToken, AsyncOAuth2
 from .resources import OAuth2 as OAuthManager
 
 __all__ = ['Authorization', 'OAuth']
@@ -170,3 +170,21 @@ class OAuth:
             raise error from cause
         finally:
             manager.close()
+
+    async def async_retrieve_token(self, config: Config) -> AccessToken:
+        # print('retrieving OAuth2 access token...')  # FIXME: use logger instead
+        manager = AsyncOAuth2(config)
+        try:
+            self._access_token = await manager.get_access_token()
+            if not self._access_token:
+                raise SparkError('no access token found')
+            return self._access_token
+        except SparkError as error:
+            # print(error.message)
+            raise
+        except Exception as cause:
+            error = SparkError('cannot retrieve OAuth2 access token', cause)
+            # print(error.message)
+            raise error from cause
+        finally:
+            await manager.close()

@@ -8,7 +8,7 @@ from ._auth import Authorization
 from ._config import BaseUrl, Config
 from .resources._base import download as download_file
 
-__all__ = ['Client']
+__all__ = ['Client', 'AsyncClient']
 
 
 class Client:
@@ -65,4 +65,29 @@ class Client:
 
 
 class AsyncClient:
-    pass
+    def __init__(
+        self,
+        *,
+        base_url: Optional[str | BaseUrl] = None,
+        oauth: Optional[Mapping[str, str] | str] = None,
+        api_key: Optional[str] = None,
+        token: Optional[str] = None,
+        timeout: Optional[float] = None,
+        max_retries: Optional[int] = None,
+        retry_interval: Optional[float] = None,
+        tenant: Optional[str] = None,
+        env: Optional[str] = None,
+        logger: Optional[bool] = True,
+    ) -> None:
+        self.config = Config(
+            base_url=base_url,
+            oauth=oauth,
+            api_key=api_key,
+            token=token,
+            timeout=timeout,
+            max_retries=max_retries,
+            retry_interval=retry_interval,
+            tenant=tenant,
+            env=env,
+            logger=logger,
+        )

@@ -26,6 +26,8 @@ async def router(scope: Scope, receive: Receive, send: Send) -> None:  # noqa: A
         await service_execute_v4(scope, receive, send)
     elif scope['path'].startswith('/my-tenant/api/v3/public/version/version_uuid'):
         await service_execute_with_metadata(scope, receive, send)
+    elif scope['path'].startswith('/auth/realms/my-tenant/protocol/openid-connect/token'):
+        await retrieve_access_token(scope, send)
 
 
 async def read_body(receive):
@@ -41,6 +43,19 @@ async def read_body(receive):
         more_body = message.get('more_body', False)
 
     return body
+
+
+async def retrieve_access_token(scope: Scope, send: Send):
+    assert scope['type'] == 'http'
+    assert scope['method'] == 'POST'
+
+    headers = {k.decode(): v.decode() for k, v in scope['headers']}
+    assert 'content-type' in headers
+    assert headers['content-type'] == 'application/x-www-form-urlencoded'
+
+    res_body = '{"access_token":"fake access token", "expires_in":360, "token_type":"Bearer"}'
+    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send({'type': 'http.response.body', 'body': res_body.encode()})
 
 
 async def service_execute_v3(scope: Scope, receive: Receive, send: Send) -> None:
