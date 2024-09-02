@@ -5,11 +5,13 @@
 | Verb                                   | Description                                                                   |
 | -------------------------------------- | ----------------------------------------------------------------------------- |
 | `Spark.services.execute(uri, inputs)`  | [Execute a Spark service](#execute-a-spark-service).                          |
+| `Spark.services.transform(uri, inputs)`| [Execute a Spark service using Transforms](#execute-a-spark-service-using-transforms).|
 | `Spark.services.get_versions(uri)`     | [Get all the versions of a service](#get-all-the-versions-of-a-service).      |
 | `Spark.services.get_schema(uri)`       | [Get the schema for a given service](#get-the-schema-for-a-service).          |
 | `Spark.services.get_metadata(uri)`     | [Get the metadata of a service](#get-the-metadata-of-a-service).              |
 | `Spark.services.download(uri)`         | [Download the excel file of a service](#download-the-excel-file-of-a-service).|
 | `Spark.services.recompile(uri)`        | [Recompile a service using specific compiler version](#recompile-a-service).  |
+| `Spark.services.validate(uri, data)`   | [Validate input data using static or dynamic validations](#validate-input-data). |
 
 A Spark service is the representation of your Excel file in the Spark platform.
 
@@ -113,7 +115,7 @@ spark.services.execute(UriParams(folder='my-folder', service='service', version=
 - using **proxy** endpoints:
   `proxy` is the custom endpoint associated with the service.
 
-```ts
+```py
 spark.services.execute('proxy/custom-endpoint')
 # or
 spark.services.execute(UriParams(proxy='custom-endpoint'))
@@ -193,6 +195,50 @@ to `original`.
 > Executing multiple inputs is a synchronous operation and may take some time to complete.
 > The default timeout for this client is 60 seconds, and for Spark servers, it is 55 seconds.
 > Another good practice is to split the batch into smaller chunks and submit separate requests.
+
+## Execute a Spark service using Transforms
+
+This method allows you to execute a Spark service using unstructured data. It is
+quite useful especially when the service in question does not conform to the client
+application's data structure. This is the perfect opportunity to use a middle layer
+such as Transforms on the Spark side to adapt the service execution to the client
+application.
+
+Check out the [API reference](https://docs.coherent.global/spark-apis/transforms-api)
+to learn more about Transforms API.
+
+### Arguments
+
+This method requires a service URI locator and the input data. Additionally, you
+may provide the following keyword arguments:
+
+| Property      | Type             | Description                                      |
+| ------------- | ---------------- | ------------------------------------------------ |
+| _using_       | `None \| str`    | The transform name (defaults to the service name if any).|
+| _api\_version_| `v3 \| v4`       | The target API version (defaults to `v3`).       |
+| _encoding_    | `gzip \| deflate`| Apply this content encoding between client and server. |
+
+> NOTE: When using `encoding`, the SDK will automatically compress and decompress the
+> payload using the specified encoding.
+
+As for the metadata of a Spark service execution, this method follows the same
+pattern as the [Spark.services.execute()](#execute-a-spark-service) method. You
+can provide them as keyword arguments.
+
+```python
+spark.services.transform(
+    'my-folder/my-service',
+    inputs={'my_input': 13},
+    using='my-transform', # transform name
+    call_purpose='Demo'
+)
+```
+
+### Returns
+
+When successful, this method returns the output data of the service execution in
+accordance with the rules defined in the [Transform document](https://docs.coherent.global/spark-apis/transforms-api#example)
+if any.
 
 ## Get all the versions of a service
 
@@ -439,6 +485,92 @@ is successful, this method returns a JSON with the job details.
 
 A recompilation job is asynchronous and may take some time to complete. You may
 want to poll the job status before using the updated service.
+
+## Validate input data
+
+This method validates the input data using static or dynamic validations set in
+the Excel file. This is useful for building frontend applications that connect
+to Spark services.
+
+- `static` validation is a cell validation that's only affected by its own formula.
+- `dynamic` validation is a cell validation that depends on other cells/inputs.
+
+Check out the [API reference](https://docs.coherent.global/spark-apis/validation-api)
+to learn more about validation of the inputs and outputs.
+
+> **Note:** This method works similarly to the `Spark.services.execute()` method but
+> with a different purpose. If you want to know more about the input and output
+> data format, check the [excute(...)](#execute-a-spark-service) method.
+
+### Arguments
+
+This method follows the same pattern as the `execute` method. To specify which type
+of validation to use, you must provide the `validation_type` property as part of
+the keyword arguments.
+
+```python
+spark.services.validate(
+    'my-folder/my-service',
+    inputs={'my_input': 13},
+    validation_type='dynamic',
+    call_purpose='Demo'
+)
+```
+
+No need to specify the `response_format` property as the method always returns the
+original format emitted by the API.
+
+### Returns
+
+```json
+{
+  "status": "Success",
+  "error": null,
+  "response_data": {
+    "outputs": {
+      "my_static_input": {
+        "validation_allow": "List",
+        "validation_type": "static",
+        "dependent_inputs": ["my_dynamic_input"],
+        "min": null,
+        "max": null,
+        "options": ["a", "b"],
+        "ignore_blank": true
+      },
+      "my_dynamic_input": {
+        "validation_allow": "List",
+        "validation_type": "dynamic",
+        "dependent_inputs": null,
+        "min": null,
+        "max": null,
+        "options": ["x", "y", "z"],
+        "ignore_blank": false
+      }
+    },
+    "warnings": null,
+    "errors": null,
+    "service_chain": null
+  },
+  "response_meta": {
+    "service_id": "uuid",
+    "version_id": "uudi",
+    "version": "0.4.2",
+    "process_time": 0,
+    "call_id": "uuid",
+    "compiler_type": "Type3",
+    "compiler_version": "1.12.0",
+    "source_hash": null,
+    "engine_id": "alpha-numeric-id",
+    "correlation_id": null,
+    "parameterset_version_id": null,
+    "system": "SPARK",
+    "request_timestamp": "1970-01-23T00:58:20.752Z"
+  }
+}
+```
+
+See more examples of [static validation](https://docs.coherent.global/spark-apis/validation-api#validation_type-static)
+and [dynamic validation](https://docs.coherent.global/spark-apis/validation-api#validation_type-dynamic-part-1).
 
 [Back to top](#services-api) or [Next: Batches API](./batches.md)
 

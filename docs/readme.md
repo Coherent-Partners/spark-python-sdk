@@ -10,6 +10,8 @@ Additional information can be found on [Spark's User Guide](https://docs.coheren
 - [Authentication](./authentication.md)
 - [Services API](./services.md)
 - [Batches API](./batches.md)
+- [Log History API](./history.md)
+- [Other APIs](./misc.md)
 
 ## Getting Started
 
@@ -69,7 +71,7 @@ the following properties:
 > better readability and ease of use. Keep an eye out on the `data` property
 > when accessing the response data.
 >
-> As a side note, we intend to leverage the asynchronous methods [in the future](./roadmap.md)
+> As a side note, we intend to leverage the asynchronous methods in the future
 > to provide a more efficient way to interact with the Spark platform.
 
 ## HTTP Error

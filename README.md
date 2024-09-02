@@ -195,11 +195,13 @@ OAuth2.0 Client Credentials flow:
 [Services API](./docs/services.md) - manages Spark services:
 
 - `Spark.services.execute(uri, inputs)` executes a Spark service.
+- `Spark.services.transform(uri, inputs)` executes a Spark service using `Transforms`.
 - `Spark.services.get_versions(uri)` lists all the versions of a service.
 - `Spark.services.get_schema(uri)` gets the schema of a service.
 - `Spark.services.get_metadata(uri)` gets the metadata of a service.
 - `Spark.services.download(uri)` downloads the excel file of a service.
 - `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
+- `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
 
 [Batches API](./docs/batches.md) - manages asynchronous batch processing:
 

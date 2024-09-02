@@ -11,6 +11,12 @@ def execute(services: Spark.Services):
     print(response.data)
 
 
+def transform(services: Spark.Services):
+    inputs = {}  # inputs data
+    response = services.transform('my-folder/my-service', inputs=inputs, using='my-transform', encoding='gzip')
+    print(response.data)
+
+
 def get_schema(services: Spark.Services):
     response = services.get_schema('my-folder/my-service')
     print(response.data)
@@ -38,12 +44,20 @@ def recompile(services: Spark.Services):
     print(response.data)
 
 
+def validate(services: Spark.Services):
+    inputs = {}  # inputs data to validate
+    response = services.validate('my-folder/my-service', inputs=inputs, validation_type='dynamic')
+    print(response.data)
+
+
 if __name__ == '__main__':
     spark = Spark.Client()
     with spark.services as services:
         execute(services)
+        transform(services)
         get_schema(services)
         get_metadata(services)
         get_versions(services)
         download(services)
         recompile(services)
+        validate(services)
