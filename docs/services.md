@@ -115,7 +115,7 @@ spark.services.execute(UriParams(folder='my-folder', service='service', version=
 - using **proxy** endpoints:
   `proxy` is the custom endpoint associated with the service.
 
-```ts
+```py
 spark.services.execute('proxy/custom-endpoint')
 # or
 spark.services.execute(UriParams(proxy='custom-endpoint'))

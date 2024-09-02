@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: SDK Feedback & Support
+    url: https://coherentglobal.atlassian.net/servicedesk/customer/portals
+    about: |
+      Please only file issues here that you believe represent actual bugs or feature
+      requests for the Coherent Spark Python library. If you're having general trouble
+      with Spark APIs or the Spark platform, please visit our service desk to get support.
