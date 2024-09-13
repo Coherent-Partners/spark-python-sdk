@@ -12,6 +12,7 @@
 | `Spark.services.download(uri)`         | [Download the excel file of a service](#download-the-excel-file-of-a-service).|
 | `Spark.services.recompile(uri)`        | [Recompile a service using specific compiler version](#recompile-a-service).  |
 | `Spark.services.validate(uri, data)`   | [Validate input data using static or dynamic validations](#validate-input-data). |
+| `Spark.services.delete(uri)`           | [Delete an existing Spark service](#delete-a-spark-service).                                 |
 
 A Spark service is the representation of your Excel file in the Spark platform.
 
@@ -566,6 +567,39 @@ original format emitted by the API.
     "system": "SPARK",
     "request_timestamp": "1970-01-23T00:58:20.752Z"
   }
+}
+```
+
+## Delete a Spark service
+
+This method allows you to delete an existing Spark service using its folder and
+service names.
+
+> [!WARNING]
+> This method should be used with caution as it will delete the service, including all its
+> versions. Once deleted, the service cannot be recovered.
+
+### Arguments
+
+You may provide the service URI as a string or an object with the folder and service
+names.
+
+```py
+spark.services.delete('my-folder/my-service')
+# or
+spark.services.delete(folder='my-folder', service='my-service')
+```
+
+### Returns
+
+The method returns a successful status when the service is deleted.
+
+```json
+{
+  "status": "Success",
+  "data": null,
+  "message": null,
+  "errorCode": null
 }
 ```
 

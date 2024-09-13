@@ -8,15 +8,13 @@ from typing import Mapping, Optional
 from ._config import Config
 from ._constants import ENV_VARS
 from ._errors import SparkError
+from ._logger import get_logger
 from ._utils import mask
+from ._version import sdk_logger
 from .resources import AccessToken
 from .resources import OAuth2 as OAuthManager
 
 __all__ = ['Authorization', 'OAuth']
-
-CLIENT_ID = os.getenv(ENV_VARS.CLIENT_ID)
-CLIENT_SECRET = os.getenv(ENV_VARS.CLIENT_SECRET)
-OAUTH_PATH = os.getenv(ENV_VARS.OAUTH_PATH)
 
 
 class Authorization:
@@ -29,9 +27,9 @@ class Authorization:
         token: Optional[str] = None,
         oauth: Optional[Mapping[str, str] | str] = None,
     ) -> None:
-        client_id = CLIENT_ID
-        client_secret = CLIENT_SECRET
-        oauth_path = OAUTH_PATH
+        client_id = os.getenv(ENV_VARS.CLIENT_ID)
+        client_secret = os.getenv(ENV_VARS.CLIENT_SECRET)
+        oauth_path = os.getenv(ENV_VARS.OAUTH_PATH)
 
         self._api_key = api_key
         self._token = re.sub(r'(?i)\bBearer\b', '', token).strip() if token else None
@@ -154,19 +152,16 @@ class OAuth:
         )
 
     def retrieve_token(self, config: Config) -> AccessToken:
-        # print('retrieving OAuth2 access token...')  # FIXME: use logger instead
-        manager = OAuthManager(config)
+        logger = get_logger(sdk_logger, disable=not config.logger)
+
         try:
-            self._access_token = manager.get_access_token()
-            if not self._access_token:
-                raise SparkError('no access token found')
-            return self._access_token
-        except SparkError as error:
-            # print(error.message)
-            raise
+            with OAuthManager(config) as manager:
+                logger.info('retrieving OAuth2 access token...')
+                self._access_token = manager.get_access_token()
+                if not self._access_token:
+                    raise SparkError('no access token found')
+                return self._access_token
         except Exception as cause:
-            error = SparkError('cannot retrieve OAuth2 access token', cause)
-            # print(error.message)
+            error = SparkError('failed to retrieve OAuth2 access token', cause)
+            logger.warning(error.message)
             raise error from cause
-        finally:
-            manager.close()
