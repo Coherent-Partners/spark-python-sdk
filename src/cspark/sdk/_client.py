@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Mapping, Optional
+from typing import Any, Mapping, Optional, Union
 
 import cspark.sdk.resources as API
 
 from ._auth import Authorization
 from ._config import BaseUrl, Config
+from ._logger import LoggerOptions
 from .resources._base import download as download_file
 
 __all__ = ['Client']
@@ -24,7 +25,7 @@ class Client:
         retry_interval: Optional[float] = None,
         tenant: Optional[str] = None,
         env: Optional[str] = None,
-        logger: Optional[bool] = True,
+        logger: Union[bool, Mapping[str, Any], LoggerOptions] = True,
     ) -> None:
         self.config = Config(
             base_url=base_url,

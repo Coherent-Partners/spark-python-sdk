@@ -8,6 +8,7 @@ for commit guidelines.
 
 - Add support for deleting a service
 - Remove `httpx` logging handler
+- Add logger options for more personalized logging
 
 ## 0.1.5 (2024-09-02)
 

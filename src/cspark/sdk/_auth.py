@@ -10,7 +10,6 @@ from ._constants import ENV_VARS
 from ._errors import SparkError
 from ._logger import get_logger
 from ._utils import mask
-from ._version import sdk_logger
 from .resources import AccessToken
 from .resources import OAuth2 as OAuthManager
 
@@ -152,7 +151,7 @@ class OAuth:
         )
 
     def retrieve_token(self, config: Config) -> AccessToken:
-        logger = get_logger(sdk_logger, disable=not config.logger)
+        logger = get_logger(**config.logger.__dict__)
 
         try:
             with OAuthManager(config) as manager:
