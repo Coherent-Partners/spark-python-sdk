@@ -2,8 +2,6 @@
 import cspark.sdk as Spark
 from dotenv import load_dotenv
 
-load_dotenv()
-
 
 def execute(services: Spark.Services):
     inputs = {}  # inputs data
@@ -50,7 +48,14 @@ def validate(services: Spark.Services):
     print(response.data)
 
 
+def delete(services: Spark.Services):
+    response = services.delete('my-folder/my-service')
+    print(response.data)
+
+
 if __name__ == '__main__':
+    load_dotenv()
+
     spark = Spark.Client()
     with spark.services as services:
         execute(services)
@@ -61,3 +66,4 @@ if __name__ == '__main__':
         download(services)
         recompile(services)
         validate(services)
+        delete(services)

@@ -4,7 +4,7 @@ import gzip
 import json
 import zlib
 from datetime import datetime
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 from .._config import Config
 from .._constants import SPARK_SDK
@@ -71,8 +71,8 @@ class Services(ApiResource):
             body = {'request_data': {'inputs': executable.inputs}, 'request_meta': metadata.values}
 
         if encoding:
-            content = self.__encode(data=body, encoding=encoding)
-            response = self.request(url, method='POST', content=content, headers=self.__encoding_headers(encoding))
+            content, headers = self.__encode(data=body, encoding=encoding)
+            response = self.request(url, method='POST', content=content, headers=headers)
         else:
             response = self.request(url, method='POST', body=body)
         return ServiceExecuted(response, executable.is_batch, response_format or 'alike')
@@ -124,8 +124,7 @@ class Services(ApiResource):
         url = Uri.of(base_url=self.config.base_url.full, version='api/v4', endpoint=endpoint)
 
         if encoding:
-            content = self.__encode(data=inputs or {}, encoding=encoding)
-            headers = self.__encoding_headers(encoding, extras=metadata.as_header)
+            content, headers = self.__encode(data=inputs or {}, encoding=encoding, extras=metadata.as_header)
             response = self.request(url, method='POST', content=content, headers=headers)
         else:
             response = self.request(url, method='POST', body=inputs or {}, headers=metadata.as_header)
@@ -272,18 +271,30 @@ class Services(ApiResource):
 
         return self.request(url, method='POST', body={'request_data': data})
 
-    def __encode(self, *, data: Any, encoding: str = 'gzip') -> bytes:
+    def delete(
+        self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
+    ):
+        uri = Uri.validate(UriParams(folder, service) if uri is None else Uri.to_params(uri))
+        endpoint = f'product/{uri.folder}/engines/delete/{uri.service}'
+        url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
+
+        return self.request(url, method='DELETE')
+
+    def __encode(
+        self,
+        *,
+        data: Any,
+        encoding: str = 'gzip',
+        content_type: str = 'application/json',
+        extras: Mapping[str, str] = {},
+    ) -> Tuple[bytes, Dict[str, str]]:
+        headers = {'Content-Type': content_type, 'Content-Encoding': encoding, 'Accept-Encoding': encoding, **extras}
         if encoding == 'gzip':
-            return gzip.compress(json.dumps(data).encode('utf-8'))
+            return gzip.compress(json.dumps(data).encode('utf-8')), headers
         if encoding == 'deflate':
-            return zlib.compress(json.dumps(data).encode('utf-8'))
+            return zlib.compress(json.dumps(data).encode('utf-8')), headers
         else:
             raise SparkError.sdk('encoding is not supported', {'encoding': encoding})
-
-    def __encoding_headers(
-        self, encoding: str, *, content_type: str = 'application/json', extras: Mapping[str, str] = {}
-    ) -> Dict[str, str]:
-        return {'Content-Type': content_type, 'Content-Encoding': encoding, 'Accept-Encoding': encoding, **extras}
 
 
 class ServiceExecuted(HttpResponse):

@@ -6,8 +6,6 @@ from typing import Any, Dict, cast
 import cspark.sdk as Spark
 from dotenv import load_dotenv
 
-load_dotenv()
-
 
 def describe(batches: Spark.Batches):
     print(batches.describe().data)
@@ -60,6 +58,8 @@ def create_and_run(batches: Spark.Batches):
 
 
 if __name__ == '__main__':
+    load_dotenv()
+
     spark = Spark.Client()
     with spark.batches as b:
         describe(b)

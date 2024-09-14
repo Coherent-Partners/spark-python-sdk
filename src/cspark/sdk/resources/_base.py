@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import re
 import time
 from dataclasses import dataclass
@@ -11,9 +10,9 @@ from httpx import URL, Client, Headers, Request
 
 from .._config import Config
 from .._errors import SparkError
+from .._logger import get_logger
 from .._utils import get_retry_timeout, get_uuid, is_str_empty, sanitize_uri
-from .._version import about as sdk_info
-from .._version import sdk_ua_header
+from .._version import about, sdk_ua_header
 
 __all__ = ['ApiResource', 'UriParams', 'Uri', 'HttpResponse']
 
@@ -22,15 +21,7 @@ class ApiResource:
     def __init__(self, config: Config):
         self.config = config
         self._client = Client()
-
-        logging.basicConfig(
-            format='[%(name)s] %(asctime)s [%(levelname)s] - %(message)s',
-            datefmt='%m/%d/%Y, %H:%M:%S %p',
-            level=logging.INFO,
-        )
-        # FIXME: Redefine HTTP handler to use the SDK config instead of httpx's.
-        logger = 'cspark.sdk' if not self.config.logger else None  # hack to enable or disable logging
-        self.logger = logging.getLogger(logger)
+        self.logger = get_logger(**config.logger.__dict__)
 
     def __enter__(self):
         return self
@@ -51,7 +42,7 @@ class ApiResource:
     def default_headers(self):
         return {
             **self.config.extra_headers,
-            'User-Agent': sdk_info,
+            'User-Agent': about,
             'x-spark-ua': sdk_ua_header,
             'x-request-id': get_uuid(),
             'x-tenant-name': self.config.base_url.tenant,
