@@ -86,7 +86,7 @@ It is quite flexible and can be configured with the following options:
 
 ### Base URL
 
-`base_url` (default: `os.getenv['CSPARK_BASE_URL']`): indicates the base URL of
+`base_url` (default: `os.getenv['CSPARK_BASE_URL']`) indicates the base URL of
 Coherent Spark APIs. It should include the tenant and environment information.
 
 ```py
@@ -104,7 +104,7 @@ spark = Spark.Client(env='my-env', tenant='my-tenant')
 
 The SDK supports three types of authentication schemes:
 
-- `api_key` (default: `os.getenv['CSPARK_API_KEY']`): indicates the API key
+- `api_key` (default: `os.getenv['CSPARK_API_KEY']`) indicates the API key
   (also known as synthetic key), which is sensitive and should be kept secure.
 
 ```py
@@ -116,7 +116,7 @@ spark = Spark.Client(api_key='my-api-key')
 > of authentication. In that case, you need to set `api_key` to `open` in order to
 > create a `Spark.Client`.
 
-- `token` (default: `os.getenv['CSPARK_BEARER_TOKEN']`): indicates the bearer token.
+- `token` (default: `os.getenv['CSPARK_BEARER_TOKEN']`) indicates the bearer token.
   It can be prefixed with 'Bearer' or not. A bearer token is usually valid for a
   limited time and should be refreshed periodically.
 
@@ -127,7 +127,7 @@ spark = Spark.Client(token='my-access-token') # without prefix
 ```
 
 - `oauth` (default: `os.getenv['CSPARK_CLIENT_ID']` and `os.getenv['CSPARK_CLIENT_SECRET']` or
-  `os.getenv['CSPARK_OAUTH_PATH']`): indicates the OAuth2.0 client credentials.
+  `os.getenv['CSPARK_OAUTH_PATH']`) indicates the OAuth2.0 client credentials.
   You can either provide the client ID and secret directly or the file path to
   the JSON file containing the credentials.
 
@@ -139,19 +139,30 @@ spark = Spark.Client(oauth='path/to/oauth/credentials.json')
 
 ### Additional Settings
 
-- `timeout` (default: `60000` ms): indicates the maximum amount of time that the
+- `timeout` (default: `60000` ms) indicates the maximum amount of time that the
   client should wait for a response from Spark servers before timing out a request.
 
-- `max_retries` (default: `2`): indicates the maximum number of times that the client
+- `max_retries` (default: `2`) indicates the maximum number of times that the client
   will retry a request in case of a temporary failure, such as an unauthorized
   response or a status code greater than 400.
 
-- `retry_interval` (default: `1` second): indicates the delay between each retry.
+- `retry_interval` (default: `1` second) indicates the delay between each retry.
 
-- `logger` (default: `True`): enables or disables logs for the SDK.
+- `logger` (default: `True`) enables or disables the logger for the SDK.
+  - If `bool`, determines whether or not the SDK should print logs.
+  - If `dict`, the SDK will print logs in accordance with the specified keyword arguments.
+  - If `LoggerOptions`, the SDK will print messages based on the specified options:
+    - `context` (default: `CSPARK v{version}`): defines the context of the logs (e.g., `CSPARK v0.1.6`);
+    - `disabled` (default: `False`) determines whether the logger should be disabled.
+    - `colorful` (default: `True`) determines whether the logs should be colorful;
+    - `timestamp` (default: `True`) determines whether the logs should include timestamps;
+    - `datefmt` (default: `'%m/%d/%Y, %I:%M:%S %p'`) defines the date format for the logs;
+    - `level` (default: `DEBUG`) defines the [logging level][logging-level] for the logs.
 
 ```py
 spark = Spark.Client(logger=False)
+# or
+spark = Spark.Client(logger={'colorful': False})
 ```
 
 ## Client Errors
@@ -195,11 +206,14 @@ OAuth2.0 Client Credentials flow:
 [Services API](./docs/services.md) - manages Spark services:
 
 - `Spark.services.execute(uri, inputs)` executes a Spark service.
+- `Spark.services.transform(uri, inputs)` executes a Spark service using `Transforms`.
 - `Spark.services.get_versions(uri)` lists all the versions of a service.
 - `Spark.services.get_schema(uri)` gets the schema of a service.
 - `Spark.services.get_metadata(uri)` gets the metadata of a service.
 - `Spark.services.download(uri)` downloads the excel file of a service.
 - `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
+- `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
+- `Spark.services.delete(uri)` deletes an existing service, including all its versions.
 
 [Batches API](./docs/batches.md) - manages asynchronous batch processing:
 
@@ -243,3 +257,4 @@ conduct, and the process for submitting pull requests.
 [license-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/LICENSE
 [examples]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/examples
 [documentation]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/docs
+[logging-level]: https://docs.python.org/3/library/logging.html#logging-levels

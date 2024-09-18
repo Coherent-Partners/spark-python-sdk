@@ -12,6 +12,11 @@
 | `Spark.services.download(uri)`         | [Download the excel file of a service](#download-the-excel-file-of-a-service).|
 | `Spark.services.recompile(uri)`        | [Recompile a service using specific compiler version](#recompile-a-service).  |
 | `Spark.services.validate(uri, data)`   | [Validate input data using static or dynamic validations](#validate-input-data). |
+<<<<<<< HEAD
+=======
+| `Spark.services.delete(uri)`           | [Delete an existing Spark service](#delete-a-spark-service).                                 |
+
+>>>>>>> dev
 
 A Spark service is the representation of your Excel file in the Spark platform.
 
@@ -115,7 +120,7 @@ spark.services.execute(UriParams(folder='my-folder', service='service', version=
 - using **proxy** endpoints:
   `proxy` is the custom endpoint associated with the service.
 
-```ts
+```py
 spark.services.execute('proxy/custom-endpoint')
 # or
 spark.services.execute(UriParams(proxy='custom-endpoint'))
@@ -571,6 +576,39 @@ original format emitted by the API.
 
 See more examples of [static validation](https://docs.coherent.global/spark-apis/validation-api#validation_type-static)
 and [dynamic validation](https://docs.coherent.global/spark-apis/validation-api#validation_type-dynamic-part-1).
+
+## Delete a Spark service
+
+This method allows you to delete an existing Spark service using its folder and
+service names.
+
+> [!WARNING]
+> This method should be used with caution as it will delete the service, including all its
+> versions. Once deleted, the service cannot be recovered.
+
+### Arguments
+
+You may provide the service URI as a string or an object with the folder and service
+names.
+
+```py
+spark.services.delete('my-folder/my-service')
+# or
+spark.services.delete(folder='my-folder', service='my-service')
+```
+
+### Returns
+
+The method returns a successful status when the service is deleted.
+
+```json
+{
+  "status": "Success",
+  "data": null,
+  "message": null,
+  "errorCode": null
+}
+```
 
 [Back to top](#services-api) or [Next: Batches API](./batches.md)
 

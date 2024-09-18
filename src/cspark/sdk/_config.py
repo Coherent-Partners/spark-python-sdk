@@ -3,11 +3,12 @@ from __future__ import annotations
 import json
 import os
 import re
-from typing import Mapping, Optional, cast
+from typing import Any, Mapping, Optional, Union, cast
 from urllib.parse import urlparse
 
 from ._constants import *
 from ._errors import SparkError
+from ._logger import LoggerOptions
 from ._utils import is_str_empty
 from ._validators import Validators
 
@@ -16,6 +17,7 @@ __all__ = ['Config', 'BaseUrl']
 
 class Config:
     _options: str
+    _logger: LoggerOptions
     extra_headers: Mapping[str, str] = {}
 
     def __init__(
@@ -30,7 +32,7 @@ class Config:
         retry_interval: Optional[float] = DEFAULT_RETRY_INTERVAL,
         tenant: Optional[str] = None,
         env: Optional[str] = None,
-        logger: Optional[bool] = True,
+        logger: Union[bool, Mapping[str, Any], LoggerOptions] = True,
     ) -> None:
         from ._auth import Authorization  # NOTE: help avoid circular import
 
@@ -45,7 +47,7 @@ class Config:
         self._timeout = timeout if num_validator.is_valid(timeout) else DEFAULT_TIMEOUT_IN_MS
         self._max_retries = max_retries if num_validator.is_valid(max_retries) else DEFAULT_MAX_RETRIES
         self._retry_interval = retry_interval if num_validator.is_valid(retry_interval) else DEFAULT_RETRY_INTERVAL
-        self._logger = logger
+        self._logger = LoggerOptions.when(logger)
         self._env = self._base_url.env
 
         self._options = str(
@@ -87,8 +89,8 @@ class Config:
         return cast(float, self._retry_interval)
 
     @property
-    def logger(self) -> bool:
-        return cast(bool, self._logger or False)
+    def logger(self) -> LoggerOptions:
+        return self._logger
 
     def copy_with(
         self,

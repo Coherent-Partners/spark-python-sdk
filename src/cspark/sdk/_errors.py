@@ -111,29 +111,29 @@ class SparkApiError(SparkError):
     @staticmethod
     def when(status: int, error: ErrorMessage) -> SparkApiError:
         if status == 0:
-            return InternetError(error, 0)
+            return InternetError(error, status)
         elif status == 400:
-            return BadRequestError(error, 400)
+            return BadRequestError(error, status)
         elif status == 401:
-            return UnauthorizedError(error, 401)
+            return UnauthorizedError(error, status)
         elif status == 403:
-            return ForbiddenError(error, 403)
+            return ForbiddenError(error, status)
         elif status == 404:
-            return NotFoundError(error, 404)
+            return NotFoundError(error, status)
         elif status == 409:
-            return ConflictError(error, 409)
+            return ConflictError(error, status)
         elif status == 415:
-            return UnsupportedMediaTypeError(error, 415)
+            return UnsupportedMediaTypeError(error, status)
         elif status == 422:
-            return UnprocessableEntityError(error, 422)
+            return UnprocessableEntityError(error, status)
         elif status == 429:
-            return RateLimitError(error, 429)
+            return RateLimitError(error, status)
         elif status == 500:
-            return InternalServerError(error, 500)
+            return InternalServerError(error, status)
         elif status == 503:
-            return ServiceUnavailableError(error, 503)
+            return ServiceUnavailableError(error, status)
         elif status == 504:
-            return GatewayTimeoutError(error, 504)
+            return GatewayTimeoutError(error, status)
         else:
             return UnknownApiError(error)
 
