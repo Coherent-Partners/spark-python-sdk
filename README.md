@@ -156,7 +156,7 @@ spark = Spark.Client(oauth='path/to/oauth/credentials.json')
     - `disabled` (default: `False`) determines whether the logger should be disabled.
     - `colorful` (default: `True`) determines whether the logs should be colorful;
     - `timestamp` (default: `True`) determines whether the logs should include timestamps;
-    - `datefmt` (default: `'%Y-%m-%d %H:%M:%S'`) defines the date format for the logs;
+    - `datefmt` (default: `'%m/%d/%Y, %I:%M:%S %p'`) defines the date format for the logs;
     - `level` (default: `DEBUG`) defines the [logging level][logging-level] for the logs.
 
 ```py
@@ -213,6 +213,7 @@ OAuth2.0 Client Credentials flow:
 - `Spark.services.download(uri)` downloads the excel file of a service.
 - `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
 - `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
+- `Spark.services.delete(uri)` deletes an existing service, including all its versions.
 
 [Batches API](./docs/batches.md) - manages asynchronous batch processing:
 

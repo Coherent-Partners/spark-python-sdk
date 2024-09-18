@@ -570,6 +570,9 @@ original format emitted by the API.
 }
 ```
 
+See more examples of [static validation](https://docs.coherent.global/spark-apis/validation-api#validation_type-static)
+and [dynamic validation](https://docs.coherent.global/spark-apis/validation-api#validation_type-dynamic-part-1).
+
 ## Delete a Spark service
 
 This method allows you to delete an existing Spark service using its folder and
@@ -602,9 +605,6 @@ The method returns a successful status when the service is deleted.
   "errorCode": null
 }
 ```
-
-See more examples of [static validation](https://docs.coherent.global/spark-apis/validation-api#validation_type-static)
-and [dynamic validation](https://docs.coherent.global/spark-apis/validation-api#validation_type-dynamic-part-1).
 
 [Back to top](#services-api) or [Next: Batches API](./batches.md)
 
