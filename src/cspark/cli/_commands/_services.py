@@ -4,8 +4,8 @@ import click
 from cspark.sdk import Client, SparkError
 
 
-@click.group(name='services', help='Manages Spark services')
-def services_group():
+@click.group(name='services', help='Manage Spark services')
+def services_cmd():
     pass
 
 
@@ -51,4 +51,4 @@ class ServicesListCommand(click.Command):
             sys.exit(1)
 
 
-services_group.add_command(ServicesListCommand())
+services_cmd.add_command(ServicesListCommand())

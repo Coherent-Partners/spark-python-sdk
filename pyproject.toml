@@ -51,7 +51,10 @@ dev-dependencies = [
 
 [project.optional-dependencies]
 cli = [
-  "click==8.*"
+  "click==8.*",
+  "pyyaml>=6.0.0",
+  "rich>=10",
+  "InquirerPy==0.3.*",
 ]
 
 [project.scripts]

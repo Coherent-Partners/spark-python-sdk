@@ -1,9 +1,11 @@
 import click
 
-from ._auth import auth_group
-from ._services import services_group
+from ._auth import auth_cmd
+from ._config import config_cmd
+from ._services import services_cmd
 
 
 def register_commands(cli: click.Group) -> None:
-    cli.add_command(auth_group)
-    cli.add_command(services_group)
+    cli.add_command(auth_cmd)
+    cli.add_command(config_cmd)
+    cli.add_command(services_cmd)
