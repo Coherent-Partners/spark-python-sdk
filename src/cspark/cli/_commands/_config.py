@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import logging
 from datetime import datetime
 
@@ -11,8 +10,11 @@ from cspark.sdk._version import sdk_logger
 from InquirerPy import inquirer
 from InquirerPy.validator import PathValidator
 from rich.console import Console
+from rich.text import Text
 
-from .._utils import Profile, load_profiles, update_profile, get_active_profile
+from .._utils import Profile, delete_profile, get_active_profile, load_profiles, update_profile
+
+_SPARK_ENVS = ['uat.us', 'uat.eu', 'uat.jp', 'uat.ca', 'uat.au', 'us', 'ca', 'eu', 'jp', 'au', 'sit', 'dev', 'test']
 
 
 @click.group(name='config', help='Set up Spark configuration profiles', invoke_without_command=True)
@@ -22,7 +24,7 @@ from .._utils import Profile, load_profiles, update_profile, get_active_profile
     type=bool,
     is_flag=True,
     default=False,
-    help='Add a configuration profile to use',
+    help='Add a configuration profile to connect to Spark',
 )
 @click.pass_context
 def config_cmd(ctx: click.Context, profile: bool):
@@ -35,8 +37,15 @@ def config_cmd(ctx: click.Context, profile: bool):
         click.echo(ctx.get_help())
 
 
+@click.command(name='init', help='Create a profile for a better CLI experience')
+def init_cmd():
+    # FIXME: improve welcome message.
+    Console().print('Welcome to Coherent Spark CLI!\n\n🚀 Set up a new configuration profile')
+    build_profile()
+
+
 def build_profile():
-    profiles = load_profiles()
+    profiles = load_profiles(is_init=True)
 
     profile_name = _collect_profile_name([p.name for p in profiles])
     base_url = _collect_base_url()
@@ -71,6 +80,7 @@ def _collect_profile_name(old_names: list[str]) -> str:
     return inquirer.text(  # type: ignore
         message='Enter profile name:',
         validate=lambda entry: len(entry) > 0 and entry not in old_names,
+        filter=lambda entry: entry.strip(),
         invalid_message='Profile name is required and must be unique!',
     ).execute()
 
@@ -102,12 +112,11 @@ def _collect_base_url() -> str:
             ).execute()
             base_url = BaseUrl.of(url=url, tenant=tenant).full
     else:
-        envs = ['uat.us', 'uat.eu', 'uat.jp', 'uat.ca', 'uat.au', 'us', 'ca', 'eu', 'jp', 'au', 'sit', 'dev', 'test']
         env = inquirer.text(  # type: ignore
             message='Enter environment:',
             validate=is_empty_str,
             invalid_message='Environment is required',
-            completer={e: None for e in envs},
+            completer={e: None for e in _SPARK_ENVS},
         ).execute()
         tenant = inquirer.text(  # type: ignore
             message='Enter tenant name:',
@@ -120,12 +129,7 @@ def _collect_base_url() -> str:
         message=f'Is this base URL correct: {base_url}?', default=True
     ).execute()
 
-    while not confirm_url:
-        base_url = _collect_base_url()
-        confirm_url = inquirer.confirm(  # type: ignore
-            message=f'Is this base URL correct: {base_url}?', default=True
-        ).execute()
-    return base_url
+    return base_url if confirm_url else _collect_base_url()
 
 
 def _collect_auth():
@@ -213,11 +217,37 @@ def _collect_advanced_settings():
     return float(timeout), int(max_retries), float(retry_interval)
 
 
+class ConfigSwitchCommand(click.Command):
+    def __init__(self):
+        super().__init__(
+            name='switch',
+            help='Switch between different configuration profiles',
+            options_metavar='',
+            add_help_option=False,
+            callback=self.switch,
+        )
+
+    def switch(self):
+        profiles = load_profiles()
+        selected = inquirer.select(  # type: ignore
+            message='Select profile to switch to:',
+            choices=[p.name for p in profiles],
+        ).execute()
+
+        for p in profiles:
+            if p.name == selected:
+                p.is_active = True
+                update_profile(p)
+                break
+
+        Console().print(f'🔄 Profile switched to [magenta]{selected}[/magenta]!')
+
+
 class ConfigSetCommand(click.Command):
     def __init__(self):
         super().__init__(
             name='set',
-            help='Set configuration values',
+            help='Set configuration values of the active profile',
             options_metavar='',
             add_help_option=False,
             callback=self.set,
@@ -230,8 +260,8 @@ class ConfigSetCommand(click.Command):
             try:
                 key, val = value.split('=')
                 updates[key] = val
-            except ValueError:
-                raise click.UsageError(f'invalid format: {value}; expected format: <key>=<value>')
+            except ValueError as err:
+                raise click.UsageError(f'invalid format: {value}; expected format: <key>=<value>') from err
 
         if len(updates) == 0:
             raise click.UsageError('no configuration values to set')
@@ -254,7 +284,7 @@ class ConfigGetCommand(click.Command):
     def __init__(self):
         super().__init__(
             name='get',
-            help='Read configuration values',
+            help='Read configuration values of the active profile',
             callback=self.get,
             options_metavar='',
             add_help_option=False,
@@ -269,9 +299,9 @@ class ConfigGetCommand(click.Command):
         key = key.lower()
         if key in ['tenant', 'env', 'environment', 'url']:
             self._get_url_keys(key, profile)
-            return
-
-        if key in profile.__dict__.keys():
+        elif key in ['auth', 'oauth', 'oauth2']:
+            self._get_auth_keys(key, profile)
+        elif key in profile.__dict__.keys():
             click.echo(profile.__dict__[key])
         else:
             raise click.UsageError(f'"{key}" is not valid key')
@@ -285,19 +315,57 @@ class ConfigGetCommand(click.Command):
         else:
             click.echo(url.env)
 
+    def _get_auth_keys(self, key: str, profile: Profile):
+        auth = profile.mask_auth(show=True)
+        if key == 'auth':
+            for k, v in auth.items():
+                click.echo(f'{k.ljust(7)}: {v}')
+        else:
+            click.echo(auth.get('oauth'))
+
 
 class ConfigListCommand(click.Command):
     def __init__(self):
         super().__init__(
             name='list',
-            help='List configuration profiles\' names',
+            help='List configuration profiles',
             options_metavar='',
             add_help_option=False,
-            callback=self.list
+            callback=self.list,
+            params=[
+                click.Option(
+                    ['-a', '--all'],
+                    is_flag=True,
+                    default=False,
+                    type=bool,
+                    help='Display details of all existing profiles',
+                ),
+                click.Option(
+                    ['-v', '--verbose'],
+                    is_flag=True,
+                    default=False,
+                    type=bool,
+                    help='Display additional details of a profile',
+                ),
+            ],
         )
 
-    def list(self):
+    def list(self, all: bool, verbose: bool):
         profiles = load_profiles()
+
+        if not all and not verbose:
+            self._inlined_list(profiles)
+        elif all:
+            for idx, profile in enumerate(profiles):
+                self._display_profile(profile, nl=idx < len(profiles) - 1, verbose=verbose)
+        else:
+            profile = get_active_profile()
+            if profile:
+                self._display_profile(profile, nl=False, verbose=verbose)
+            else:
+                raise click.UsageError('No active profile found!')
+
+    def _inlined_list(self, profiles: list[Profile]):
         console = Console()
         for p in profiles:
             if p.is_active:
@@ -305,7 +373,80 @@ class ConfigListCommand(click.Command):
             else:
                 console.print(f'  {p.name}')
 
+    def _display_profile(self, profile: Profile, verbose: bool = False, nl: bool = False):
+        url = profile.extract_url()
 
+        console = Console()
+        console.print(Text(f'{profile.name}', style=f"{'magenta' if profile.is_active else ''}"))
+        console.print(f'  - base URL: {url.value}')
+        console.print(f'  - tenant  : {url.tenant}')
+        for key, value in profile.mask_auth().items():
+            console.print(f'  - {key.ljust(8)}: {value}')
+
+        if verbose:
+
+            def date(d):
+                return datetime.fromisoformat(d).strftime('%Y-%m-%d %I:%M:%S %p')
+
+            console.print(f'  [cyan]other settings[/cyan]')
+            console.print(f'    - logger     : [yellow]{"enabled" if profile.logger else "disabled"}[/yellow]')
+            console.print(f'    - timeout    : {profile.timeout}')
+            console.print(f'    - interval   : {profile.retry_interval}')
+            console.print(f'    - max retries: {profile.max_retries}')
+            console.print(f'    - updated at : {date(profile.updated_at)}')  # type: ignore
+
+        if nl:
+            console.print()
+
+
+class ConfigRemoveCommand(click.Command):
+    def __init__(self):
+        super().__init__(
+            name='rm',
+            help='Remove a configuration profile',
+            options_metavar='',
+            add_help_option=False,
+            callback=self.remove,
+            params=[click.Option(['-f', '--force'], is_flag=True, default=False, help='Force removal of a profile')],
+        )
+
+    def remove(self, force: bool):
+        profiles = load_profiles()
+        console = Console()
+
+        if len(profiles) == 1:
+            if force:
+                delete_profile(profiles[0])
+                console.print('[red]✗[/red] Active profile removed')
+            else:
+                console.print(f'[yellow]WARNING: only one profile exists =>[/yellow] {profiles[0].name}')
+                console.print('Use [green]--force[/green] to remove the active profile!')
+                return
+        else:
+            selected = inquirer.select(  # type: ignore
+                message='Select profile to remove:',
+                choices=[p.name for p in profiles],
+            ).execute()
+
+            for p in profiles:
+                if p.name != selected:
+                    continue
+
+                if p.is_active and not force:
+                    console.print(
+                        f'[magenta]{selected}[/magenta] is the active profile; use [green]--force[/green] '
+                        'to remove it or switch to another profile before removing it.\n'
+                        'Use [green]cspark config switch[/green] to switch profiles.\n'
+                        '[yellow]WARNING: Removing the active profile will fallback to the next available profile.[/yellow]'
+                    )
+                else:
+                    delete_profile(p)
+                    Console().print(f'[red]✗[/red] Profile [magenta]{selected}[/magenta] removed')
+                break
+
+
+config_cmd.add_command(ConfigSwitchCommand())
 config_cmd.add_command(ConfigSetCommand())
 config_cmd.add_command(ConfigGetCommand())
 config_cmd.add_command(ConfigListCommand())
+config_cmd.add_command(ConfigRemoveCommand())
