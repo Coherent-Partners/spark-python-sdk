@@ -8,8 +8,8 @@ import yaml
 from cspark.sdk import BaseUrl, LoggerOptions, SparkError
 from rich.console import Console
 
-_HOME_DIR = pathlib.Path.home() / '.cspark'
-_PROFILE_PATH = _HOME_DIR / 'profiles.yml'
+HOME_DIR = pathlib.Path.home() / '.cspark'
+_PROFILE_PATH = HOME_DIR / 'profiles.yml'
 
 
 class NoProfileError(click.UsageError):
@@ -37,9 +37,12 @@ class Profile:
     logger: Union[bool, LoggerOptions] = False
 
     def mask_auth(self, show: bool = False) -> dict[str, str]:
+        def mask(s, count=24):
+            return (s or '')[:4] + '*' * count + (s or '')[-4:]
+
         auth = dict[str, str]()
         if self.api_key:
-            auth['api_key'] = self.api_key if show else mask(self.api_key)
+            auth['api_key'] = self.api_key if show else mask(self.api_key, 12)
         if self.token:
             auth['token'] = self.token if show else mask(self.token)
         if self.oauth_path:
@@ -91,6 +94,15 @@ class Profile:
             raise click.UsageError('client_secret is required')
 
 
+def create_profile():
+    path = _PROFILE_PATH
+    if path.exists():
+        return
+
+    with path.open('w') as file:
+        yaml.dump({'version': '1.0', 'profile': '', 'accounts': []}, file, sort_keys=False)
+
+
 def load_profiles(is_init: bool = False) -> List[Profile]:
     path = _PROFILE_PATH
     if not path.exists():
@@ -110,7 +122,7 @@ def load_profiles(is_init: bool = False) -> List[Profile]:
                 '[red]ERROR: no profile has been set yet...[/red]'
                 '\n💡 Use [green]cspark init[/green] to create and set an active profile.'
             )
-            click.exceptions.Exit(2)
+            click.exceptions.Exit(1)
         return profiles
     raise ValueError(f'unsupported profile version: {version}')
 
@@ -174,25 +186,12 @@ def delete_profile(profile: Union[str, Profile]):
         yaml.dump(data, file, sort_keys=False)
 
 
-def create_profile():
-    path = _PROFILE_PATH
-    if path.exists():
-        return
-
-    with path.open('w') as file:
-        yaml.dump({'version': '1.0', 'profile': '', 'accounts': []}, file, sort_keys=False)
-
-
 def get_active_profile() -> Optional[Profile]:
     profiles = load_profiles()
     for profile in profiles:
         if profile.is_active:
             return profile
     return None
-
-
-def mask(s):
-    return (s or '')[:4] + '*' * 12
 
 
 def _parse_v1(account: dict, active: str) -> 'Profile':
