@@ -1,3 +1,4 @@
+import json
 import pathlib
 import re
 from dataclasses import dataclass
@@ -8,6 +9,7 @@ import yaml
 from cspark.sdk import BaseUrl, LoggerOptions, SparkError
 from rich.console import Console
 
+DATE_FORMAT = '%Y-%m-%d %I:%M:%S %p'
 HOME_DIR = pathlib.Path.home() / '.cspark'
 _PROFILE_PATH = HOME_DIR / 'profiles.yml'
 
@@ -85,6 +87,26 @@ class Profile:
 
         return {k: v for k, v in d.items() if v is not None}
 
+    def to_config(self) -> dict:
+        d = self.to_dict()
+        del d['name']
+        del d['created_at']
+        del d['updated_at']
+
+        path = HOME_DIR / f'{self.name}_auth.json'
+        if path.exists():
+            with path.open('r') as file:
+                auth = json.load(file)
+                d.update({'token': auth.get('access_token')})
+                d.pop('auth', None)
+        else:
+            auth = d.pop('auth', {})
+            oauth = auth.pop('oauth', {})
+            d.update({'oauth': oauth['path']} if 'path' in oauth else oauth)  # reshape oauth
+            d.update(auth)
+
+        return d
+
     def _validate(self):
         if not self.base_url:
             raise click.UsageError('base_url is required')
@@ -122,7 +144,7 @@ def load_profiles(is_init: bool = False) -> List[Profile]:
                 '[red]ERROR: no profile has been set yet...[/red]'
                 '\n💡 Use [green]cspark init[/green] to create and set an active profile.'
             )
-            click.exceptions.Exit(1)
+            raise click.exceptions.Exit(1)
         return profiles
     raise ValueError(f'unsupported profile version: {version}')
 
@@ -186,12 +208,12 @@ def delete_profile(profile: Union[str, Profile]):
         yaml.dump(data, file, sort_keys=False)
 
 
-def get_active_profile() -> Optional[Profile]:
+def get_active_profile() -> Profile:
     profiles = load_profiles()
     for profile in profiles:
         if profile.is_active:
             return profile
-    return None
+    raise NoProfileError()
 
 
 def _parse_v1(account: dict, active: str) -> 'Profile':

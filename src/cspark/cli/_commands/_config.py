@@ -12,7 +12,7 @@ from InquirerPy.validator import PathValidator
 from rich.console import Console
 from rich.text import Text
 
-from .._utils import Profile, delete_profile, get_active_profile, load_profiles, update_profile
+from .._utils import DATE_FORMAT, Profile, delete_profile, get_active_profile, load_profiles, update_profile
 
 _SPARK_ENVS = ['uat.us', 'uat.eu', 'uat.jp', 'uat.ca', 'uat.au', 'us', 'ca', 'eu', 'jp', 'au', 'sit', 'dev', 'test']
 
@@ -267,9 +267,6 @@ class ConfigSetCommand(click.Command):
             raise click.UsageError('no configuration values to set')
 
         profile = get_active_profile()
-        if profile is None:
-            raise click.UsageError('no profile has been set yet')
-
         all_keys = profile.__dict__.keys()
         for key, val in updates.items():
             if key in all_keys:
@@ -293,13 +290,11 @@ class ConfigGetCommand(click.Command):
 
     def get(self, key: str):
         profile = get_active_profile()
-        if profile is None:
-            raise click.UsageError('no profile has been set yet')
 
         key = key.lower()
         if key in ['tenant', 'env', 'environment', 'url']:
             self._get_url_keys(key, profile)
-        elif key in ['auth', 'oauth', 'oauth2']:
+        elif key in ['auth', 'oauth']:
             self._get_auth_keys(key, profile)
         elif key in profile.__dict__.keys():
             click.echo(profile.__dict__[key])
@@ -319,9 +314,18 @@ class ConfigGetCommand(click.Command):
         auth = profile.mask_auth(show=True)
         if key == 'auth':
             for k, v in auth.items():
-                click.echo(f'{k.ljust(7)}: {v}')
+                click.echo(f'{k}: {v}')
         else:
-            click.echo(auth.get('oauth'))
+            config = profile.to_config()
+            if 'oauth' in config:
+                oauth = config['oauth']
+                if isinstance(oauth, dict):
+                    for k, v in oauth.items():
+                        click.echo(f'{k}: {v}')
+                else:
+                    click.echo(oauth)
+            else:
+                click.echo(config.get('token'))
 
 
 class ConfigListCommand(click.Command):
@@ -354,18 +358,17 @@ class ConfigListCommand(click.Command):
         profiles = load_profiles()
 
         if not all and not verbose:
-            self._inlined_list(profiles)
+            self._show_profiles(profiles)
         elif all:
             for idx, profile in enumerate(profiles):
                 self._display_profile(profile, nl=idx < len(profiles) - 1, verbose=verbose)
         else:
-            profile = get_active_profile()
-            if profile:
-                self._display_profile(profile, nl=False, verbose=verbose)
-            else:
-                raise click.UsageError('No active profile found!')
+            for profile in profiles:
+                if profile.is_active:
+                    self._display_profile(profile, nl=False, verbose=verbose)
+                    break
 
-    def _inlined_list(self, profiles: list[Profile]):
+    def _show_profiles(self, profiles: list[Profile]):
         console = Console()
         for p in profiles:
             if p.is_active:
@@ -384,16 +387,13 @@ class ConfigListCommand(click.Command):
             console.print(f'  - {key.ljust(8)}: {value}')
 
         if verbose:
-
-            def date(d):
-                return datetime.fromisoformat(d).strftime('%Y-%m-%d %I:%M:%S %p')
-
+            updated_at = datetime.fromisoformat(profile.updated_at).strftime(DATE_FORMAT)
             console.print(f'  [cyan]other settings[/cyan]')
             console.print(f'    - logger     : [yellow]{"enabled" if profile.logger else "disabled"}[/yellow]')
             console.print(f'    - timeout    : {profile.timeout}')
             console.print(f'    - interval   : {profile.retry_interval}')
             console.print(f'    - max retries: {profile.max_retries}')
-            console.print(f'    - updated at : {date(profile.updated_at)}')  # type: ignore
+            console.print(f'    - updated at : {updated_at}')
 
         if nl:
             console.print()
