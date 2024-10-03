@@ -231,6 +231,10 @@ OAuth2.0 Client Credentials flow:
 
 - `Spark.logs.rehydrate(uri, call_id)` rehydrates the executed model into the original Excel file.
 
+[ImpEx API](./docs/impex.md) - imports and exports Spark services:
+
+- `Spark.impex.export(data)` exports Spark entities (versions, services, or folders).
+
 [Other APIs](./docs/misc.md) - for other functionalities:
 
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.

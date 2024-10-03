@@ -102,7 +102,7 @@ with spark.logs as logs:
         print(response.data) # print download info
 ```
 
-[Back to top](#log-history-api) or [Next: Other APIs](./misc.md)
+[Back to top](#log-history-api) or [Next: ImpEx API](./impex.md)
 
 <!-- References -->
 

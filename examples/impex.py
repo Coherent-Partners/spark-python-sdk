@@ -1,4 +1,3 @@
-#!/usr/bin/env -S rye run python
 import cspark.sdk as Spark
 from dotenv import load_dotenv
 
@@ -19,10 +18,18 @@ def download(wasm: Spark.Wasm):
     save_file(response.buffer, 'wasm.zip')
 
 
+def export_entities_with(impex: Spark.ImpEx):
+    downloadables = impex.export(services=['my-folder/my-service'], max_retries=5, retry_interval=3)
+    for count, download in enumerate(downloadables):
+        save_file(download.buffer, f'exported-{count}.zip')
+
+
 if __name__ == '__main__':
     load_dotenv()
     download_file()
 
     spark = Spark.Client()
+    export_entities_with(spark.impex)
+
     with spark.wasm as wasm:
         download(wasm)
