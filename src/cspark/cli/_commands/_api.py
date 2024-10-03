@@ -1,19 +1,20 @@
 import json
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Mapping, Optional, Union
 
 import click
 from cspark.sdk import ApiResource, Uri
 
 
 def header_option(**kwargs: Any) -> Callable:
-    """Define a decorator that applies click.option with dynamic parameters"""
+    """Define a decorator that applies headers to a command"""
 
     def decorator(func: Union[Callable, click.Command]) -> Union[Callable, click.Command]:
         return click.option(
             '-H',
             '--header',
+            'headers',
             type=str,
-            multiple=True,  # allows multiple headers to be provided
+            multiple=True,  # allows multiple headers
             help='Headers to send with the request (e.g., "x-my-header: value")',
             metavar='<HEADER>',
             **kwargs,
@@ -22,12 +23,47 @@ def header_option(**kwargs: Any) -> Callable:
     return decorator
 
 
-def parse_headers(headers: list[str]) -> dict[str, str]:
-    parsed_headers = {}
-    for header in headers:
-        key, value = header.split(':', 1)
-        parsed_headers[key.strip()] = value.strip()
-    return parsed_headers
+def params_option(**kwargs: Any) -> Callable:
+    """Define a decorator that applies parameters to a command"""
+
+    def decorator(func: Union[Callable, click.Command]) -> Union[Callable, click.Command]:
+        return click.option(
+            '-p',
+            '--param',
+            'params',
+            type=str,
+            multiple=True,  # allows multiple params
+            help='additional parameters (or metadata) supported',
+            metavar='<PARAM>',
+            **kwargs,
+        )(func)
+
+    return decorator
+
+
+def parse_kv_pairs(pairs: list[str], *, sep: str = ':', infer_type: bool = False) -> dict:
+    """Parse a list of key-value pairs into a dictionary"""
+
+    def _infer_type(value: str):
+        _value = value.strip().lower()
+        if _value == 'true':
+            return True
+        elif _value == 'false':
+            return False
+        try:
+            if '.' in _value:
+                return float(_value)
+            else:
+                return int(_value)
+        except ValueError:
+            return value  # default to string
+
+    parsed = {}
+    for pair in pairs:
+        key, value = pair.split(sep, 1)
+        parsed[key.strip()] = _infer_type(value.strip()) if infer_type else value.strip()
+
+    return parsed
 
 
 class Services(ApiResource):
@@ -36,3 +72,39 @@ class Services(ApiResource):
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
         body = {'page': 1, 'pageSize': 100, 'search': [], 'sort': 'name1'}
         return self.request(url, method='POST', body=body.update(json.loads(data)) if data else body)
+
+
+class AliasedGroup(click.Group):
+    """A click Group that allows aliases to be defined"""
+
+    def __init__(self, *, name: str, aliases: Optional[Mapping[str, str]] = None, **attrs: Any) -> None:
+        self.aliases = aliases or {}
+        super().__init__(name=name, **attrs)
+
+    def get_command(self, ctx: click.Context, cmd_name: str):
+        rv = click.Group.get_command(self, ctx, cmd_name)
+        if rv is not None:
+            return rv
+
+        if cmd_name in self.aliases:
+            actual_cmd = self.aliases[cmd_name]
+            return click.Group.get_command(self, ctx, actual_cmd)
+
+        # NOTE: is this a good idea?
+        # Alternative option: if we did not find an explicit alias we
+        # allow automatic abbreviation of the command.  "execute" for
+        # instance will match "exec".  We only allow that however if
+        # there is only one command.
+        # matches = [x for x in self.list_commands(ctx) if x.lower().startswith(cmd_name.lower())]
+
+        # if not matches:
+        #     return None
+        # elif len(matches) == 1:
+        #     return click.Group.get_command(self, ctx, matches[0])
+        # ctx.fail(f"too many matches: {', '.join(sorted(matches))}")
+        return None
+
+    def resolve_command(self, ctx, args):
+        # always return the command's name, not the alias
+        _, cmd, args = super().resolve_command(ctx, args)
+        return cmd.name, cmd, args  # type: ignore

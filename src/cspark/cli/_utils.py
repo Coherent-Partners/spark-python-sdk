@@ -2,6 +2,7 @@ import json
 import pathlib
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from typing import List, Optional, Union
 
 import click
@@ -87,6 +88,26 @@ class Profile:
 
         return {k: v for k, v in d.items() if v is not None}
 
+    @staticmethod
+    def from_dict(data: dict) -> 'Profile':
+        now = datetime.now().isoformat()
+        return Profile(
+            name=data.get('name', ''),
+            is_active=True,
+            created_at=now,
+            updated_at=now,
+            base_url=data.get('base_url', ''),
+            api_key=data.get('api_key'),
+            token=data.get('token'),
+            client_id=data.get('client_id'),
+            client_secret=data.get('client_secret'),
+            oauth_path=data.get('oauth_path'),
+            timeout=data.get('timeout'),
+            max_retries=data.get('max_retries'),
+            retry_interval=data.get('retry_interval'),
+            logger=LoggerOptions(**data.get('logger', {})) if data.get('logger') else False,
+        )
+
     def to_config(self) -> dict:
         d = self.to_dict()
         del d['name']
@@ -108,6 +129,8 @@ class Profile:
         return d
 
     def _validate(self):
+        if not self.name:
+            raise click.UsageError('profile name is required')
         if not self.base_url:
             raise click.UsageError('base_url is required')
         if not self.api_key and not self.token and not self.client_id and not self.oauth_path:
@@ -149,7 +172,7 @@ def load_profiles(is_init: bool = False) -> List[Profile]:
     raise ValueError(f'unsupported profile version: {version}')
 
 
-def update_profile(updated: Profile):
+def add_or_update_profile(updated: Profile):
     updated._validate()
 
     path = _PROFILE_PATH
@@ -164,19 +187,20 @@ def update_profile(updated: Profile):
 
     for i, account in enumerate(accounts):
         if account.get('name') == updated.name:
-            accounts[i] = updated.to_dict()
+            accounts[i] = updated.to_dict()  # update existing profile
             if updated.is_active and updated.name != active_profile_name:
                 data['profile'] = updated.name
             break
     else:
         if updated.is_active:
             data['profile'] = updated.name
-        accounts.append(updated.to_dict())
+        accounts.append(updated.to_dict())  # add new profile
 
     data['accounts'] = accounts
 
     with path.open('w') as file:
         yaml.dump(data, file, sort_keys=False)
+    return updated
 
 
 def delete_profile(profile: Union[str, Profile]):

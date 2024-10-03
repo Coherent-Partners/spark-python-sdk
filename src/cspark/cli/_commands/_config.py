@@ -1,9 +1,11 @@
-from __future__ import annotations
-
+import json
 import logging
+import pathlib
 from datetime import datetime
+from typing import List, Optional, Union
 
 import click
+import yaml
 from cspark.sdk import BaseUrl, LoggerOptions, SparkError
 from cspark.sdk._validators import Validators
 from cspark.sdk._version import sdk_logger
@@ -12,12 +14,19 @@ from InquirerPy.validator import PathValidator
 from rich.console import Console
 from rich.text import Text
 
-from .._utils import DATE_FORMAT, Profile, delete_profile, get_active_profile, load_profiles, update_profile
+from .._utils import DATE_FORMAT, Profile, add_or_update_profile, delete_profile, get_active_profile, load_profiles
+from ._api import AliasedGroup
 
 _SPARK_ENVS = ['uat.us', 'uat.eu', 'uat.jp', 'uat.ca', 'uat.au', 'us', 'ca', 'eu', 'jp', 'au', 'sit', 'dev', 'test']
 
 
-@click.group(name='config', help='Set up Spark configuration profiles', invoke_without_command=True)
+@click.group(
+    name='config',
+    help='Manage configuration profiles',
+    invoke_without_command=True,
+    cls=AliasedGroup,
+    aliases={'ls': 'list', 'rm': 'remove', 'del': 'remove'},
+)
 @click.option(
     '-p',
     '--profile',
@@ -37,11 +46,54 @@ def config_cmd(ctx: click.Context, profile: bool):
         click.echo(ctx.get_help())
 
 
-@click.command(name='init', help='Create a profile for a better CLI experience')
-def init_cmd():
-    # FIXME: improve welcome message.
-    Console().print('Welcome to Coherent Spark CLI!\n\n🚀 Set up a new configuration profile')
-    build_profile()
+@click.command(name='init', help='Start a new configuration profile')
+@click.option(
+    '-f',
+    '--file',
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, writable=True, readable=True),
+    metavar='<CONFIG PATH>',
+    help='Path to the configuration file',
+)
+@click.option('--config', type=str, metavar='<JSON>', help='Configuration profile in JSON format')
+def init_cmd(file: Union[pathlib.Path, str, None], config: Optional[str]):
+    def msg(name):
+        return f'[green]✓[/green] Profile [magenta]{name}[/magenta] created and set as active'
+
+    console = Console()
+    if file:
+        profile = load_config_file(pathlib.Path(file))
+        add_or_update_profile(profile)
+        console.print(msg(profile.name))
+    elif config:
+        try:
+            profile = Profile.from_dict(json.loads(config))
+            add_or_update_profile(profile)
+            console.print(msg(profile.name))
+        except json.JSONDecodeError as err:
+            Console().print('[red]✗[/red] Invalid JSON configuration')
+            raise click.exceptions.Exit(1) from err
+    else:
+        # FIXME: improve welcome message.
+        console.print('Welcome to Coherent Spark CLI!\n\n🚀 Build a configuration profile to connect to Spark')
+        build_profile()
+
+
+def load_config_file(file: pathlib.Path) -> Profile:
+    if not file.exists():
+        Console().print(f'[red]✗[/red] File not found: {file}')
+        raise click.exceptions.Exit(1)
+
+    try:
+        if file.suffix.lower() in ['.yml', '.yaml']:
+            with file.open() as f:
+                config = yaml.safe_load(f)
+        else:
+            with file.open() as f:
+                config = json.load(f)
+        return Profile.from_dict(config)
+    except (yaml.YAMLError, json.JSONDecodeError) as err:
+        Console().print(f'[red]✗[/red] Invalid configuration file: {file}')
+        raise click.exceptions.Exit(1) from err
 
 
 def build_profile():
@@ -72,7 +124,7 @@ def build_profile():
         retry_interval=retry_interval,
     )
 
-    update_profile(profile)
+    add_or_update_profile(profile)
     Console().print(f'[green]✓[/green] Profile [magenta]{profile_name}[/magenta] created and set as active')
 
 
@@ -166,7 +218,7 @@ def _collect_auth():
     return auth
 
 
-def _collect_logger_options() -> bool | LoggerOptions:
+def _collect_logger_options() -> Union[bool, LoggerOptions]:
     enabled = inquirer.confirm(message='Enable logger?', default=False).execute()  # type: ignore
 
     if not enabled:
@@ -237,7 +289,7 @@ class ConfigSwitchCommand(click.Command):
         for p in profiles:
             if p.name == selected:
                 p.is_active = True
-                update_profile(p)
+                add_or_update_profile(p)
                 break
 
         Console().print(f'🔄 Profile switched to [magenta]{selected}[/magenta]!')
@@ -273,7 +325,7 @@ class ConfigSetCommand(click.Command):
                 profile.__dict__[key] = val
 
         profile.updated_at = datetime.now().isoformat()
-        update_profile(profile)
+        add_or_update_profile(profile)
         Console().print(f'Profile [magenta]{profile.name}[/magenta] updated!')
 
 
@@ -368,7 +420,7 @@ class ConfigListCommand(click.Command):
                     self._display_profile(profile, nl=False, verbose=verbose)
                     break
 
-    def _show_profiles(self, profiles: list[Profile]):
+    def _show_profiles(self, profiles: List[Profile]):
         console = Console()
         for p in profiles:
             if p.is_active:
@@ -402,7 +454,7 @@ class ConfigListCommand(click.Command):
 class ConfigRemoveCommand(click.Command):
     def __init__(self):
         super().__init__(
-            name='rm',
+            name='remove',
             help='Remove a configuration profile',
             options_metavar='',
             add_help_option=False,
@@ -425,7 +477,7 @@ class ConfigRemoveCommand(click.Command):
         else:
             selected = inquirer.select(  # type: ignore
                 message='Select profile to remove:',
-                choices=[p.name for p in profiles],
+                choices=[p.name for p in profiles] + ['<Cancel>'],
             ).execute()
 
             for p in profiles:
