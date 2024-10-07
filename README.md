@@ -234,6 +234,7 @@ OAuth2.0 Client Credentials flow:
 [ImpEx API](./docs/impex.md) - imports and exports Spark services:
 
 - `Spark.impex.export(data)` exports Spark entities (versions, services, or folders).
+- `Spark.impex.run_import(data)` imports previously exported Spark entities into the Spark platform.
 
 [Other APIs](./docs/misc.md) - for other functionalities:
 

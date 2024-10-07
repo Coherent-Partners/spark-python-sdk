@@ -24,12 +24,19 @@ def export_entities_with(impex: Spark.ImpEx):
         save_file(download.buffer, f'exported-{count}.zip')
 
 
+def import_entities_with(impex: Spark.ImpEx):
+    destination = {'source': 'my-folder/my-service', 'target': 'this-folder/my-service', 'upgrade': 'patch'}
+    response = impex.run_import(destination, file=open('exported.zip', 'rb'), max_retries=7, retry_interval=3)
+    print(response.data)
+
+
 if __name__ == '__main__':
     load_dotenv()
     download_file()
 
     spark = Spark.Client()
     export_entities_with(spark.impex)
+    import_entities_with(spark.impex)
 
     with spark.wasm as wasm:
         download(wasm)
