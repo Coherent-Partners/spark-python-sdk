@@ -182,7 +182,6 @@ Some of the derived `SparkApiError` are:
 
 | Type                      | Status | When                           |
 | ------------------------- | ------ | ------------------------------ |
-| `InternetError`           | 0      | no internet access             |
 | `BadRequestError`         | 400    | invalid request                |
 | `UnauthorizedError`       | 401    | missing or invalid credentials |
 | `ForbiddenError`          | 403    | insufficient permissions       |
@@ -231,6 +230,7 @@ OAuth2.0 Client Credentials flow:
 [Log History API](./docs/history.md) - manages service execution logs:
 
 - `Spark.logs.rehydrate(uri, call_id)` rehydrates the executed model into the original Excel file.
+- `Spark.logs.download(data)` downloads service execution logs as `csv` or `json` file.
 
 [ImpEx API](./docs/impex.md) - imports and exports Spark services:
 

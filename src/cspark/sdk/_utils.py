@@ -111,11 +111,11 @@ class DateUtils:
         months: int = 0,
         days: int = 0,
     ) -> Tuple[datetime, datetime]:
-        start_date = DateUtils._to_datetime(start) if start else datetime.now()
+        start_date = DateUtils.to_datetime(start) if start else datetime.now()
 
         # Calculate the end date
         if end and DateUtils.is_after(end, start_date):
-            end_date = DateUtils._to_datetime(end)
+            end_date = DateUtils.to_datetime(end)
         else:
             # Handling months overflow manually
             year = start_date.year + years
@@ -132,14 +132,14 @@ class DateUtils:
 
     @staticmethod
     def is_before(date: Union[str, int, datetime], when: datetime) -> bool:
-        return DateUtils._to_datetime(date) < when
+        return DateUtils.to_datetime(date) < when
 
     @staticmethod
     def is_after(date: Union[str, int, datetime], when: datetime) -> bool:
-        return DateUtils._to_datetime(date) > when
+        return DateUtils.to_datetime(date) > when
 
     @staticmethod
-    def _to_datetime(value: Union[str, int, datetime]) -> datetime:
+    def to_datetime(value: Union[str, int, datetime]) -> datetime:
         if isinstance(value, datetime):
             return value
         if isinstance(value, int):

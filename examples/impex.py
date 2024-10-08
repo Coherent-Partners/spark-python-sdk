@@ -32,11 +32,22 @@ def import_entities_with(impex: Spark.ImpEx):
 
 if __name__ == '__main__':
     load_dotenv()
-    download_file()
 
-    spark = Spark.Client()
-    export_entities_with(spark.impex)
-    import_entities_with(spark.impex)
+    try:
+        download_file()
 
-    with spark.wasm as wasm:
-        download(wasm)
+        spark = Spark.Client()
+        export_entities_with(spark.impex)
+        import_entities_with(spark.impex)
+
+        with spark.wasm as wasm:
+            download(wasm)
+    except Spark.SparkSdkError as err:
+        print(err.message)
+        if err.cause:
+            print(err.details)
+    except Spark.SparkApiError as err:
+        print(err.message)
+        print(err.details)
+    except Exception as exc:
+        print(f'Unknown error: {exc}')

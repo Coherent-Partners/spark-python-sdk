@@ -90,4 +90,4 @@ if __name__ == '__main__':
         print(err.message)
         print(err.details)
     except Exception as exc:
-        print(exc)
+        print(f'Unknown error: {exc}')

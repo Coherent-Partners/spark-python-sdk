@@ -1,4 +1,3 @@
-#!/usr/bin/env -S rye run python
 from typing import cast
 
 import cspark.sdk as Spark
@@ -24,5 +23,15 @@ def retrieve_token():
 
 
 if __name__ == '__main__':
-    retrieve_token()
-    print_logs()
+    try:
+        retrieve_token()
+        print_logs()
+    except Spark.SparkSdkError as err:
+        print(err.message)
+        if err.cause:
+            print(err.details)
+    except Spark.SparkApiError as err:
+        print(err.message)
+        print(err.details)
+    except Exception as exc:
+        print(f'Unknown error: {exc}')

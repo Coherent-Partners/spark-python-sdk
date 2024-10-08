@@ -13,6 +13,8 @@ for commit guidelines.
   - Upload and compile a service
   - Poll its status until completion
   - Publish the service
+- Enable log download for a service execution
+- Get a service schema by version ID
 
 ## 0.1.6 (2024-09-13)
 

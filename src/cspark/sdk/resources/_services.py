@@ -292,10 +292,15 @@ class Services(ApiResource):
         return self.request(url, method='POST', body=body)
 
     def get_schema(
-        self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        version_id: Optional[str] = None,
     ):
-        uri = Uri.validate(UriParams(folder=folder, service=service) if uri is None else Uri.to_params(uri))
-        endpoint = f'product/{uri.folder}/engines/get/{uri.service}'
+        uri = Uri.validate(Uri.to_params(uri) if uri else UriParams(folder, service, version_id=version_id))
+        endpoint = f'product/{uri.folder}/engines/get/{uri.service}/{uri.version_id or ""}'
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
 
         return self.request(url)
