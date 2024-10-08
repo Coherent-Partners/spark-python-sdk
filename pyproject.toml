@@ -49,6 +49,17 @@ dev-dependencies = [
   "anyio>=4.4.0",
 ]
 
+[project.optional-dependencies]
+cli = [
+  "click==8.*",
+  "pyyaml>=6.0.0",
+  "rich>=10",
+  "InquirerPy==0.3.*",
+]
+
+[project.scripts]
+cspark = "cspark.cli:main"
+
 [tool.rye.scripts]
 format = { chain = ["ruff format", "ruff check --fix ."] }
 lint = { chain = ["format", "pyright"] }
