@@ -4,6 +4,7 @@
 
 | Verb                                   | Description                                                                   |
 | -------------------------------------- | ----------------------------------------------------------------------------- |
+| `Spark.services.create(data)`          | [Create a new Spark service](#create-a-new-spark-service).                    |
 | `Spark.services.execute(uri, inputs)`  | [Execute a Spark service](#execute-a-spark-service).                          |
 | `Spark.services.transform(uri, inputs)`| [Execute a Spark service using Transforms](#execute-a-spark-service-using-transforms).|
 | `Spark.services.get_versions(uri)`     | [Get all the versions of a service](#get-all-the-versions-of-a-service).      |
@@ -11,10 +12,137 @@
 | `Spark.services.get_metadata(uri)`     | [Get the metadata of a service](#get-the-metadata-of-a-service).              |
 | `Spark.services.download(uri)`         | [Download the excel file of a service](#download-the-excel-file-of-a-service).|
 | `Spark.services.recompile(uri)`        | [Recompile a service using specific compiler version](#recompile-a-service).  |
-| `Spark.services.validate(uri, data)`   | [Validate input data using static or dynamic validations](#validate-input-data). |
-| `Spark.services.delete(uri)`           | [Delete an existing Spark service](#delete-a-spark-service).                                 |
+| `Spark.services.validate(uri, data)`   | [Validate input data using static or dynamic validations](#validate-input-data).|
+| `Spark.services.delete(uri)`           | [Delete an existing Spark service](#delete-a-spark-service).                  |
 
 A Spark service is the representation of your Excel file in the Spark platform.
+
+## Create a new Spark service
+
+This method helps you create a new service in Spark by uploading the Excel file,
+compiling it into a [WASM module](./misc.md), and then publishing a new version
+of it as a service.
+
+If you're uncertain of how to prepare an Excel file for Spark, take a look at the
+[User Guide](https://docs.coherent.global/getting-started-in-5-minutes) for more
+information.
+
+> [!IMPORTANT]
+> You must create a folder before you can create a service.
+
+### Arguments
+
+This method accepts the following keyword arguments:
+
+| Property         | Type          | Description                                              |
+| ---------------- | ------------- | -------------------------------------------------------- |
+| _name_           | `str`         | The service name.                                        |
+| _folder_         | `str`         | The folder name.                                         |
+| _file_           | `BinaryIO`    | The binary file (e.g., `open('path/to/file.xlsx', 'rb')`).|
+| _file\_name_     | `None \| str` | The name of the Excel file (defaults to service `name`). |
+| _versioning_     | `major \| minor \| patch`| How to increment the service version (defaults to `minor`).|
+| _start\_date_    | `None \| str \| int \| datetime` | The effective start date (defaults to `datetime.now()` ).|
+| _end\_date_      | `None \| str \| int \| datetime` | The effective end date (defaults to 10 years later).|
+| _draft\_name_    | `None \| str`   | This overrides the `service` name to a custom name.                 |
+| _track\_user_    | `None \| bool`  | Track the user who created the service (defaults to `False`).       |
+| _max\_retries_   | `None \| int`   | The number of retries to attempt (defaults to `Config.max_retries`).|
+| _retry\_interval_| `None \| float` | The interval between retries in seconds (defaults to `Config.retry_interval`).|
+
+```python
+spark.services.create(
+    name='my-service',
+    folder='my-folder',
+    versioning='patch',
+    track_user=True,
+    file=open('path/to/my-service.xlsx', 'rb'),
+    max_retries=10,
+    retry_interval=3,
+)
+```
+
+Depending on the size of the Excel file and the complexity of the service, this
+method may take a while to run. Do allocate enough time for the method to complete.
+That is, `max_retries` and `retry_interval` are provided to help you extend the
+timeout period.
+
+Here's a hierarchy of the service creation process:
+
+- `Spark.services.create` (1)
+  - `Spark.services.compile` (2)
+    - `Spark.services.compilation.initiate` (3)
+    - `Spark.services.compilation.get_status` (4)
+  - `Spark.services.publish` (5)
+
+If you want to have more control, you can invoke the methods in the hierarchy
+individually. For example, if you only want to compile the service, you can call
+`Spark.services.compile(...)` directly, which will only execute steps (3) and (4).
+
+### Returns
+
+This method returns a JSON with detailed information on the upload, compilation,
+and publication processes.
+
+```json
+{
+  "upload": {
+    "status": "Success",
+    "response_data": {
+      "lines_of_code": 13,
+      "hours_saved": 0.01,
+      "nodegen_compilation_jobid": "uuid",
+      "original_file_documentid": "uuid",
+      "engine_file_documentid": "uuid",
+      "warnings": [],
+      "current_statistics": null,
+      "no_of_sheets": 1,
+      "no_of_inputs": 4,
+      "no_of_outputs": 2,
+      "no_of_formulas": 2,
+      "no_of_cellswithdata": 42
+    },
+    "response_meta": {
+      "service_id": "uuid",
+      "version_id": "uuid",
+      "version": "0.1.0",
+      "process_time": 68,
+      "call_id": null,
+      "compiler_type": "Neuron",
+      "compiler_version": null,
+      "source_hash": null,
+      "engine_id": null,
+      "correlation_id": null,
+      "parameterset_version_id": null,
+      "system": "SPARK",
+      "request_timestamp": "1970-01-23T04:56:07.890Z"
+    },
+    "error": null
+  },
+  "compilation": {
+    "status": "Success",
+    "response_data": {
+      "status": "Success",
+      "last_error_message": "null",
+      "progress": 100
+    },
+    "response_meta": {
+      "system": "SPARK",
+      "request_timestamp": "1970-01-23T04:56:07.890Z"
+    },
+    "error": null
+  },
+  "publication": {
+    "status": "Success",
+    "response_data": {
+      "version_id": "uuid"
+    },
+    "response_meta": {
+      "system": "SPARK",
+      "request_timestamp": "1970-01-23T04:56:07.890Z"
+    },
+    "error": null
+  }
+}
+```
 
 ## Execute a Spark service
 

@@ -11,6 +11,7 @@ Additional information can be found on [Spark's User Guide](https://docs.coheren
 - [Services API](./services.md)
 - [Batches API](./batches.md)
 - [Log History API](./history.md)
+- [ImpEx API](./impex.md)
 - [Other APIs](./misc.md)
 
 ## Getting Started

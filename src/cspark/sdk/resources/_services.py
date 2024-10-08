@@ -1,23 +1,131 @@
-from __future__ import annotations
-
 import gzip
 import json
+import time
 import zlib
 from datetime import datetime
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, BinaryIO, Dict, List, Mapping, Optional, Tuple, Union
 
-from .._config import Config
 from .._constants import SPARK_SDK
 from .._errors import SparkError
-from .._utils import DateUtils, is_str_not_empty, join_list_str
+from .._utils import DateUtils, get_retry_timeout, is_str_not_empty, join_list_str
 from ._base import ApiResource, HttpResponse, Uri, UriParams
 
 __all__ = ['Services', 'ServiceExecuted']
 
 
 class Services(ApiResource):
-    def __init__(self, config: Config):
-        super().__init__(config)
+    @property
+    def compilation(self):
+        return Compilation(self.config)
+
+    def create(
+        self,
+        name: str,
+        *,
+        folder: str,
+        file: BinaryIO,
+        file_name: Optional[str] = None,
+        draft_name: Optional[str] = None,
+        versioning: Optional[str] = None,
+        start_date: Union[None, str, int, datetime] = None,
+        end_date: Union[None, str, int, datetime] = None,
+        track_user: Optional[bool] = False,
+        max_retries: Optional[int] = None,
+        retry_interval: Optional[float] = None,
+    ):
+        compiled = self.compile(
+            folder=folder,
+            service=name,
+            file=file,
+            file_name=file_name,
+            versioning=versioning,
+            start_date=start_date,
+            end_date=end_date,
+            max_retries=max_retries,
+            retry_interval=retry_interval,
+        )
+        upload = compiled['upload'].get('response_data', {})
+
+        published = self.publish(
+            folder=folder,
+            service=name,
+            file_id=upload.get('original_file_documentid'),
+            engine_id=upload.get('engine_file_documentid'),
+            draft_name=draft_name,
+            versioning=versioning,
+            start_date=start_date,
+            end_date=end_date,
+            track_user=track_user,
+        )
+        return {**compiled, 'publication': published.data}
+
+    def compile(
+        self,
+        *,
+        folder: str,
+        service: str,
+        file: BinaryIO,
+        file_name: Optional[str] = None,
+        versioning: Optional[str] = None,
+        start_date: Union[None, str, int, datetime] = None,
+        end_date: Union[None, str, int, datetime] = None,
+        max_retries: Optional[int] = None,
+        retry_interval: Optional[float] = None,
+    ):
+        with self.compilation as compilation:
+            upload = compilation.initiate(
+                folder=folder,
+                service=service,
+                file=file,
+                file_name=file_name,
+                versioning=versioning,
+                start_date=start_date,
+                end_date=end_date,
+            )
+
+            status = compilation.get_status(
+                job_id=isinstance(upload.data, dict)
+                and upload.data.get('response_data', {}).get('nodegen_compilation_jobid')
+                or '',  # NOTE: this should never happen (only bypassing type checker)
+                folder=folder,
+                service=service,
+                max_retries=max_retries,
+                retry_interval=retry_interval,
+            )
+            return {'upload': upload.data, 'compilation': status.data}
+
+    def publish(
+        self,
+        folder: str,
+        service: str,
+        file_id: str,
+        engine_id: str,
+        draft_name: Optional[str] = None,
+        versioning: Optional[str] = None,
+        start_date: Union[None, str, int, datetime] = None,
+        end_date: Union[None, str, int, datetime] = None,
+        track_user: Optional[bool] = False,
+    ):
+        startdate, enddate = DateUtils.parse(start_date, end_date)
+        uri = Uri.validate(UriParams(folder, service))
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='publish')
+        body = {
+            'request_data': {
+                'draft_service_name': draft_name or uri.service,
+                'effective_start_date': startdate.isoformat(),
+                'effective_end_date': enddate.isoformat(),
+                'original_file_documentid': file_id,
+                'engine_file_documentid': engine_id,
+                'version_difference': versioning or 'minor',
+                'should_track_user_action': track_user,
+            }
+        }
+
+        response = self.request(url, method='POST', body=body)
+        version_id = isinstance(response.data, dict) and response.data.get('response_data', {}).get('version_id')
+        if version_id:
+            self.logger.info(f'service published with version id <{version_id}>')
+        return response
 
     def execute(
         self,
@@ -430,3 +538,74 @@ class _ExecuteMeta:
         # NOTE: this has to be a single line string: "'{\"call_purpose\":\"Single Execution\"}'"
         value = json.dumps({k: v for k, v in self.values.items() if v is not None}, separators=(',', ':'))
         return {'x-meta' if self._is_batch else 'x-request-meta': "'{}'".format(value)}
+
+
+class Compilation(ApiResource):
+    def initiate(
+        self,
+        folder: str,
+        service: str,
+        file: BinaryIO,
+        file_name: Optional[str] = None,
+        versioning: Optional[str] = None,
+        start_date: Union[None, str, int, datetime] = None,
+        end_date: Union[None, str, int, datetime] = None,
+    ):
+        startdate, enddate = DateUtils.parse(start_date, end_date)
+        uri = Uri.validate(UriParams(folder, service))
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='upload')
+
+        metadata = {
+            'request_data': {
+                'effective_start_date': startdate.isoformat(),
+                'effective_end_date': enddate.isoformat(),
+                'version_difference': versioning or 'minor',
+            }
+        }
+        form = {'engineUploadRequestEntity': json.dumps(metadata)}
+        files = {'serviceFile': (file_name or f'{uri.service}.xlsx', file)}
+
+        response = self.request(url, method='POST', form=form, files=files)
+        if isinstance(response.data, dict) and response.data.get('response_data'):
+            doc_id = response.data.get('response_data', {}).get('original_file_documentid')
+            self.logger.info(f'service file uploaded <{doc_id}>')
+        return response
+
+    def get_status(
+        self,
+        folder: str,
+        service: str,
+        job_id: str,
+        max_retries: Optional[int] = None,
+        retry_interval: Optional[float] = None,
+        throwable: bool = True,
+    ):
+        """Polls the compilation job status until it's completed or timed out."""
+        max_retries = max_retries or self.config.max_retries
+        retry_interval = retry_interval or self.config.retry_interval
+
+        uri = Uri.validate(UriParams(folder, service))
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint=f'getcompilationprogess/{job_id}')
+
+        retries = 0
+        response = self.request(url)
+        while True:
+            response_data = isinstance(response.data, dict) and response.data.get('response_data', {}) or {}
+            progress, status = response_data.get('progress', 0), response_data.get('status')
+
+            if progress == 100 and status == 'Success':
+                return response
+
+            if progress < 100 and retries < max_retries:
+                self.logger.info(f'waiting for compilation job to complete - {progress}%')
+
+                retries += 1
+                time.sleep(get_retry_timeout(retries, retry_interval))
+                response = self.request(url)
+            else:
+                if throwable:
+                    error = SparkError.sdk(f'compilation job status check timed out after {retries} attempts')
+                    self.logger.error(error.message)
+                    raise error
+                self.logger.warning(f'compilation job status check timed out after {retries} attempts')
+                return response

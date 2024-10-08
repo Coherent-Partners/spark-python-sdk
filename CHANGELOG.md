@@ -4,11 +4,15 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
-## 0.1.7 (2024-10-07)
+## 0.1.7 (2024-10-08)
 
 - Add support for ImpEx API
   - Export Spark entities (versions, services, or folders)
   - Import Spark entities
+- Add support for service creation
+  - Upload and compile a service
+  - Poll its status until completion
+  - Publish the service
 
 ## 0.1.6 (2024-09-13)
 

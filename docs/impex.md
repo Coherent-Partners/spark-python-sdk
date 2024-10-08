@@ -5,7 +5,7 @@
 | Verb                          | Description                                                                       |
 | ----------------------------- | --------------------------------------------------------------------------------- |
 | `Spark.impex.export(data)`    | [Export Spark entities (versions, services, or folders)](#export-spark-entities). |
-| `Spark.impex.run_import(data)`| [Import exported Spark entities into your workspace](#import-spark-entities).     |
+| `Spark.impex.import_(data)`| [Import exported Spark entities into your workspace](#import-spark-entities).     |
 
 ## Export Spark entities
 
@@ -102,7 +102,7 @@ Check out the [API reference](https://docs.coherent.global/spark-apis/impex-apis
 for more information.
 
 ```python
-spark.impex.run_import(
+spark.impex.import_(
     destination={'source': 'my-folder/my-service', 'target': 'this-folder/my-service', 'upgrade': 'patch'},
     file=open('exported.zip', 'rb'),
     max_retries=7,

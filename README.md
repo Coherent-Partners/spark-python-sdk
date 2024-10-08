@@ -205,6 +205,7 @@ OAuth2.0 Client Credentials flow:
 
 [Services API](./docs/services.md) - manages Spark services:
 
+- `Spark.services.create(data)` creates a new Spark service.
 - `Spark.services.execute(uri, inputs)` executes a Spark service.
 - `Spark.services.transform(uri, inputs)` executes a Spark service using `Transforms`.
 - `Spark.services.get_versions(uri)` lists all the versions of a service.
@@ -234,7 +235,7 @@ OAuth2.0 Client Credentials flow:
 [ImpEx API](./docs/impex.md) - imports and exports Spark services:
 
 - `Spark.impex.export(data)` exports Spark entities (versions, services, or folders).
-- `Spark.impex.run_import(data)` imports previously exported Spark entities into the Spark platform.
+- `Spark.impex.import_(data)` imports previously exported Spark entities into the platform.
 
 [Other APIs](./docs/misc.md) - for other functionalities:
 

@@ -68,7 +68,7 @@ class ImpEx:
 
             return exporter.download([f['file'] for f in files])
 
-    def run_import(
+    def import_(
         self,
         destination: Union[str, List[str], Mapping[str, str], List[Mapping[str, str]]],
         file: BinaryIO,
