@@ -1,4 +1,3 @@
-#!/usr/bin/env -S rye run python
 import cspark.sdk as Spark
 from dotenv import load_dotenv
 
@@ -19,10 +18,36 @@ def download(wasm: Spark.Wasm):
     save_file(response.buffer, 'wasm.zip')
 
 
+def export_entities_with(impex: Spark.ImpEx):
+    downloadables = impex.export(services=['my-folder/my-service'], max_retries=5, retry_interval=3)
+    for count, download in enumerate(downloadables):
+        save_file(download.buffer, f'exported-{count}.zip')
+
+
+def import_entities_with(impex: Spark.ImpEx):
+    destination = {'source': 'my-folder/my-service', 'target': 'this-folder/my-service', 'upgrade': 'patch'}
+    response = impex.import_(destination, file=open('exported.zip', 'rb'), max_retries=7, retry_interval=3)
+    print(response.data)
+
+
 if __name__ == '__main__':
     load_dotenv()
-    download_file()
 
-    spark = Spark.Client()
-    with spark.wasm as wasm:
-        download(wasm)
+    try:
+        download_file()
+
+        spark = Spark.Client()
+        export_entities_with(spark.impex)
+        import_entities_with(spark.impex)
+
+        with spark.wasm as wasm:
+            download(wasm)
+    except Spark.SparkSdkError as err:
+        print(err.message)
+        if err.cause:
+            print(err.details)
+    except Spark.SparkApiError as err:
+        print(err.message)
+        print(err.details)
+    except Exception as exc:
+        print(f'Unknown error: {exc}')

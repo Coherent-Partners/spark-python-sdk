@@ -57,7 +57,7 @@ to authenticate to the Spark platform and access its APIs. Follow [this guide][b
 learn how to access your bearer token.
 
 Sometimes, a bearer token is prefixed with the word 'Bearer'. But the SDK will know
-how to handle it whether you choose it to prefix your token or not. You can set a
+how to handle it whether you choose to prefix your token or not. You can set a
 token directly or define it in the environment variable `CSPARK_BEARER_TOKEN`.
 
 ```py
@@ -110,6 +110,10 @@ variables and use a library like [python-dotenv] to load them into your applicat
 Creating a `Spark.Client` instance now becomes as simple as:
 
 ```py
+import cspark.sdk as Spark
+from dotenv import load_dotenv
+
+load_dotenv()
 spark = Spark.Client()
 ```
 
@@ -120,7 +124,7 @@ spark = Spark.Client()
 ## Good to Know
 
 When using OAuth2.0 client credentials, the SDK will automatically refresh the
-bearer token when it expires. You can also generate or refresh the token manually.
+access token when it expires. You can also generate or refresh the token manually.
 
 ```py
 spark = Spark.Client(oauth='path/to/my/credentials.json')

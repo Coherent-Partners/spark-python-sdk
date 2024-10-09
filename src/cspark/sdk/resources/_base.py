@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from types import TracebackType
 from typing import Any, Mapping, Optional, Union
 
-from httpx import URL, Client, Headers, Request
+from httpx import URL, Client, Headers, Request, Response
 
 from .._config import Config
 from .._errors import SparkError
@@ -95,26 +95,18 @@ class ApiResource:
             url = str(request.url)
             raise SparkError.api(
                 status,
-                {
-                    'message': f'failed to fetch <{url}>',
-                    'cause': {
-                        'request': {
-                            'url': url,
-                            'method': request.method,
-                            'headers': request.headers,
-                            'body': request.content,
-                        },
-                        'response': {
-                            'headers': response.headers,
-                            'body': response.text,
-                            'raw': response.content,
-                        },
-                    },
-                },
+                {'message': f'failed to fetch <{url}>', 'cause': _create_api_error_cause(request, response)},
             )
 
         # otherwise, ok response
-        http_response = {'status': status, 'data': None, 'buffer': response.content, 'headers': response.headers}
+        http_response = {
+            'status': status,
+            'data': None,
+            'buffer': response.content,
+            'headers': response.headers,
+            'raw_request': request,
+            'raw_response': response,
+        }
 
         content_type = response.headers.get('content-type', '')
         if 'application/json' in content_type:
@@ -145,30 +137,35 @@ def download(
             json=body,
             timeout=timeout,
         )
+
         response = client.send(request)
-        status = response.status_code
-        if status >= 400:
-            raise SparkError.api(
-                response.status_code,
-                {
-                    'message': f'failed to download content from <{request.url}>',
-                    'cause': {
-                        'request': {
-                            'url': str(request.url),
-                            'method': request.method,
-                            'headers': request.headers,
-                            'body': request.content,
-                        },
-                        'response': {
-                            'headers': response.headers,
-                            'body': response.text,
-                            'raw': response.content,
-                        },
-                    },
-                },
-            )
-        http_response = {'status': status, 'data': None, 'buffer': response.content, 'headers': response.headers}
-        return HttpResponse(**http_response)
+        if response.status_code >= 400:
+            raise SparkError.api(response.status_code, _create_api_error_cause(request, response))
+
+        return HttpResponse(
+            status=response.status_code,
+            data=None,
+            buffer=response.content,
+            headers=response.headers,
+            raw_request=request,
+            raw_response=response,
+        )
+
+
+def _create_api_error_cause(request: Request, response: Response) -> dict[str, Any]:
+    return {
+        'request': {
+            'url': str(request.url),
+            'method': request.method,
+            'headers': request.headers,
+            'body': request.content,
+        },
+        'response': {
+            'headers': response.headers,
+            'body': response.text,
+            'raw': response.content,
+        },
+    }
 
 
 @dataclass
@@ -177,6 +174,8 @@ class HttpResponse:
     data: Union[None, Any, str]
     buffer: bytes
     headers: Headers
+    raw_request: Request
+    raw_response: Response
 
     def copy_with(self, **kwargs) -> 'HttpResponse':
         return HttpResponse(
@@ -184,6 +183,8 @@ class HttpResponse:
             data=kwargs.get('data', self.data),
             buffer=kwargs.get('buffer', self.buffer),
             headers=kwargs.get('headers', self.headers),
+            raw_request=kwargs.get('request', self.raw_request),
+            raw_response=kwargs.get('response', self.raw_response),
         )
 
 

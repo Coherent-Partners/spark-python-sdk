@@ -14,7 +14,7 @@ by creating a new issue.
 ## Installation
 
 ```bash
-pip install -U cspark
+pip install cspark # or pip install 'cspark[cli]' for CLI support.
 ```
 
 > 🫣 This Python library requires [Python 3.7+](https://www.python.org/downloads/).
@@ -156,7 +156,7 @@ spark = Spark.Client(oauth='path/to/oauth/credentials.json')
     - `disabled` (default: `False`) determines whether the logger should be disabled.
     - `colorful` (default: `True`) determines whether the logs should be colorful;
     - `timestamp` (default: `True`) determines whether the logs should include timestamps;
-    - `datefmt` (default: `'%Y-%m-%d %H:%M:%S'`) defines the date format for the logs;
+    - `datefmt` (default: `'%m/%d/%Y, %I:%M:%S %p'`) defines the date format for the logs;
     - `level` (default: `DEBUG`) defines the [logging level][logging-level] for the logs.
 
 ```py
@@ -182,7 +182,6 @@ Some of the derived `SparkApiError` are:
 
 | Type                      | Status | When                           |
 | ------------------------- | ------ | ------------------------------ |
-| `InternetError`           | 0      | no internet access             |
 | `BadRequestError`         | 400    | invalid request                |
 | `UnauthorizedError`       | 401    | missing or invalid credentials |
 | `ForbiddenError`          | 403    | insufficient permissions       |
@@ -205,6 +204,7 @@ OAuth2.0 Client Credentials flow:
 
 [Services API](./docs/services.md) - manages Spark services:
 
+- `Spark.services.create(data)` creates a new Spark service.
 - `Spark.services.execute(uri, inputs)` executes a Spark service.
 - `Spark.services.transform(uri, inputs)` executes a Spark service using `Transforms`.
 - `Spark.services.get_versions(uri)` lists all the versions of a service.
@@ -213,6 +213,7 @@ OAuth2.0 Client Credentials flow:
 - `Spark.services.download(uri)` downloads the excel file of a service.
 - `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
 - `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
+- `Spark.services.delete(uri)` deletes an existing service, including all its versions.
 
 [Batches API](./docs/batches.md) - manages asynchronous batch processing:
 
@@ -229,6 +230,12 @@ OAuth2.0 Client Credentials flow:
 [Log History API](./docs/history.md) - manages service execution logs:
 
 - `Spark.logs.rehydrate(uri, call_id)` rehydrates the executed model into the original Excel file.
+- `Spark.logs.download(data)` downloads service execution logs as `csv` or `json` file.
+
+[ImpEx API](./docs/impex.md) - imports and exports Spark services:
+
+- `Spark.impex.export(data)` exports Spark entities (versions, services, or folders).
+- `Spark.impex.import_(data)` imports previously exported Spark entities into the platform.
 
 [Other APIs](./docs/misc.md) - for other functionalities:
 

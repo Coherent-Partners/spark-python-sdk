@@ -245,7 +245,7 @@ class Pipeline(ApiResource):
                         f'chunk id <{id}> is duplicated for this pipeline <{self._id}> '
                         f'and has been replaced with <{chunk.id}>'
                     )
-            self._chunks[chunk.id] = chunk.size or len(chunk.data.inputs)  # FIXME: len(...) is wrong for JSON array.
+            self._chunks[chunk.id] = chunk.size or len(chunk.data.inputs)
             assessed.append(chunk.to_dict())
         return assessed
 
@@ -258,9 +258,6 @@ def create_chunks(
     summary: Optional[Dict[str, Any]] = None,
 ) -> List[BatchChunk]:
     """Creates a list of batch chunks from a given dataset."""
-    if not isinstance(dataset, list):
-        raise SparkError.sdk('invalid data format\nexpecting a list of inputs', dataset)
-
     length = len(dataset)
     chunk_size = max(1, chunk_size)
     batch_size = math.ceil(length / chunk_size)

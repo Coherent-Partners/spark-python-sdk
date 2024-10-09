@@ -1,6 +1,19 @@
-#!/usr/bin/env -S rye run python
+import json
+
 import cspark.sdk as Spark
 from dotenv import load_dotenv
+
+
+def create(services: Spark.Services):
+    response = services.create(
+        name='service-name',
+        folder='my-folder',
+        track_user=True,
+        file=open('my-service.xlsx', 'rb'),
+        max_retries=10,
+        retry_interval=3,
+    )
+    print(json.dumps(response['publication'], indent=2))
 
 
 def execute(services: Spark.Services):
@@ -56,14 +69,25 @@ def delete(services: Spark.Services):
 if __name__ == '__main__':
     load_dotenv()
 
-    spark = Spark.Client()
-    with spark.services as services:
-        execute(services)
-        transform(services)
-        get_schema(services)
-        get_metadata(services)
-        get_versions(services)
-        download(services)
-        recompile(services)
-        validate(services)
-        delete(services)
+    try:
+        spark = Spark.Client()
+        with spark.services as services:
+            create(services)
+            execute(services)
+            transform(services)
+            get_schema(services)
+            get_metadata(services)
+            get_versions(services)
+            download(services)
+            recompile(services)
+            validate(services)
+            delete(services)
+    except Spark.SparkSdkError as err:
+        print(err.message)
+        if err.cause:
+            print(err.details)
+    except Spark.SparkApiError as err:
+        print(err.message)
+        print(err.details)
+    except Exception as exc:
+        print(f'Unknown error: {exc}')

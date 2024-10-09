@@ -1,7 +1,5 @@
-#!/usr/bin/env -S rye run python
 import json
 import time
-from typing import Any, Dict, cast
 
 import cspark.sdk as Spark
 from dotenv import load_dotenv
@@ -12,55 +10,66 @@ def describe(batches: Spark.Batches):
 
 
 def create_and_run(batches: Spark.Batches):
-    def print_status(status, msg):
-        a, b, c = status['records_available'], status['record_submitted'], status['records_completed']
-        print(f'{msg} :: {a} of {b} records submitted ({c} processed)')
+    logger = Spark.get_logger(context='Async Batch', datefmt='%Y-%m-%d %H:%M:%S')
 
-    chunks = []
-    with open('path/to/data.json', 'r') as f:
+    def log_status(status, msg='status check'):
+        a, b, c = status['records_available'], status['record_submitted'], status['records_completed']
+        logger.info(f'{msg} :: {a} of {b} records submitted ({c} processed)')
+
+    chunks, results = [], []
+    with open('path/to/inputs.json', 'r') as f:
         data = json.load(f)
-        chunks = Spark.create_chunks(data, chunk_size=200)
+        chunks = Spark.create_chunks(data, chunk_size=150)
 
     if len(chunks) == 0:
-        print('no data to process')
+        logger.warning('no input data to process')
         return
 
-    batch = batches.create('my-folder/my-service')
-    print('batch created', batch.data)
-
-    if not isinstance(batch.data, dict):
-        return
-
-    pipeline = batches.of(batch.data['id'])
+    pipeline = None
     try:
-        submission = pipeline.push(chunks=chunks)
-        print('submission data', submission.data)
-        time.sleep(1)
+        batch = batches.create('my-folder/my-service')
+        pipeline = batches.of(batch.data['id'])  # type: ignore
+        pipeline.push(chunks=chunks)
+        time.sleep(5)
 
-        status = cast(Dict[str, Any], pipeline.get_status().data)
-        print_status(status, 'first status check')
+        status = pipeline.get_status().data
 
-        while status['records_completed'] < status['record_submitted']:
-            status = cast(Dict[str, Any], pipeline.get_status().data)
-            print_status(status, 'subsequent status check')
+        while status['records_completed'] < status['record_submitted']:  # type: ignore
+            status = pipeline.get_status().data
+            log_status(status)
 
-            if status['records_available'] > 0:
+            if status['records_available'] > 0:  # type: ignore
                 result = pipeline.pull()
-                print('result data', result.data)
+                log_status(result.data['status'], 'data retrieval status')  # type: ignore
+
+                for r in result.data['data']:  # type: ignore
+                    results.extend(r['outputs'])  # type: ignore
 
             time.sleep(2)
-    except Exception as e:
-        print(e)
+
+    except Spark.SparkSdkError as err:
+        print(err.message)
+        if err.cause:
+            print(err.details)
+    except Spark.SparkApiError as err:
+        logger.warning(err.message)
+        logger.info(err.details)
+    except Exception as exc:
+        logger.fatal(f'Unknown error: {exc}')
     finally:
-        state = pipeline.dispose()
-        print(state.data)
-        print('done!')
+        if pipeline:
+            pipeline.dispose()
+
+        with open('path/to/outputs.json', 'w') as f:
+            json.dump(results, f, indent=2)
+
+        logger.info(f'total processed outputs: {len(results)}\nDone! 🎉')
 
 
 if __name__ == '__main__':
     load_dotenv()
 
-    spark = Spark.Client()
+    spark = Spark.Client(timeout=120_000)
     with spark.batches as b:
         describe(b)
         create_and_run(b)

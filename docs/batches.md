@@ -594,14 +594,14 @@ to use it is contingent upon specific requirements and the characteristics of th
 data being handled.
 
 To further illustrate the practical implementation of the Batches API, consider the
-following example: the `create_and_run` script.
+following example: the `create_and_run()` script.
 
 It's a self-contained script and should serve as a demonstration of how to harmoniously
 use the various methods of the Batches API in one go. The script performs the following
 tasks:
 
-- reading a dataset from a JSON file;
-- pushing it to a pipeline;
+- reading a dataset (inputs) from a JSON file;
+- pushing it in chunks to a newly created batch pipeline;
 - checking the pipeline's status every 2 seconds;
 - retrieving the output data from the pipeline when available;
 - and finally, closing the pipeline.
@@ -617,32 +617,35 @@ import time
 import cspark.sdk as Spark
 from dotenv import load_dotenv
 
+
 def create_and_run(batches: Spark.Batches):
     def print_status(status, msg):
         """Convenience function to print the status of the batch pipeline."""
         a, b, c = status['records_available'], status['record_submitted'], status['records_completed']
         print(f'{msg} :: {a} of {b} records submitted ({c} processed)')
 
-    # START: Main workflow
     chunks = []
-    with open('path/to/data.json', 'r') as f:
+    with open('path/to/inputs.json', 'r') as f:
         data = json.load(f)
-        chunks = Spark.create_chunks(data, chunk_size=200)
+        chunks = Spark.create_chunks(data, chunk_size=150)
 
     if len(chunks) == 0:
         print('no data to process')
         return
 
+    results = []
     batch = batches.create('my-folder/my-service')
     print('batch created', batch.data)
 
     if not isinstance(batch.data, dict):
+        print('failed to create a batch pipeline')
         return
 
     pipeline = batches.of(batch.data['id'])
     try:
         submission = pipeline.push(chunks=chunks)
-        print('submission data', submission.data)
+        print('assessed data', pipeline.stats)
+        print('submitted data', submission.data)
         time.sleep(1)
 
         status = pipeline.get_status().data
@@ -654,15 +657,20 @@ def create_and_run(batches: Spark.Batches):
 
             if status['records_available'] > 0:
                 result = pipeline.pull()
-                print('result data', result.data)
+                print_status(result.data['status'], 'data retrieval status')
+                for r in result.data['data']:
+                    results.extend(r['outputs'])
+                print('consumed {} outputs so far'.format(len(results)))
 
-            time.sleep(2) # check every 2 seconds
+            time.sleep(2)
     except Exception as e:
         print(e)
     finally:
         state = pipeline.dispose()
         print(state.data)
-        print('done!')
+        print('consumed a total of {} outputs \nDone! 🎉'.format(len(results)))
+        with open('path/to/outputs.json', 'w') as f:
+            json.dump(results, f, indent=2)
     # END: Main workflow
 
 if __name__ == '__main__':

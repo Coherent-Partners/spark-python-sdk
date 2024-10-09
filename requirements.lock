@@ -13,6 +13,8 @@ anyio==4.4.0
 certifi==2024.6.2
     # via httpcore
     # via httpx
+click==8.1.7
+    # via cspark
 dataclasses==0.6
     # via cspark
 h11==0.14.0
@@ -24,6 +26,24 @@ httpx==0.27.0
 idna==3.7
     # via anyio
     # via httpx
+inquirerpy==0.3.4
+    # via cspark
+markdown-it-py==3.0.0
+    # via rich
+mdurl==0.1.2
+    # via markdown-it-py
+pfzy==0.3.4
+    # via inquirerpy
+prompt-toolkit==3.0.47
+    # via inquirerpy
+pygments==2.18.0
+    # via rich
+pyyaml==6.0.2
+    # via cspark
+rich==13.8.1
+    # via cspark
 sniffio==1.3.1
     # via anyio
     # via httpx
+wcwidth==0.2.13
+    # via prompt-toolkit
