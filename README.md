@@ -14,7 +14,7 @@ by creating a new issue.
 ## Installation
 
 ```bash
-pip install -U cspark
+pip install cspark # or pip install 'cspark[cli]' for CLI support.
 ```
 
 > 🫣 This Python library requires [Python 3.7+](https://www.python.org/downloads/).

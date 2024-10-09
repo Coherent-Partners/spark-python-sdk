@@ -15,6 +15,8 @@ for commit guidelines.
   - Publish the service
 - Enable log download for a service execution
 - Get a service schema by version ID
+- Introduce a beta version of the command-line client
+- Apply minor improvements
 
 ## 0.1.6 (2024-09-13)
 

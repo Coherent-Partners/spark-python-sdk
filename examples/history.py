@@ -29,7 +29,7 @@ if __name__ == '__main__':
     spark = Spark.Client(timeout=90_000)
     try:
         with spark.logs as logs:
-            # rehydrate(logs)
+            rehydrate(logs)
             download(logs)
     except Spark.SparkSdkError as err:
         print(err.message)

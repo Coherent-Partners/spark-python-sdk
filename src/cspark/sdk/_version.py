@@ -2,11 +2,9 @@ from sys import version_info as v
 
 __all__ = ['__version__', '__title__', 'sdk_version', 'about']
 
-__version__ = '0.1.7'
+__version__ = sdk_version = '0.1.7'
 
 __title__ = 'Coherent Spark Python SDK'
-
-sdk_version = __version__
 
 sdk_logger = f'CSPARK v{sdk_version}'
 

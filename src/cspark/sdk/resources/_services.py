@@ -431,7 +431,9 @@ class ServiceExecuted(HttpResponse):
                 'correlation_id': resp_meta.get('correlation_id'),
                 'request_timestamp': resp_meta.get('request_timestamp'),
             }
-        super().__init__(response.status, data, response.buffer, response.headers)
+        super().__init__(
+            response.status, data, response.buffer, response.headers, response.raw_request, response.raw_response
+        )
 
 
 class _ExecuteInputs:

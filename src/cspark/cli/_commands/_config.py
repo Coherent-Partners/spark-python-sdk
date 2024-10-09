@@ -16,6 +16,7 @@ from rich.text import Text
 
 from .._utils import DATE_FORMAT, Profile, add_or_update_profile, delete_profile, get_active_profile, load_profiles
 from ._api import AliasedGroup
+from ._auth import _friendly_time
 
 _SPARK_ENVS = ['uat.us', 'uat.eu', 'uat.jp', 'uat.ca', 'uat.au', 'us', 'ca', 'eu', 'jp', 'au', 'sit', 'dev', 'test']
 
@@ -440,11 +441,14 @@ class ConfigListCommand(click.Command):
 
         if verbose:
             updated_at = datetime.fromisoformat(profile.updated_at).strftime(DATE_FORMAT)
+            timeout = _friendly_time(profile.timeout / 1000) if profile.timeout else 'None'
+            retry_interval = _friendly_time(profile.retry_interval) if profile.retry_interval else 'None'
+            max_retries = f'up to {profile.max_retries} times' if profile.max_retries else 'None'
             console.print(f'  [cyan]other settings[/cyan]')
             console.print(f'    - logger     : [yellow]{"enabled" if profile.logger else "disabled"}[/yellow]')
-            console.print(f'    - timeout    : {profile.timeout}')
-            console.print(f'    - interval   : {profile.retry_interval}')
-            console.print(f'    - max retries: {profile.max_retries}')
+            console.print(f'    - timeout    : {timeout}')
+            console.print(f'    - interval   : {retry_interval}')
+            console.print(f'    - max retries: {max_retries}')
             console.print(f'    - updated at : {updated_at}')
 
         if nl:
