@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
-## 0.1.7 (2024-10-08)
+## 0.1.9 (2024-10-10)
+
+- Add support for hybrid runner
+  - Enable version and health check
+  - Enable Services API (execute, upload)
+
+## 0.1.8 (2024-10-09)
+
+- Fix CLI init issue
+
+## 0.1.7b (2024-10-08)
 
 - Add support for ImpEx API
   - Export Spark entities (versions, services, or folders)

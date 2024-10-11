@@ -140,6 +140,9 @@ class Profile:
 
 
 def create_profile():
+    if not HOME_DIR.exists():
+        HOME_DIR.mkdir()
+
     path = _PROFILE_PATH
     if path.exists():
         return

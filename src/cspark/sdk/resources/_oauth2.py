@@ -9,10 +9,7 @@ __all__ = ['OAuth2', 'AccessToken']
 class OAuth2(ApiResource):
     def get_access_token(self) -> 'AccessToken':
         url = Uri.of(base_url=self.config.base_url.oauth2, version='protocol', endpoint='openid-connect/token')
-        body = {
-            **self.config.auth.oauth.to_dict(),  # type: ignore
-            'grant_type': self.config.auth.oauth.flow,  # type: ignore
-        }
+        body = {**self.config.auth.oauth.to_dict(), 'grant_type': self.config.auth.oauth.flow}  # type: ignore
 
         response = self.request(url, method='POST', form=body)
         return AccessToken.from_dict(response.data)
