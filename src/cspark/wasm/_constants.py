@@ -1,5 +1,7 @@
-__all__ = ['__version__', 'DEFAULT_RUNNER_URL']
-
-__version__ = '0.1.0-beta'
+__all__ = ['DEFAULT_RUNNER_URL', 'ENV_VARS']
 
 DEFAULT_RUNNER_URL = 'http://localhost:3000'
+
+
+class ENV_VARS:
+    RUNNER_URL = 'CSPARK_RUNNER_URL'
