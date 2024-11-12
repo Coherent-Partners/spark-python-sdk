@@ -2,7 +2,8 @@ from typing import Any, Mapping, Optional, Union
 
 import cspark.wasm.resources as API
 from cspark.sdk import BaseUrl, LoggerOptions
-from cspark.wasm import Config, RunnerUrl
+
+from ._config import Config, RunnerUrl
 
 __all__ = ['Client']
 

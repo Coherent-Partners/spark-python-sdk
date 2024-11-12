@@ -1,6 +1,7 @@
 from json import dumps
 from os import getenv
 from typing import Optional
+from urllib.parse import urlparse
 
 from cspark.sdk import BaseUrl, SparkError
 from cspark.sdk import Config as BaseConfig
@@ -40,8 +41,8 @@ class Config(BaseConfig):
 
 
 class RunnerUrl(BaseUrl):
-    def __init__(self, url: str = getenv(ENV_VARS.RUNNER_URL) or DEFAULT_RUNNER_URL, tenant: str = ''):
-        super().__init__(url, tenant)
+    def __init__(self, url: Optional[str] = None, tenant: str = ''):
+        super().__init__(url or getenv(ENV_VARS.RUNNER_URL) or DEFAULT_RUNNER_URL, tenant)
 
     def copy_with(self, *, url: Optional[str] = None, tenant: Optional[str] = None, **kwargs) -> 'RunnerUrl':  # noqa: ARG002
         """Overrides parent's copyWith as `env` is not applicable to RunnerUrl."""
