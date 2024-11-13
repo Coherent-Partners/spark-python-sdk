@@ -7,7 +7,7 @@ from typing import Any, BinaryIO, Dict, List, Mapping, Optional, Tuple, Union
 
 from .._constants import SPARK_SDK
 from .._errors import SparkError
-from .._utils import DateUtils, get_retry_timeout, is_str_not_empty, join_list_str
+from .._utils import DateUtils, StringUtils, get_retry_timeout
 from ._base import ApiResource, HttpResponse, Uri, UriParams
 
 __all__ = ['Services', 'ServiceExecuted']
@@ -261,7 +261,7 @@ class Services(ApiResource):
         outputs_filter: Optional[str] = None,
     ):
         uri = Uri.validate(uri)
-        validation_type = is_str_not_empty(validation_type) and str(validation_type).lower() or None
+        validation_type = StringUtils.is_not_empty(validation_type) and str(validation_type).lower() or None
 
         executable = _ExecuteInputs(inputs)
         metadata = _ExecuteMeta(
@@ -379,7 +379,7 @@ class Services(ApiResource):
             'label': label,
             'effectiveStartDate': startdate.isoformat(),
             'effectiveEndDate': enddate.isoformat(),
-            'tags': join_list_str(tags),
+            'tags': StringUtils.join(tags),
         }
 
         return self.request(url, method='POST', body={'request_data': data})
@@ -440,7 +440,7 @@ class _ExecuteInputs:
     def __init__(self, data: Union[None, str, Dict[str, Any], List[Any]] = None):
         if data is None or (isinstance(data, list) and len(data) == 0):
             data = {}
-        if is_str_not_empty(data):
+        if StringUtils.is_not_empty(data):
             data = json.loads(str(data))
 
         self.inputs = data
@@ -486,23 +486,23 @@ class _ExecuteMeta:
 
         self._call_purpose = (
             call_purpose
-            if is_str_not_empty(call_purpose)
+            if StringUtils.is_not_empty(call_purpose)
             else 'Sync Batch Execution'
             if is_batch
             else 'Single Execution'
         )
         self._compiler_type = (
             str(compiler_type).capitalize()
-            if is_str_not_empty(compiler_type) and str(compiler_type).lower() in self.__COMPILER_TYPES
+            if StringUtils.is_not_empty(compiler_type) and str(compiler_type).lower() in self.__COMPILER_TYPES
             else 'Neuron'
         )
 
-        self._subservices = join_list_str(subservices)
+        self._subservices = StringUtils.join(subservices)
         self._debug_solve = debug_solve
         self._downloadable = downloadable
         self._echo_inputs = echo_inputs
-        self._tables_as_array = join_list_str(tables_as_array)
-        self._selected_outputs = join_list_str(selected_outputs)
+        self._tables_as_array = StringUtils.join(tables_as_array)
+        self._selected_outputs = StringUtils.join(selected_outputs)
         self._outputs_filter = outputs_filter
 
     @property

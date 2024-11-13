@@ -4,7 +4,7 @@ import re
 from typing import List, Optional
 
 from ._errors import SparkError
-from ._utils import is_positive_int, is_str_empty
+from ._utils import StringUtils, is_positive_int
 
 __all__ = ['Validators']
 
@@ -28,7 +28,7 @@ class EmptyStringValidator(BaseValidator):
         return cls.instance
 
     def validate(self, value: Optional[str], message: Optional[str] = None):
-        if is_str_empty(value):
+        if StringUtils.is_empty(value):
             raise SparkError.sdk(message or 'must be non-empty string value', cause=value)
 
     def is_valid(self, value: Optional[str], message: Optional[str] = None) -> bool:
@@ -70,7 +70,7 @@ class BaseUrlValidator(BaseValidator):
         return cls.instance
 
     def validate(self, value: Optional[str]):
-        if is_str_empty(value):
+        if StringUtils.is_empty(value):
             raise SparkError.sdk('base URL is required', value)
 
         if not self._wildcard.match(str(value).rstrip('/')):

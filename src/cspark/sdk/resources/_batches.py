@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Union, cast
 from .._config import Config
 from .._constants import SPARK_SDK
 from .._errors import SparkError
-from .._utils import get_uuid, is_not_empty_list, is_str_empty, join_list_str
+from .._utils import StringUtils, get_uuid, is_not_empty_list
 from ._base import ApiResource, Uri, UriParams
 
 __all__ = ['Batches', 'Pipeline', 'BatchChunk', 'ChunkData', 'create_chunks']
@@ -21,6 +21,21 @@ class ChunkData:
     def to_dict(self):
         return self.__dict__
 
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> 'ChunkData':
+        """Creates a chunk data object from dictionary-based data."""
+        return ChunkData(data.get('inputs', []), data.get('parameters', {}), data.get('summary'))
+
+    @staticmethod
+    def from_str(data: Union[str, bytes]) -> 'ChunkData':
+        """Creates a chunk data object from string-based data."""
+        try:
+            return ChunkData.from_dict(json.loads(data))
+        except json.JSONDecodeError as err:
+            raise SparkError.sdk('failed to parse string/bytes data as JSON', cause=err) from err
+        except Exception as exc:
+            raise SparkError.sdk(f'cannot create chunk data from {data}', cause=exc) from exc
+
 
 @dataclass
 class BatchChunk:
@@ -32,7 +47,7 @@ class BatchChunk:
         return {'id': self.id, 'data': self.data.to_dict(), 'size': self.size or len(self.data.inputs)}
 
     @staticmethod
-    def from_dict(data: List[Dict[str, Any]], size: Optional[int] = None) -> List['BatchChunk']:
+    def from_dict(data: Union[Dict[str, Any], List[Dict[str, Any]]]) -> List['BatchChunk']:
         """Creates a list of batch chunks from dictionary-based data."""
         if isinstance(data, dict):
             data = [data]
@@ -41,11 +56,25 @@ class BatchChunk:
         for chunk in data:
             if not isinstance(chunk, dict):
                 continue
-            inputs = chunk.get('inputs', [])
-            params = chunk.get('parameters', {})
-            summary = chunk.get('summary', {})
-            chunks.append(BatchChunk(id=get_uuid(), data=ChunkData(inputs, params, summary), size=size or len(inputs)))
+
+            id = chunk.get('id', get_uuid())
+            chunk_data = ChunkData.from_dict(chunk.get('data', {}))
+            size = chunk.get('size', len(chunk_data.inputs))
+
+            chunks.append(BatchChunk(id, data=chunk_data, size=size))
         return chunks
+
+    @staticmethod
+    def from_str(data: Union[str, bytes]) -> List['BatchChunk']:
+        """Creates a list of batch chunks from string-based data."""
+        try:
+            json_data = json.loads(data)
+            chunks = json_data.pop('chunks', []) if 'chunks' in json_data else json_data
+            return BatchChunk.from_dict(chunks)
+        except json.JSONDecodeError as err:
+            raise SparkError.sdk('failed to parse string/bytes data as JSON', cause=err) from err
+        except Exception as exc:
+            raise SparkError.sdk(f'cannot create batch chunks from {data}', cause=exc) from exc
 
 
 class Batches(ApiResource):
@@ -85,12 +114,12 @@ class Batches(ApiResource):
             'service': uri.service_id or service_uri or None,
             'version_id': uri.version_id,
             'version_by_timestamp': active_since,
-            'subservice': join_list_str(subservices),
-            'output': join_list_str(selected_outputs),
+            'subservice': StringUtils.join(subservices),
+            'output': StringUtils.join(selected_outputs),
             'call_purpose': call_purpose or 'Async Batch Execution',
             'source_system': source_system or SPARK_SDK,
             'correlation_id': correlation_id,
-            'unique_record_key': join_list_str(unique_record_key),
+            'unique_record_key': StringUtils.join(unique_record_key),
             # experimental pipeline options
             'initial_workers': min_runners,
             'max_workers': max_runners,
@@ -115,7 +144,7 @@ class Pipeline(ApiResource):
         self._id = batch_id
         self._base_uri = {'base_url': self.config.base_url.full, 'version': 'api/v4'}
 
-        if is_str_empty(batch_id):
+        if StringUtils.is_empty(batch_id):
             error = SparkError.sdk('batch pipeline id is required to proceed', batch_id)
             self.logger.error(error.message)
             raise error
@@ -146,12 +175,13 @@ class Pipeline(ApiResource):
         chunks: Optional[List[BatchChunk]] = None,
         data: Optional[ChunkData] = None,
         inputs: Optional[List[Any]] = None,
+        raw: Union[None, str, bytes] = None,
         if_chunk_id_duplicated: str = 'replace',  # 'ignore' | 'replace' | 'throw'
     ):
         self.__assert_state(['closed', 'cancelled'])
 
         url = Uri.of(None, endpoint=f'batch/{self._id}/chunks', **self._base_uri)
-        body = self.__build_chunk_data(chunks, data, inputs, if_chunk_id_duplicated)
+        body = self.__build_chunk_data(chunks, data, inputs, raw, if_chunk_id_duplicated)
         response = self.request(url, method='POST', body=body)
         total = response.data['record_submitted'] if isinstance(response.data, dict) else 0
         self.logger.info(f'pushed {total} records to batch pipeline <{self._id}>')
@@ -199,9 +229,13 @@ class Pipeline(ApiResource):
         chunks: Optional[List[BatchChunk]] = None,
         data: Optional[ChunkData] = None,
         inputs: Optional[List[Any]] = None,
+        raw: Union[None, str, bytes] = None,
         if_duplicated: str = 'replace',
     ):
         try:
+            if raw is not None and StringUtils.is_not_empty(raw):
+                chunks = BatchChunk.from_str(raw)  # takes precedence over other entries
+
             if is_not_empty_list(chunks):
                 return {'chunks': self.__assess_chunks(cast(List[BatchChunk], chunks), if_duplicated)}
             if isinstance(data, ChunkData) and is_not_empty_list(data.inputs):
@@ -210,7 +244,7 @@ class Pipeline(ApiResource):
                 data = ChunkData(inputs=cast(List[Any], inputs), parameters={})
                 return {'chunks': self.__assess_chunks([BatchChunk(id=get_uuid(), data=data)], if_duplicated)}
 
-            cause = {'chunks': chunks, 'data': data, 'inputs': inputs}
+            cause = {'chunks': chunks, 'data': data, 'inputs': inputs, 'raw': raw}
             raise SparkError.sdk(
                 message=f'wrong data params were provided for this pipeline <{self._id}>.\n'
                 'Expecting either "chunks=List[BatchChunk]", "data=ChunkData" or "inputs=List[Any]"',
@@ -225,7 +259,7 @@ class Pipeline(ApiResource):
     def __assess_chunks(self, chunks: List['BatchChunk'], is_duplicated: str):
         assessed = []
         for chunk in chunks:
-            id = get_uuid() if is_str_empty(chunk.id) else chunk.id
+            id = get_uuid() if StringUtils.is_empty(chunk.id) else chunk.id
             if chunk.id in self._chunks:
                 if is_duplicated == 'ignore':
                     self.logger.warn(
@@ -251,13 +285,13 @@ class Pipeline(ApiResource):
 
 
 def create_chunks(
-    dataset: List[Any],
+    dataset: List[Any],  # input dataset
     *,
     chunk_size: int = 200,
     parameters: Optional[Dict[str, Any]] = None,
     summary: Optional[Dict[str, Any]] = None,
 ) -> List[BatchChunk]:
-    """Creates a list of batch chunks from a given dataset."""
+    """Creates a list of batch chunks from a given input dataset."""
     length = len(dataset)
     chunk_size = max(1, chunk_size)
     batch_size = math.ceil(length / chunk_size)

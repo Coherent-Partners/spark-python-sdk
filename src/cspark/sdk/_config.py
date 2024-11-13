@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from ._constants import *
 from ._errors import SparkError
 from ._logger import LoggerOptions
-from ._utils import is_str_empty
+from ._utils import StringUtils
 from ._validators import Validators
 
 __all__ = ['Config', 'BaseUrl']
@@ -188,7 +188,7 @@ class BaseUrl:
             if str_validator.is_valid(maybe_tenant, 'tenant name is required'):
                 base_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
                 return BaseUrl(url=base_url, tenant=str(maybe_tenant))
-        elif not is_str_empty(tenant) and not is_str_empty(env):
+        elif StringUtils.is_not_empty(tenant) and StringUtils.is_not_empty(env):
             base_url = f'https://excel.{str(env).strip().lower()}.coherent.global'
             return BaseUrl(url=base_url, tenant=str(tenant).strip().lower())
         else:

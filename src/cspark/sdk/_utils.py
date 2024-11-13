@@ -10,18 +10,6 @@ from typing import Any, List, Optional, Tuple, Union, cast
 from ._constants import DEFAULT_RETRY_INTERVAL, RETRY_RANDOMIZATION_FACTOR
 
 
-def is_str(value: Any | None) -> bool:
-    return isinstance(value, str)
-
-
-def is_str_empty(value: Any | None) -> bool:
-    return value is None or (isinstance(value, str) and value.strip() == '')
-
-
-def is_str_not_empty(value: Any | None) -> bool:
-    return isinstance(value, str) and value.strip() != ''
-
-
 def is_int(value: Any | None) -> bool:
     if isinstance(value, int):
         return True
@@ -36,12 +24,6 @@ def is_positive_int(value: Any | None) -> bool:
     return is_int(value) and cast(int, value) > 0
 
 
-def mask(value: str, start: int = 0, end: int = 4, char: str = '*') -> str:
-    if not value or start < 0 or end < 0:
-        return value
-    return value[:start] + char * (len(value) - start - end) + value[-end:]
-
-
 def sanitize_uri(url: str, leading: bool = False) -> str:
     sanitized = re.sub(r'/{2,}', '/', url)
     sanitized = sanitized.rstrip('/')
@@ -53,8 +35,6 @@ def find_value_from_dict(key_path: str, data: dict, default: Any = None) -> Any:
     Walks through a nested dictionary-based dataset and returns the value associated
     with the key path.
     """
-    if not isinstance(data, dict):
-        return default
     try:
         keys = key_path.split('.')
     except AttributeError:
@@ -74,16 +54,36 @@ def get_retry_timeout(retries: int, interval: float = DEFAULT_RETRY_INTERVAL) ->
     return math.pow(2, retries) * interval * randomization
 
 
-def join_list_str(value: Union[None, str, List[str]] = None, sep: str = ',') -> Union[str, None]:
-    return sep.join(value) if isinstance(value, list) else value
-
-
 def is_not_empty_list(value: Any | None) -> bool:
     return isinstance(value, list) and len(value) > 0
 
 
 def get_uuid() -> str:
     return str(uuid.uuid4())
+
+
+class StringUtils:
+    @staticmethod
+    def is_str(value: Any | None) -> bool:
+        return isinstance(value, str)
+
+    @staticmethod
+    def is_empty(value: Any | None) -> bool:
+        return value is None or (isinstance(value, str) and value.strip() == '')
+
+    @staticmethod
+    def is_not_empty(value: Any | None) -> bool:
+        return isinstance(value, str) and value.strip() != ''
+
+    @staticmethod
+    def mask(value: str, start: int = 0, end: int = 4, char: str = '*') -> str:
+        if not value or start < 0 or end < 0:
+            return value
+        return value[:start] + char * (len(value) - start - end) + value[-end:]
+
+    @staticmethod
+    def join(value: Union[None, str, List[str]] = None, sep: str = ',') -> Union[str, None]:
+        return sep.join(value) if isinstance(value, list) else value
 
 
 class DateUtils:

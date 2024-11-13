@@ -9,7 +9,7 @@ from ._config import Config
 from ._constants import ENV_VARS
 from ._errors import SparkError
 from ._logger import get_logger
-from ._utils import mask
+from ._utils import StringUtils
 from .resources import AccessToken
 from .resources import OAuth2 as OAuthManager
 
@@ -60,7 +60,7 @@ class Authorization:
     @property
     def api_key(self) -> Optional[str]:
         if self._api_key and not self.is_open:
-            return mask(self._api_key)
+            return StringUtils.mask(self._api_key)
         return self._api_key
 
     @property
@@ -128,7 +128,7 @@ class OAuth:
 
     @property
     def client_secret(self) -> str:
-        return mask(self._client_secret)
+        return StringUtils.mask(self._client_secret)
 
     @property
     def version(self) -> str:
