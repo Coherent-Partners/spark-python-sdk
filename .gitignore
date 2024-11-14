@@ -7,10 +7,13 @@ wheels/
 *.egg-info
 .ruff_cache/
 .pytest_cache/
+poetry.lock
+*.log
 
 # venv
 .venv
 
 # Misc
 temp/
+.temp/
 .env

@@ -2,8 +2,8 @@
 
 [![PyPI version][version-img]][version-url]
 
-The Coherent Spark Python SDK (currently in **Beta**) is designed to elevate the developer
-experience and provide convenient access to Coherent Spark APIs.
+The Coherent Spark Python SDK is designed to elevate the developer experience and
+provide convenient access to Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 
@@ -55,7 +55,7 @@ with spark.services as services:
     print(response.data)
 ```
 
-Explore the [examples] and [documentation] folders to find out more about the SDK's capabilities.
+Explore the [examples] and [docs] folders to find out more about the SDK's capabilities.
 
 > **PRO TIP:**
 > A service URI locator can be combined with other parameters to locate a specific
@@ -77,7 +77,7 @@ with spark.services as services:
 #    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
 ```
 
-See the [Uri and UriParams](./src/cspark/sdk/resources/_base.py) classes for more details.
+See the [Uri and UriParams][uri-url] classes for more details.
 
 ## Client Options
 
@@ -237,7 +237,7 @@ OAuth2.0 Client Credentials flow:
 - `Spark.impex.export(data)` exports Spark entities (versions, services, or folders).
 - `Spark.impex.import_(data)` imports previously exported Spark entities into the platform.
 
-[Other APIs](./docs/misc.md) - for other functionalities:
+[Other APIs](./docs/misc.md) - for other functionality:
 
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
 - `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
@@ -262,5 +262,6 @@ conduct, and the process for submitting pull requests.
 [contributing-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/CONTRIBUTING.md
 [license-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/LICENSE
 [examples]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/examples
-[documentation]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/docs
+[docs]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/docs
+[uri-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/src/cspark/sdk/resources/_base.py
 [logging-level]: https://docs.python.org/3/library/logging.html#logging-levels

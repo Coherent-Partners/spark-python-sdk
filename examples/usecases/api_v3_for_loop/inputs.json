@@ -1,0 +1,42 @@
+[
+  {
+    "radius": 2,
+    "height": 15
+  },
+  {
+    "radius": 5,
+    "height": 1
+  },
+  {
+    "radius": 1,
+    "height": 2
+  },
+  {
+    "radius": 6,
+    "height": 15
+  },
+  {
+    "radius": 7,
+    "height": 6
+  },
+  {
+    "radius": 8,
+    "height": 19
+  },
+  {
+    "radius": 4,
+    "height": 1
+  },
+  {
+    "radius": 7,
+    "height": 16
+  },
+  {
+    "radius": 5,
+    "height": 4
+  },
+  {
+    "radius": 6,
+    "height": 1
+  }
+]
