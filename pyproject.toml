@@ -1,6 +1,6 @@
 [project]
 name = "cspark"
-version = "0.1.9"
+version = "0.1.10"
 description = "A Python SDK for interacting with Coherent Spark APIs"
 license = "Apache-2.0"
 authors = [{ name = "Coherent", email = "team@coherent.global" }]
@@ -47,6 +47,7 @@ dev-dependencies = [
   "python-dotenv>=1.0.0",
   "uvicorn>=0.30.1",
   "anyio>=4.4.0",
+  "poetry",
 ]
 
 [project.optional-dependencies]

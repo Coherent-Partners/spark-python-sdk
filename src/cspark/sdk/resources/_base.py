@@ -11,7 +11,7 @@ from httpx import URL, Client, Headers, Request, Response
 from .._config import Config
 from .._errors import SparkError
 from .._logger import get_logger
-from .._utils import get_retry_timeout, get_uuid, is_str_empty, sanitize_uri
+from .._utils import StringUtils, get_retry_timeout, get_uuid, sanitize_uri
 from .._version import about, sdk_ua_header
 
 __all__ = ['ApiResource', 'UriParams', 'Uri', 'HttpResponse']
@@ -293,7 +293,7 @@ class Uri:
                 return UriParams(service_id=service)
             if folder == 'proxy':
                 return UriParams(proxy=service)
-            version = None if is_str_empty(version) else version
+            version = None if StringUtils.is_empty(version) else version
             return UriParams(folder=folder, service=service, version=version)
         return UriParams()
 
@@ -315,7 +315,7 @@ class Uri:
     @staticmethod
     def validate(uri: Union[str, UriParams], message: Optional[str] = None) -> UriParams:
         uri_params = Uri.to_params(uri)
-        if is_str_empty(uri_params.service_uri):
+        if StringUtils.is_empty(uri_params.service_uri):
             folder, service = uri_params.folder, uri_params.service
             if folder and not service:
                 msg = message or 'service name is missing'

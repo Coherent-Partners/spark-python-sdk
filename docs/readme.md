@@ -13,6 +13,7 @@ Additional information can be found on [Spark's User Guide](https://docs.coheren
 - [Log History API](./history.md)
 - [ImpEx API](./impex.md)
 - [Other APIs](./misc.md)
+- [Hybrid Deployment](./hybrid.md)
 
 ## Getting Started
 

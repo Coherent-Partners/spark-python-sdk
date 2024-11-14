@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "api_v3_for_loop"
+version = "0.1.0"
+description = "Execute records sequentially using Execute APIv3"
+authors = ["Coherent <team@coherent.global>"]
+readme = "readme.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+cspark = "^0.1.9"
+
+[tool.poetry.group.dev.dependencies]
+python-dotenv = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

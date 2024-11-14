@@ -182,6 +182,13 @@ class Export(ApiResource):
         self.logger.error(error.message)
         raise error
 
+    def cancel(self, job_id: str):
+        url = Uri.of(None, endpoint=f'export/{job_id}', **self._base_uri)
+        response = self.request(url, method='PATCH', body={'export_status': 'cancelled'})
+        if isinstance(response.data, dict):
+            self.logger.info(f'export job <${response.data["id"]}> has been cancelled')
+        return response
+
     def download(self, urls: Union[str, List[str]]):
         downloads = []
 

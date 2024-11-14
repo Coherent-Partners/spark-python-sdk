@@ -332,7 +332,32 @@ It is also designed to facilitate data submission in different shapes and forms.
 
 ### Arguments
 
-The method accepts 3 mutually exclusive keyword arguments:
+The method accepts 4 mutually exclusive keyword arguments:
+
+- `raw`: is the raw chunk data without no direct data manipulation. The raw dataset
+  can be of `string` or `bytes` as long as it is JSON serializable.
+
+```py
+raw_string = """
+{
+  "chunks": [
+    {
+      "id": "0001",
+      "size": 2,
+      "data": {
+        "inputs": [
+          ["input_1", "input_2", "input_N"],
+          [1, 2, 3],
+          [4, 5, 6]
+        ],
+        "parameters": {"common_input": 0}
+      }
+    }
+  ]
+}
+"""
+pipeline.push(raw=raw_string)
+```
 
 - `inputs`: a list of the records as input data. This is convenient when you have
   a list of records that needs to be processed in a single chunk. That is, you are
@@ -610,7 +635,6 @@ The script will continue to interact with Spark till all data has been processed
 unless an error occurs, which will force an early closure of the pipeline.
 
 ```py
-#!/usr/bin/env python
 import json
 import time
 
@@ -619,66 +643,67 @@ from dotenv import load_dotenv
 
 
 def create_and_run(batches: Spark.Batches):
-    def print_status(status, msg):
+    logger = Spark.get_logger(context='Async Batch', datefmt='%Y-%m-%d %H:%M:%S')
+
+    def log_status(status, msg='status check'):
         """Convenience function to print the status of the batch pipeline."""
         a, b, c = status['records_available'], status['record_submitted'], status['records_completed']
-        print(f'{msg} :: {a} of {b} records submitted ({c} processed)')
+        logger.info(f'{msg} :: {a} of {b} records submitted ({c} processed)')
 
-    chunks = []
+    chunks, results = [], []
     with open('path/to/inputs.json', 'r') as f:
         data = json.load(f)
         chunks = Spark.create_chunks(data, chunk_size=150)
 
     if len(chunks) == 0:
-        print('no data to process')
+        logger.warning('no input data to process')
         return
 
-    results = []
-    batch = batches.create('my-folder/my-service')
-    print('batch created', batch.data)
-
-    if not isinstance(batch.data, dict):
-        print('failed to create a batch pipeline')
-        return
-
-    pipeline = batches.of(batch.data['id'])
+    pipeline = None
     try:
-        submission = pipeline.push(chunks=chunks)
-        print('assessed data', pipeline.stats)
-        print('submitted data', submission.data)
-        time.sleep(1)
+        batch = batches.create('my-folder/my-service')
+        pipeline = batches.of(batch.data['id'])
+        pipeline.push(chunks=chunks)
+        time.sleep(5)
 
         status = pipeline.get_status().data
-        print_status(status, 'first status check')
 
         while status['records_completed'] < status['record_submitted']:
             status = pipeline.get_status().data
-            print_status(status, 'subsequent status check')
+            log_status(status)
 
             if status['records_available'] > 0:
                 result = pipeline.pull()
-                print_status(result.data['status'], 'data retrieval status')
+                log_status(result.data['status'], 'data retrieval status')
+
                 for r in result.data['data']:
                     results.extend(r['outputs'])
-                print('consumed {} outputs so far'.format(len(results)))
 
             time.sleep(2)
-    except Exception as e:
-        print(e)
+
+    except Spark.SparkSdkError as err:
+        print(err.message)
+        if err.cause:
+            print(err.details)
+    except Spark.SparkApiError as err:
+        logger.warning(err.message)
+        logger.info(err.details)
+    except Exception as exc:
+        logger.fatal(f'Unknown error: {exc}')
     finally:
-        state = pipeline.dispose()
-        print(state.data)
-        print('consumed a total of {} outputs \nDone! 🎉'.format(len(results)))
+        if pipeline:
+            pipeline.dispose()
+
         with open('path/to/outputs.json', 'w') as f:
             json.dump(results, f, indent=2)
-    # END: Main workflow
+
+        logger.info(f'total processed outputs: {len(results)}\nDone! 🎉')
+
 
 if __name__ == '__main__':
-    # load Spark settings from .env file
-    load_dotenv()
+    load_dotenv() # load Spark settings from .env file
 
-    # create a Spark client
-    spark = Spark.Client()
+    spark = Spark.Client(timeout=120_000) # create a Spark client
     with spark.batches as b:
         create_and_run(b)
 ```
@@ -691,9 +716,13 @@ if __name__ == '__main__':
 > If you were to "productionize" this script, you would need to add graceful error handling,
 > logging, among other capabilities to make it more robust and reliable. You may also want
 > to consider how you read and feed the input data to the pipeline and how to handle
-> the pulled output data.
+> the output data once it's available.
 
-Happy coding! 🚀
+In the example above, the script assumes that the input dataset is cleansed and
+formatted correctly. However, there may be occasions when the dataset is not in the
+desired format. In such cases, you will need to preprocess it. The `BatchChunk` and
+`ChunkData` classes can be used to manipulate the data and structure it in a way
+that is compatible with the pipeline.
 
 [Back to top](#batches-api) or [Next: Log History API](./history.md)
 

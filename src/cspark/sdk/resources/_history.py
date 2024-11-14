@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional, Union, cast
 
 from .._errors import SparkError
-from .._utils import DateUtils, get_retry_timeout, is_int, is_str_empty
+from .._utils import DateUtils, StringUtils, get_retry_timeout, is_int
 from ._base import ApiResource, Uri, UriParams
 
 __all__ = ['History']
@@ -23,7 +23,7 @@ class History(ApiResource):
         service: Optional[str] = None,
         index: Optional[int] = None,
     ):
-        if is_str_empty(call_id):
+        if StringUtils.is_empty(call_id):
             raise SparkError.sdk('call_id is required when rehydrating', {'call_id': call_id})
 
         uri = Uri.validate(UriParams(folder, service) if uri is None else Uri.to_params(uri))
