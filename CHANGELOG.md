@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.1.10 (2024-11-14)
+
+- Apply bug fixes and enhancements
+- Add standalone use cases
+- Add more test coverage
+
 ## 0.1.9 (2024-10-10)
 
 - Add support for hybrid runner

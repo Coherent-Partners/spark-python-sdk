@@ -43,6 +43,11 @@ def get_versions(services: Spark.Services):
     print(response.data)
 
 
+def search(services: Spark.Services):
+    response = services.search()
+    print(response.data)
+
+
 def download(services: Spark.Services):
     response = services.download('my-folder/my-service', type='configured')
     with open('my-excel-file.xlsx', 'wb') as file:
@@ -78,6 +83,7 @@ if __name__ == '__main__':
             get_schema(services)
             get_metadata(services)
             get_versions(services)
+            search(services)
             download(services)
             recompile(services)
             validate(services)

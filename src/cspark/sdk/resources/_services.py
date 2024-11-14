@@ -336,6 +336,28 @@ class Services(ApiResource):
         response = self.request(url)
         return response.copy_with(data=response.data.get('data', []) if isinstance(response.data, dict) else [])
 
+    def search(
+        self,
+        *,
+        page: int = 1,
+        limit: int = -1,
+        sort: str = 'name1_co',
+        query: Optional[List[Any]] = None,
+        fields: Optional[List[str]] = None,
+        **params,
+    ):
+        uri = Uri.of(base_url=self.config.base_url.full, endpoint='services/search')
+        search_params = {
+            'page': page,
+            'page_size': limit,
+            'sort': sort,
+            'query': query or [],
+            'fields': fields or ['id', 'foldername', 'filename', 'version', 'tags', 'modifiedDate'],
+            **params,  # other query parameters
+        }
+
+        return self.request(uri, method='POST', body={'request_data': search_params})
+
     def download(
         self,
         uri: Union[None, str, UriParams] = None,
