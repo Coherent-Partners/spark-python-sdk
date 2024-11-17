@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "service_promotion"
+version = "0.1.0"
+description = "Promote Spark services from lower to higher environments"
+authors = ["Coherent <team@coherent.global>"]
+readme = "readme.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+cspark = "^0.1.10"
+
+[tool.poetry.group.dev.dependencies]
+python-dotenv = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
