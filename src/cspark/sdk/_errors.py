@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, Generic, Optional, TypeVar, cast
 
-from httpx import Headers
+from httpx import Headers, Request, Response
 
 __all__ = ['SparkError', 'SparkSdkError', 'SparkApiError', 'ErrorMessage']
 
@@ -136,6 +136,22 @@ class SparkApiError(SparkError):
             return GatewayTimeoutError(error, status)
         else:
             return UnknownApiError(error)
+
+    @staticmethod
+    def to_cause(request: Request, response: Response) -> dict[str, Any]:
+        return {
+            'request': {
+                'url': str(request.url),
+                'method': request.method,
+                'headers': request.headers,
+                'body': request.content,
+            },
+            'response': {
+                'headers': response.headers,
+                'body': response.text,
+                'raw': response.content,
+            },
+        }
 
 
 class InternetError(SparkApiError):

@@ -54,7 +54,7 @@ Explore the [examples] and [docs] folders to find out more about its capabilitie
 [cspark]: https://pypi.org/project/cspark/
 [version-img]: https://badge.fury.io/py/cspark.svg
 [version-url]: https://pypi.python.org/pypi/cspark
-[user-guide]: https://docs.coherent.global/integrations/how-to-deploy-a-hybrid-runner
+[user-guide]: https://docs.coherent.global/hybrid-runner/introduction-to-the-hybrid-runner
 [hybrid-runner]: https://github.com/orgs/Coherent-Partners/packages/container/package/nodegen-server
 [examples]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/examples/hybrid.py
 [docs]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/docs/wasm/readme.md

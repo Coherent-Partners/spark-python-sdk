@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "api_v4_sync_batch"
+version = "0.1.0"
+description = "Execute sync batch of up to 1K records using a bulk approach"
+authors = ["Coherent <team@coherent.global>"]
+readme = "readme.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+cspark = "^0.1.10"
+
+[tool.poetry.group.dev.dependencies]
+python-dotenv = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
