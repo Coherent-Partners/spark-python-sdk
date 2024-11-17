@@ -59,5 +59,5 @@ access to the internet, the runner will not be able to function properly.
 
 [Back to top](#authentication)
 
-[user-guide]: https://docs.coherent.global/integrations/how-to-deploy-a-hybrid-runner
+[user-guide]: https://docs.coherent.global/hybrid-runner/introduction-to-the-hybrid-runner
 [bearer-token]: https://docs.coherent.global/spark-apis/authorization-bearer-token

@@ -64,6 +64,9 @@ class Config:
             }
         )
 
+    def __str__(self) -> str:
+        return self._options
+
     @property
     def has_headers(self) -> bool:
         return len(self.extra_headers) > 0
@@ -119,9 +122,6 @@ class Config:
             max_retries=max_retries or self._max_retries,
             retry_interval=retry_interval or self._retry_interval,
         )
-
-    def __str__(self) -> str:
-        return self._options
 
 
 class BaseUrl:

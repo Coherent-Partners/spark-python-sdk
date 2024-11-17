@@ -118,6 +118,15 @@ class OAuth:
             raise SparkError.sdk(f'failed to create oauth credentials from file <{path}>', cause=cause) from cause
         return OAuth({**creds, 'oauth_path': path})
 
+    def __str__(self) -> str:
+        return json.dumps(
+            {
+                'client_id': self._client_id,
+                'client_secret': self.client_secret,
+                'access_token': self.access_token,
+            }
+        )
+
     @property
     def access_token(self) -> Optional[str]:
         return self._access_token.access_token if self._access_token else None
@@ -140,15 +149,6 @@ class OAuth:
 
     def to_dict(self) -> Mapping[str, str]:
         return {'client_id': self._client_id, 'client_secret': self._client_secret}
-
-    def __str__(self) -> str:
-        return json.dumps(
-            {
-                'client_id': self._client_id,
-                'client_secret': self.client_secret,
-                'access_token': self.access_token,
-            }
-        )
 
     def retrieve_token(self, config: Config) -> AccessToken:
         logger = get_logger(**config.logger.__dict__)

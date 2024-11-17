@@ -295,7 +295,7 @@ method used for the SaaS-based API in [cspark.sdk][sdk].
 
 <!-- References -->
 [sdk]: https://pypi.org/project/cspark/
-[user-guide]: https://docs.coherent.global/integrations/how-to-deploy-a-hybrid-runner
+[user-guide]: https://docs.coherent.global/hybrid-runner/introduction-to-the-hybrid-runner
 [hybrid-runner]: https://github.com/orgs/Coherent-Partners/packages/container/package/nodegen-server
 [sdk-service-execute]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/docs/services.md#execute-a-spark-service
 [v3-format]: https://docs.coherent.global/spark-apis/execute-api/execute-api-v3

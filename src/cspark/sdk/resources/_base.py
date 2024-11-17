@@ -9,7 +9,7 @@ from typing import Any, Mapping, Optional, Union
 from httpx import URL, Client, Headers, Request, Response
 
 from .._config import Config
-from .._errors import SparkError
+from .._errors import SparkApiError, SparkError
 from .._logger import get_logger
 from .._utils import StringUtils, get_retry_timeout, get_uuid, sanitize_uri
 from .._version import about, sdk_ua_header
@@ -59,7 +59,7 @@ class ApiResource:
         content: Optional[bytes] = None,
         form=None,
         files=None,
-    ) -> HttpResponse:
+    ) -> 'HttpResponse':
         url = url.value if isinstance(url, Uri) else url
         request = self._client.build_request(
             method,
@@ -76,7 +76,7 @@ class ApiResource:
         self.logger.debug(f'{method} {url}')
         return self.__fetch(request)
 
-    def __fetch(self, request: Request, retries: int = 0) -> HttpResponse:
+    def __fetch(self, request: Request, retries: int = 0) -> 'HttpResponse':
         request.headers.update(self.config.auth.as_header)
         response = self._client.send(request)  # FIXME: handling errors (httpx.RequestError | httpx.HTTPStatusError)
         status = response.status_code
@@ -92,14 +92,13 @@ class ApiResource:
                 time.sleep(delay)
                 return self.__fetch(request, retries + 1)
 
-            url = str(request.url)
             raise SparkError.api(
                 status,
-                {'message': f'failed to fetch <{url}>', 'cause': _create_api_error_cause(request, response)},
+                {'message': f'failed to fetch <{request.url}>', 'cause': SparkApiError.to_cause(request, response)},
             )
 
         # otherwise, ok response
-        http_response = {
+        ok_response = {
             'status': status,
             'data': None,
             'buffer': response.content,
@@ -111,10 +110,10 @@ class ApiResource:
         content_type = response.headers.get('content-type', '')
         if 'application/json' in content_type:
             try:
-                http_response['data'] = response.json()
+                ok_response['data'] = response.json()
             except Exception:
-                http_response['data'] = response.text
-        return HttpResponse(**http_response)
+                ok_response['data'] = response.text
+        return HttpResponse(**ok_response)
 
 
 def download(
@@ -140,7 +139,7 @@ def download(
 
         response = client.send(request)
         if response.status_code >= 400:
-            raise SparkError.api(response.status_code, _create_api_error_cause(request, response))
+            raise SparkError.api(response.status_code, SparkApiError.to_cause(request, response))
 
         return HttpResponse(
             status=response.status_code,
@@ -150,22 +149,6 @@ def download(
             raw_request=request,
             raw_response=response,
         )
-
-
-def _create_api_error_cause(request: Request, response: Response) -> dict[str, Any]:
-    return {
-        'request': {
-            'url': str(request.url),
-            'method': request.method,
-            'headers': request.headers,
-            'body': request.content,
-        },
-        'response': {
-            'headers': response.headers,
-            'body': response.text,
-            'raw': response.content,
-        },
-    }
 
 
 @dataclass
@@ -219,6 +202,17 @@ class UriParams:
 class Uri:
     def __init__(self, url: URL):
         self._url = url
+
+    def __str__(self) -> str:
+        return self.value
+
+    def __repr__(self) -> str:
+        return f'<Uri: {self.value}>'
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Uri):
+            return False
+        return self.value == other.value
 
     @property
     def value(self) -> str:
@@ -307,9 +301,10 @@ class Uri:
         if uri.service_id:
             return f'service/{uri.service_id}'
         if folder and service:
+            version = f'[{version}]' if version else ''
             if long:
-                return f'folders/{folder}/services/{service}{f"[{version}]" if version else ""}'
-            return f'{folder}/{service}{f"[{version}]" if version else ""}'
+                return f'folders/{folder}/services/{service}{version}'
+            return f'{folder}/{service}{version}'
         return ''
 
     @staticmethod
@@ -327,6 +322,3 @@ class Uri:
             msg += ' "service/service_id" \n\t- "version/version_id" \n\t- "proxy/custom-endpoint"\n'
             raise SparkError.sdk(msg, uri)
         return uri_params
-
-    def __str__(self) -> str:
-        return self.value

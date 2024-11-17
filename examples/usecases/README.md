@@ -10,16 +10,23 @@ Each use case is a standalone Python project showcasing how to utilize the SDK
 to achieve specific outcomes. The examples are categorized by their operations,
 including data ingestion, data processing, and data export.
 
-## How to Run a Use Case
+## Use Cases
+
+- [Execute Records Sequentially using Execute APIv3](api_v3_for_loop/readme.md)
+- [Execute Sync Batch of Records using Execute APIv4](api_v4_sync_batch/readme.md)
+- [Service Promotion](service_promotion/readme.md)
+- [Asynchronous Batch Processing](async_batch/readme.md)
+
+## How to Run Use Cases
 
 To run a use case, you need to download the use case folder with its underlying
-content. Then, use [Poetry][poetry-url] to install the dependencies and run the
+content. Then, use [Poetry][poetry] to install the dependencies and run the
 Python scripts.
 
 > [!NOTE]
 > Follow the instructions on [Poetry's website](https://python-poetry.org/docs/)
 > to install it on your machine if you haven't done so already. If you cloned this
-> repository and set up your development environment with Rye, Poetry will be
+> repository and set up your development environment with [Rye], [Poetry] will be
 > installed automatically as a development dependency.
 
 1. install the dependencies
@@ -28,7 +35,7 @@ Python scripts.
 poetry install
 ```
 
-2. replace the placeholders in the `main.py` file with your own values.
+2. replace the placeholders in the `main.py` file with your own values (usually Spark settings)
 
 3. run the use case
 
@@ -37,16 +44,15 @@ poetry run python main.py
 ```
 
 If you encounter any issues, please refer to the use case's readme file for more
-information.
+information on how to troubleshoot and resolve them.
 
 ## Development Environment
 
 Start by cloning the repository and installing the dependencies. Then, follow
 [this guide][contributing-url] to set up your development environment.
 
-Though [Rye](https://rye-up.com/) is used for virtual environments, dependency
-management and packaging, you will need to use [Poetry][poetry-url] to run these
-examples.
+Though [Rye] is used for virtual environments, dependency management and packaging,
+you will need to use [Poetry] to run these examples.
 
 ## Hybrid Runner
 
@@ -58,7 +64,10 @@ Most of the use cases are based on this module, so you may use this WASM to test
 them out. Follow [this guide][hybrid-runner] if you need help setting up the hybrid
 runner.
 
+[Back to top](#common-use-cases) or go to [Execute Records Sequentially using Execute APIv3](api_v3_for_loop).
+
 <!-- References -->
 [contributing-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/CONTRIBUTING.md
 [hybrid-runner]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/docs/wasm/readme.md
-[poetry-url]: https://python-poetry.org/
+[poetry]: https://python-poetry.org/
+[rye]: https://rye-up.com/
