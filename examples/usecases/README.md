@@ -51,8 +51,10 @@ information on how to troubleshoot and resolve them.
 Start by cloning the repository and installing the dependencies. Then, follow
 [this guide][contributing-url] to set up your development environment.
 
-Though [Rye] is used for virtual environments, dependency management and packaging,
-you will need to use [Poetry] to run these examples.
+Though [Rye] is used for virtual environments, dependency management and packaging
+for the codebase, you will need to use [Poetry] to run these examples. Once the setup
+is complete, you can run the use cases as described above. Remember to navigate to
+the desired use case folder to get started.
 
 ## Hybrid Runner
 

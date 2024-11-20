@@ -47,12 +47,10 @@ class SparkError(Exception):
 
     @property
     def details(self) -> str:
-        if isinstance(self.cause, Exception):
+        if isinstance(self.cause, (dict, Exception)):
             return str(self.cause)
         elif isinstance(self.cause, str):
             return self.cause
-        elif isinstance(self.cause, dict):
-            return str(self.cause)
         return ''
 
     @staticmethod
