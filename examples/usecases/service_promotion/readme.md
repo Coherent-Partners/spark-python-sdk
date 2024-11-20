@@ -1,4 +1,4 @@
-## Promote Spark services from lower to higher environments
+## Promote Spark Services from Lower to Higher Environments
 
 Moving Spark services across different environments doesn't follow the same conventional
 deployment practices as other software applications. Spark provides a series of APIs
@@ -53,7 +53,7 @@ This execution consists of two routines: `exp()` and `imp()`.
 
 See an example of the expected logs below:
 
-[![outputs.png](outputs.png)](outputs.log)
+[![outputs.png](outputs.png)](outputs.png)
 
 ## What's Next
 
