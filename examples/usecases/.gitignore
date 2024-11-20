@@ -1,0 +1,5 @@
+.env
+inputs/
+outputs/
+*.log
+outputs.json

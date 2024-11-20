@@ -12,10 +12,10 @@ including data ingestion, data processing, and data export.
 
 ## Use Cases
 
-- [Execute Records Sequentially using Execute APIv3](api_v3_for_loop/readme.md)
-- [Execute Sync Batch of Records using Execute APIv4](api_v4_sync_batch/readme.md)
-- [Service Promotion](service_promotion/readme.md)
-- [Asynchronous Batch Processing](async_batch/readme.md)
+- [Execute records sequentially](api_v3_for_loop/readme.md)
+- [Execute batch of records synchronously](api_v4_sync_batch/readme.md)
+- [Asynchronous batch processing](async_batch/readme.md)
+- [Promote services across tenants or environments](service_promotion/readme.md)
 
 ## How to Run Use Cases
 
@@ -51,8 +51,10 @@ information on how to troubleshoot and resolve them.
 Start by cloning the repository and installing the dependencies. Then, follow
 [this guide][contributing-url] to set up your development environment.
 
-Though [Rye] is used for virtual environments, dependency management and packaging,
-you will need to use [Poetry] to run these examples.
+Though [Rye] is used for virtual environments, dependency management and packaging
+for the codebase, you will need to use [Poetry] to run these examples. Once the setup
+is complete, you can run the use cases as described above. Remember to navigate to
+the desired use case folder to get started.
 
 ## Hybrid Runner
 
@@ -61,10 +63,40 @@ compiled WebAssembly (WASM) module that can be used in hybrid deployments. This 
 a simple module that calculates the volume of a cylinder based on its radius and height.
 
 Most of the use cases are based on this module, so you may use this WASM to test
-them out. Follow [this guide][hybrid-runner] if you need help setting up the hybrid
-runner.
+them out. For example, you will first need to start your hybrid runner with the
+following command:
 
-[Back to top](#common-use-cases) or go to [Execute Records Sequentially using Execute APIv3](api_v3_for_loop).
+```bash
+docker run --name ws-sync -p 3000:3000 \
+  -v /Users/johndoe/models:/models \
+  -e MODEL_LOCATION=/models \
+  -e UPLOAD_ENABLED=true \
+  -e USE_SAAS=false \
+  ghcr.io/coherent-partners/nodegen-server:v1.39.0
+```
+
+Then, you can use the following Python code to upload the WASM module to the
+hybrid runner:
+
+```python
+import cspark.wasm as Hybrid
+
+hybrid = Hybrid.Client(base_url='http://localhost:3000/fieldengineering', token='open')
+with hybrid.services as s:
+    response = s.upload(file=open('volume-cylinder.zip', 'rb'))
+    print(response.data)
+```
+
+> [!TIP]
+> Consider using `versionId` as service URI when working with sync batch processing
+> (a.k.a Execute APIv4). It is a known issue we're working to resolve.
+
+Once uploaded, you are ready to run use cases that play well with hybrid runners.
+Remember to use `cspark.wasm.Client` for hybrid runners instead of `cspark.sdk.Client`,
+which is for the SaaS-based API. Follow [this guide][hybrid-runner] if you need more
+help working with hybrid runners.
+
+[Back to top](#common-use-cases) or go to [Execute Records Sequentially](api_v3_for_loop).
 
 <!-- References -->
 [contributing-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/CONTRIBUTING.md

@@ -109,19 +109,17 @@ class Services(ApiResource):
         startdate, enddate = DateUtils.parse(start_date, end_date)
         uri = Uri.validate(UriParams(folder, service))
         url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='publish')
-        body = {
-            'request_data': {
-                'draft_service_name': draft_name or uri.service,
-                'effective_start_date': startdate.isoformat(),
-                'effective_end_date': enddate.isoformat(),
-                'original_file_documentid': file_id,
-                'engine_file_documentid': engine_id,
-                'version_difference': versioning or 'minor',
-                'should_track_user_action': track_user,
-            }
+        params = {
+            'draft_service_name': draft_name or uri.service,
+            'effective_start_date': startdate.isoformat(),
+            'effective_end_date': enddate.isoformat(),
+            'original_file_documentid': file_id,
+            'engine_file_documentid': engine_id,
+            'version_difference': versioning or 'minor',
+            'should_track_user_action': track_user,
         }
 
-        response = self.request(url, method='POST', body=body)
+        response = self.request(url, method='POST', body={'request_data': params})
         version_id = isinstance(response.data, dict) and response.data.get('response_data', {}).get('version_id')
         if version_id:
             self.logger.info(f'service published with version id <{version_id}>')
