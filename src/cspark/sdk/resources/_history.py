@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 from typing import List, Optional, Union, cast
 
-from .._errors import SparkError
+from .._errors import RetryTimeoutError, SparkError
 from .._utils import DateUtils, StringUtils, get_retry_timeout, is_int
 from ._base import ApiResource, Uri, UriParams
 
@@ -169,9 +169,9 @@ class LogDownload(ApiResource):
                 time.sleep(get_retry_timeout(retries, retry_interval))
                 response = self.request(url)
             else:
+                err_msg = f'log download job status check timed out after {retries} attempts'
                 if throwable:
-                    error = SparkError.sdk(f'log download job status check timed out after {retries} attempts')
-                    self.logger.error(error.message)
-                    raise error
-                self.logger.warning(f'log download job status check timed out after {retries} attempts')
+                    self.logger.error(err_msg)
+                    raise RetryTimeoutError(err_msg, retries=retries, interval=retry_interval)
+                self.logger.warning(err_msg)
                 return response

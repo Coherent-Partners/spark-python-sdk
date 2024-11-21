@@ -5,29 +5,31 @@ from typing import Any, Dict, Generic, Optional, TypeVar, cast
 
 from httpx import Headers, Request, Response
 
-__all__ = ['SparkError', 'SparkSdkError', 'SparkApiError', 'ErrorMessage']
-
-TReq = TypeVar('TReq')
-TResp = TypeVar('TResp')
-
-
-class TRequest(Generic[TReq]):
-    def __init__(self, url: str, method: str, headers: Headers, body: Optional[TReq]):
-        self.url = url
-        self.method = method
-        self.headers = headers
-        self.body = body
-
-
-class TResponse(Generic[TResp]):
-    def __init__(self, headers: Headers, body: TResp, raw: str):
-        self.headers = headers
-        self.body = body
-        self.raw = raw
+__all__ = ['SparkError', 'SparkSdkError', 'RetryTimeoutError', 'SparkApiError', 'ErrorMessage', 'ApiErrorCause']
 
 
 class SparkError(Exception):
-    """Base class for all SDK-related errors."""
+    """
+    Base class for all SDK-related errors.
+
+    Our exception hierarchy:
+    * SparkError
+        - SparkSdkError
+            + RetryTimeoutError
+        - SparkApiError
+            + BadRequestError
+            + UnauthorizedError
+            + ForbiddenError
+            + NotFoundError
+            + ConflictError
+            + UnsupportedMediaTypeError
+            + UnprocessableEntityError
+            + RateLimitError
+            + InternalServerError
+            + ServiceUnavailableError
+            + GatewayTimeoutError
+            + UnknownApiError
+    """
 
     def __init__(self, message: str, cause: Optional[Any] = None):
         super().__init__()
@@ -36,20 +38,28 @@ class SparkError(Exception):
         self.cause = cause
 
     def __str__(self):
-        error = f'{self.name}: {self.message}'
-        return f'{error} ({self.details})' if self.details else error
+        error, details = f'{self.name}: {self.message}', self.details
+        return f'{error} ({details})' if details else error
 
     def __repr__(self):
         return f'<{self.name}>'
 
     def to_dict(self) -> Dict[str, Any]:
-        return {'name': self.name, 'message': self.message, 'cause': self.cause}
+        cause = self.cause
+        if isinstance(cause, ApiErrorCause):
+            cause = {'request': cause.request.__dict__, 'response': cause.response.__dict__}
+        elif isinstance(cause, Exception):
+            cause = str(cause)
+        return {'name': self.name, 'message': self.message, 'cause': cause}
 
     @property
     def details(self) -> str:
+        if isinstance(self.cause, ApiErrorCause):
+            req, resp = self.cause.request, self.cause.response
+            return str({'request': req.__dict__, 'response': resp and resp.__dict__ or None})
         if isinstance(self.cause, (dict, Exception)):
             return str(self.cause)
-        elif isinstance(self.cause, str):
+        if isinstance(self.cause, str):
             return self.cause
         return ''
 
@@ -83,6 +93,18 @@ class SparkSdkError(SparkError):
         return {**super().to_dict(), 'timestamp': self.timestamp}
 
 
+class RetryTimeoutError(SparkSdkError):
+    """Raised when the maximum number of retries is reached."""
+
+    def __init__(self, message: str, *, cause: Optional[Any] = None, retries: int = 0, interval: float = 0.0):
+        super().__init__(ErrorMessage(message, cause))
+        self.retries = retries
+        self.interval = interval
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {**super().to_dict(), 'retries': self.retries, 'interval': self.interval}
+
+
 class SparkApiError(SparkError):
     """
     Base class for errors related to the API.
@@ -108,9 +130,7 @@ class SparkApiError(SparkError):
 
     @staticmethod
     def when(status: int, error: ErrorMessage) -> SparkApiError:
-        if status == 0:
-            return InternetError(error, status)
-        elif status == 400:
+        if status == 400:
             return BadRequestError(error, status)
         elif status == 401:
             return UnauthorizedError(error, status)
@@ -151,9 +171,16 @@ class SparkApiError(SparkError):
             },
         }
 
-
-class InternetError(SparkApiError):
-    status = 0
+    @staticmethod
+    def no_response(request: Request) -> dict[str, Any]:
+        return {
+            'request': {
+                'url': str(request.url),
+                'method': request.method,
+                'headers': request.headers,
+                'body': request.content,
+            }
+        }
 
 
 class BadRequestError(SparkApiError):
@@ -202,6 +229,25 @@ class GatewayTimeoutError(SparkApiError):
 
 class UnknownApiError(SparkApiError):
     status = None
+
+
+TReq = TypeVar('TReq')
+TResp = TypeVar('TResp')
+
+
+class TRequest(Generic[TReq]):
+    def __init__(self, url: str, method: str, headers: Headers, body: Optional[TReq]):
+        self.url = url
+        self.method = method
+        self.headers = headers
+        self.body = body
+
+
+class TResponse(Generic[TResp]):
+    def __init__(self, headers: Headers, body: TResp, raw: str):
+        self.headers = headers
+        self.body = body
+        self.raw = raw
 
 
 class ErrorMessage:
