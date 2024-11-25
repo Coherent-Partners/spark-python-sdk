@@ -62,7 +62,7 @@ def execute_services(uri: str, inputs: str, params: list[str], headers: list[str
         client.config.extra_headers.update(parse_kv_pairs(headers))  # type: ignore
         with client.services as s:
             metadata = parse_kv_pairs(params, infer_type=True)
-            outputs = s.execute(uri, inputs=inputs, **metadata).data
+            outputs = s.execute(uri, inputs=inputs, source_system='Coherent Spark CLI', **metadata).data
 
         if not show_all:
             outputs = outputs.get('outputs') or outputs.get('response_data', {}).get('outputs')  # type: ignore
