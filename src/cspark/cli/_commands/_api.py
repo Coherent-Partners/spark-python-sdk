@@ -33,7 +33,7 @@ def params_option(**kwargs: Any) -> Callable:
             'params',
             type=str,
             multiple=True,  # allows multiple params
-            help='additional parameters (or metadata) supported',
+            help='Additional parameters (or metadata) supported',
             metavar='<PARAM>',
             **kwargs,
         )(func)

@@ -13,7 +13,7 @@ from ._api import AliasedGroup, Services, header_option, params_option, parse_kv
     help='Manage Spark services',
     options_metavar='',
     cls=AliasedGroup,
-    aliases={'ls': 'list', 'exec': 'execute', 'run': 'execute', 'del': 'delete'},
+    aliases={'ls': 'list', 'exec': 'execute', 'run': 'execute', 'find': 'search', 'del': 'delete'},
 )
 def services_cmd():
     pass
@@ -30,13 +30,46 @@ def list_services(folder: str, name_only: bool, data: str, headers: list[str]) -
 
     try:
         config = Config(**profile.to_config())
-        config.extra_headers.update(parse_kv_pairs(headers))  # type: ignore
+        config.extra_headers.update(parse_kv_pairs(headers))
         with Services(config) as s:
             response = s.get(folder, data).data
 
         output = response['data']  # type: ignore
         if name_only:
             output = [item['serviceName'] for item in output]  # type: ignore
+
+        click.echo(json.dumps(output, indent=2))
+    except SparkError as err:
+        console.print(f'[red]✗[/red] {err.message}')
+        raise click.exceptions.Exit(1) from err
+    except Exception as exc:
+        console.print(f'[red]✗[/red] {exc}')
+        raise click.exceptions.Exit(1) from exc
+
+
+@services_cmd.command(name='search', help='Search available services')
+@click.option('-d', '--data', type=str, metavar='<JSON>', help='Pagination data to send with the request')
+@header_option()
+@click.option('--show-all', is_flag=True, default=False, help='Show the complete response data')
+def search_services(data: str, headers: list[str], show_all: bool) -> None:
+    profile = get_active_profile()
+    console = Console()
+
+    def parse_params(data: str) -> dict:
+        try:
+            return json.loads(data)
+        except Exception:
+            return {}
+
+    try:
+        client = Client(**profile.to_config())
+        client.config.extra_headers.update(parse_kv_pairs(headers))
+        with client.services as s:
+            response = s.search(**parse_params(data))
+
+        output = response.data
+        if not show_all:
+            output = output.get('response_data', {})  # type: ignore
 
         click.echo(json.dumps(output, indent=2))
     except SparkError as err:
@@ -59,7 +92,7 @@ def execute_services(uri: str, inputs: str, params: list[str], headers: list[str
 
     try:
         client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_kv_pairs(headers))  # type: ignore
+        client.config.extra_headers.update(parse_kv_pairs(headers))
         with client.services as s:
             metadata = parse_kv_pairs(params, infer_type=True)
             outputs = s.execute(uri, inputs=inputs, source_system='Coherent Spark CLI', **metadata).data
@@ -89,7 +122,7 @@ def delete_services(folder: str, names: list[str], headers: list[str]) -> None:
 
     try:
         client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_kv_pairs(headers))  # type: ignore
+        client.config.extra_headers.update(parse_kv_pairs(headers))
 
         with client.services as s:
             for service in names:

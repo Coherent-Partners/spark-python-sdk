@@ -1,4 +1,4 @@
-import jwt
+import jwt  # type: ignore
 
 
 def validate_token(token: str):
