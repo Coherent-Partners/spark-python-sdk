@@ -30,8 +30,8 @@ Then, run the following command:
 poetry run python main.py
 ```
 
-The execution will start, and you will see the logs in the console and the `console.log` file
-and the outputs will be saved to the `outputs.json` file as shown below:
+The execution will begin, with logs being recorded in the `console.log` file.
+The results will be saved to the `outputs.json` file, as illustrated below:
 
 [![outputs.png](outputs.png)](outputs.json)
 

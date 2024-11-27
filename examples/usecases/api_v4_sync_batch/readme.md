@@ -34,14 +34,14 @@ Then, run the following command:
 poetry run python main.py
 ```
 
-The execution will start, and you will see the logs in the console and the `console.log` file
-and the outputs will be saved to the `outputs.json` file as shown below:
+The execution will begin, with logs being recorded in the `console.log` file.
+The results will be saved to the `outputs.json` file, as illustrated below:
 
 [![outputs.png](outputs.png)](outputs.json)
 
 ## What's Next
 
-In scenarios where you need to process a larger volume of records (e.g., 100,000),
+In scenarios where you need to process a larger volume of records (e.g., 1,000),
 the timeout limitations of Spark servers, which is approximately 55 seconds per API call,
 may require you to divide the records into smaller batches and process them sequentially.
 In such cases, consider employing more advanced techniques to manage the processing

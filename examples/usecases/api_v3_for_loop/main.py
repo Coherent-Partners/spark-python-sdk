@@ -17,8 +17,7 @@ def main():
     service_uri = 'my-folder/volume-cylinder'
 
     # ---------------- You do NOT need to modify below this line ----------------
-    logfmt = '[%(name)s] %(asctime)s %(levelname)s - %(message)s'
-    logging.basicConfig(filename='console.log', filemode='w', format=logfmt)
+    logging.basicConfig(filename='console.log', filemode='w', format=Spark.DEFAULT_LOGGER_FORMAT)
     logger = Spark.get_logger()
 
     writer = open(output_path, 'w')
@@ -41,7 +40,7 @@ def main():
             writer.write(json.dumps(result, indent=2) + newline)
             logger.info(f'record {i + 1} processed successfully')
         except Exception as exc:
-            logger.error(f'failed to process record {i + 1}')
+            logger.warning(f'failed to process record {i + 1}')
             logger.error(exc)
 
     # 3. Clean up resources
