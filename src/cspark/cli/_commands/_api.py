@@ -33,7 +33,7 @@ def params_option(**kwargs: Any) -> Callable:
             'params',
             type=str,
             multiple=True,  # allows multiple params
-            help='additional parameters (or metadata) supported',
+            help='Additional parameters (or metadata) supported',
             metavar='<PARAM>',
             **kwargs,
         )(func)
@@ -60,8 +60,11 @@ def parse_kv_pairs(pairs: list[str], *, sep: str = ':', infer_type: bool = False
 
     parsed = {}
     for pair in pairs:
-        key, value = pair.split(sep, 1)
-        parsed[key.strip()] = _infer_type(value.strip()) if infer_type else value.strip()
+        try:
+            key, value = pair.split(sep, 1)
+            parsed[key.strip()] = _infer_type(value.strip()) if infer_type else value.strip()
+        except Exception:
+            pass
 
     return parsed
 

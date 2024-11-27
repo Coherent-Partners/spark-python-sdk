@@ -4,7 +4,7 @@ from typing import BinaryIO, List, Mapping, Optional, Union
 
 from .._config import Config
 from .._constants import SPARK_SDK
-from .._errors import SparkError
+from .._errors import RetryTimeoutError, SparkError
 from .._utils import get_retry_timeout
 from ._base import ApiResource, Uri, UriParams
 
@@ -178,9 +178,9 @@ class Export(ApiResource):
             delay = get_retry_timeout(retries, retry_interval)
             time.sleep(delay)
 
-        error = SparkError.sdk(f'export job status timed out after {retries} attempts')
-        self.logger.error(error.message)
-        raise error
+        err_msg = f'export job status timed out after {retries} attempts'
+        self.logger.error(err_msg)
+        raise RetryTimeoutError(err_msg, retries=retries, interval=retry_interval)
 
     def cancel(self, job_id: str):
         url = Uri.of(None, endpoint=f'export/{job_id}', **self._base_uri)
@@ -262,9 +262,9 @@ class Import(ApiResource):
             delay = get_retry_timeout(retries, retry_interval)
             time.sleep(delay)
 
-        error = SparkError.sdk(f'import job status timed out after {retries} attempts')
-        self.logger.error(error.message)
-        raise error
+        err_msg = f'import job status timed out after {retries} attempts'
+        self.logger.error(err_msg)
+        raise RetryTimeoutError(err_msg, retries=retries, interval=retry_interval)
 
 
 class Migration:

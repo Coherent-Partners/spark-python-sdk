@@ -47,7 +47,7 @@ def main():
             writer.write(json.dumps(result, indent=2) + newline)
             logger.info(f'bulk {i + 1}/{batch_size} of {len(inputs)} records processed successfully')
         except Exception as exc:
-            logger.error(f'failed to process bulk {i + 1}/{batch_size} of {len(inputs)} records')
+            logger.warning(f'failed to process bulk {i + 1}/{batch_size} of {len(inputs)} records')
             logger.error(exc)
 
     # 3. Clean up resources

@@ -17,26 +17,24 @@ def auth_cmd():
 
 def _friendly_time(seconds: Union[int, float]) -> str:
     if seconds < 60:
-        return f'{int(seconds)} second{"s" if seconds != 1 else ""}'
+        return f'{int(seconds)} second{"s" if seconds > 1 else ""}'
     elif seconds < 3600:
-        minutes = seconds // 60
-        return f'{int(minutes)} minute{"s" if minutes != 1 else ""}'
+        mins = seconds // 60
+        return f'{int(mins)} min{"s" if mins > 1 else ""}'
     elif seconds < 86400:
-        hours = seconds // 3600
+        hrs = seconds // 3600
         mins_left = (seconds % 3600) // 60
+        timeago = f'{int(hrs)} hr{"s" if hrs != 1 else ""}'
         if mins_left > 0:
-            return (
-                f'{int(hours)} hour{"s" if hours != 1 else ""} {int(mins_left)} minute{"s" if mins_left != 1 else ""}'
-            )
-        else:
-            return f'{int(hours)} hour{"s" if hours != 1 else ""}'
+            timeago = f'{timeago} {int(mins_left)} min{"s" if mins_left > 1 else ""}'
+        return timeago
     else:
         days = seconds // 86400
-        hours_left = (seconds % 86400) // 3600
-        if hours_left > 0:
-            return f'{int(days)} day{"s" if days != 1 else ""} {int(hours_left)} hour{"s" if hours_left != 1 else ""}'
-        else:
-            return f'{int(days)} day{"s" if days != 1 else ""}'
+        hrs_left = (seconds % 86400) // 3600
+        timeago = f'{int(days)} day{"s" if days != 1 else ""}'
+        if hrs_left > 0:
+            timeago = f'{timeago} {int(hrs_left)} hr{"s" if hrs_left > 1 else ""}'
+        return timeago
 
 
 class AuthStatusCommand(click.Command):
@@ -174,7 +172,7 @@ class AuthLoginCommand(click.Command):
                     current_time = datetime.now()
 
                     if current_time >= expiration_time:
-                        console.print('[yellow]⚠[/yellow] Token has expired; refreshing...')
+                        console.print('[yellow]⚠[/yellow] Token has expired; refreshing token...')
                         self.login(refresh=True)
                     else:
                         expires_in = (expiration_time - current_time).total_seconds()

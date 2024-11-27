@@ -15,8 +15,7 @@ from rich.console import Console
 from rich.text import Text
 
 from .._utils import DATE_FORMAT, Profile, add_or_update_profile, delete_profile, get_active_profile, load_profiles
-from ._api import AliasedGroup
-from ._auth import _friendly_time
+from ._api import AliasedGroup, parse_kv_pairs
 
 _SPARK_ENVS = ['uat.us', 'uat.eu', 'uat.jp', 'uat.ca', 'uat.au', 'us', 'ca', 'eu', 'jp', 'au', 'sit', 'dev', 'test']
 
@@ -308,16 +307,9 @@ class ConfigSetCommand(click.Command):
         )
 
     def set(self, values: list[str]):
-        updates = {}
-        for value in values:
-            try:
-                key, val = value.split('=')
-                updates[key] = val
-            except ValueError as err:
-                raise click.UsageError(f'invalid format: {value}; expected format: <key>=<value>') from err
-
+        updates = parse_kv_pairs(values, sep='=', infer_type=True)
         if len(updates) == 0:
-            raise click.UsageError('no configuration values to set')
+            raise click.UsageError('no configuration values to set; expecting <key>=<value> format')
 
         profile = get_active_profile()
         all_keys = profile.__dict__.keys()
@@ -441,8 +433,8 @@ class ConfigListCommand(click.Command):
 
         if verbose:
             updated_at = datetime.fromisoformat(profile.updated_at).strftime(DATE_FORMAT)
-            timeout = _friendly_time(profile.timeout / 1000) if profile.timeout else 'None'
-            retry_interval = _friendly_time(profile.retry_interval) if profile.retry_interval else 'None'
+            timeout = f'{profile.timeout / 1000.0} second(s)' if profile.timeout else 'None'
+            retry_interval = f'{profile.retry_interval} second(s)' if profile.retry_interval else 'None'
             max_retries = f'up to {profile.max_retries} times' if profile.max_retries else 'None'
             console.print(f'  [cyan]other settings[/cyan]')
             console.print(f'    - logger     : [yellow]{"enabled" if profile.logger else "disabled"}[/yellow]')

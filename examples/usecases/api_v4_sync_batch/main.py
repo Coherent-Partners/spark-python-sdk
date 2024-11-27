@@ -38,7 +38,7 @@ def main():
         writer.write(json.dumps(result, indent=2))
         logger.info(f'bulk of {total} records processed successfully')
     except Exception as exc:
-        logger.error(f'failed to process bulk of {total} records')
+        logger.warning(f'failed to process bulk of {total} records')
         logger.error(exc)
 
     # 3. Clean up resources

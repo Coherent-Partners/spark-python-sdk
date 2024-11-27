@@ -1,16 +1,13 @@
 [tool.poetry]
-name = "api_v3_for_loop"
+name = "token_validation"
 version = "0.1.0"
-description = "Execute records sequentially using Execute APIv3"
+description = "Validate JWTs against Keycloak"
 authors = ["Coherent <team@coherent.global>"]
 readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-cspark = "^0.1.10"
-
-[tool.poetry.group.dev.dependencies]
-python-dotenv = "^1.0.1"
+pyjwt = {extras = ["crypto"], version = "^2.10.0"}
 
 [build-system]
 requires = ["poetry-core"]

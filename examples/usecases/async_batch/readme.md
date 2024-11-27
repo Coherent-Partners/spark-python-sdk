@@ -19,8 +19,8 @@ your Spark environment.
 
 ## Configuration
 
-Batch inputs and options are specified in [`config.py`](config.py). Modify this
-file to adjust your batch processing settings, including:
+Batch inputs and options are specified in [`config.py`](helpers/config.py). Modify
+this file to adjust your batch processing settings, including:
 
 - Input CSV file location
 - Chunk size
@@ -38,7 +38,7 @@ poetry run python main.py
 
 The script will read the input CSV file, split it into chunks, and process each
 chunk asynchronously. The batch processing status is displayed in the console as
-each chunk is processed.
+each chunk is being processed.
 
 [![outputs.png](outputs.png)](outputs.png)
 

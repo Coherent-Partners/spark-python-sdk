@@ -18,7 +18,6 @@ __all__ = ['Config', 'BaseUrl']
 class Config:
     _options: str
     _logger: LoggerOptions
-    extra_headers: Mapping[str, str] = {}
 
     def __init__(
         self,
@@ -50,6 +49,7 @@ class Config:
         self._logger = LoggerOptions.when(logger)
         self._env = self._base_url.env
 
+        self.extra_headers = {}
         self._options = str(
             {
                 'base_url': self._base_url.full,

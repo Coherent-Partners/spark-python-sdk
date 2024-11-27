@@ -41,7 +41,7 @@ def main():
     except Spark.SparkApiError as exc:
         logger.error(exc.to_dict())
     except Exception as exc:
-        logger.error(f'failed to process bulk of {total} records')
+        logger.warning(f'failed to process bulk of {total} records')
         logger.error(exc)
 
     # 3. Clean up resources

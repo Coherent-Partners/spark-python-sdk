@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from types import TracebackType
 from typing import Any, Mapping, Optional, Union
 
-from httpx import URL, Client, Headers, Request, Response
+from httpx import URL, Client, Headers, HTTPError, HTTPStatusError, Request, RequestError, Response
 
 from .._config import Config
 from .._errors import SparkApiError, SparkError
@@ -78,28 +78,46 @@ class ApiResource:
 
     def __fetch(self, request: Request, retries: int = 0) -> 'HttpResponse':
         request.headers.update(self.config.auth.as_header)
-        response = self._client.send(request)  # FIXME: handling errors (httpx.RequestError | httpx.HTTPStatusError)
-        status = response.status_code
 
-        if status >= 400:
-            if status == 401 and self.config.auth.type == 'oauth' and retries < self.config.max_retries:
+        response, status_code = None, 0
+        err_msg = f'an error occurred while fetching <{request.url}>'
+
+        try:
+            response = self._client.send(request)
+            response.raise_for_status()
+        except RequestError as err:
+            err_msg += f'; {err}'  # occurs while issuing a request; hence no response
+            raise SparkError.sdk(err_msg, SparkApiError.no_response(request)) from err
+        except HTTPStatusError as err:
+            err_msg = str(err)
+        except HTTPError as err:
+            err_msg += f'; {err}'
+        except Exception:
+            pass  # possibly runtime error but should not interrupt this flow
+
+        if not response:
+            raise SparkError.sdk(err_msg, SparkApiError.no_response(request))
+
+        status_code = response.status_code
+        if status_code >= 400:
+            if status_code == 401 and self.config.auth.type == 'oauth' and retries < self.config.max_retries:
                 self.config.auth.oauth.retrieve_token(self.config)  # pyright: ignore[reportOptionalMemberAccess]
                 return self.__fetch(request, retries + 1)
 
-            if (status == 408 or status == 429) and retries < self.config.max_retries:
-                self.logger.debug(f'retrying request due to status code {status}...')
+            if (status_code == 408 or status_code == 429) and retries < self.config.max_retries:
+                self.logger.debug(f'retrying request due to status code {status_code}...')
                 delay = get_retry_timeout(retries, self.config.retry_interval)
                 time.sleep(delay)
                 return self.__fetch(request, retries + 1)
 
             raise SparkError.api(
-                status,
+                status_code,
                 {'message': f'failed to fetch <{request.url}>', 'cause': SparkApiError.to_cause(request, response)},
             )
 
         # otherwise, ok response
         ok_response = {
-            'status': status,
+            'status': status_code,
             'data': None,
             'buffer': response.content,
             'headers': response.headers,

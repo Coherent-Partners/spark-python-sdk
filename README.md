@@ -1,6 +1,8 @@
 # Coherent Spark Python SDK
 
 [![PyPI version][version-img]][version-url]
+[![CI build][ci-img]][ci-url]
+[![License][license-img]][license-url]
 
 The Coherent Spark Python SDK is designed to elevate the developer experience and
 provide convenient access to Coherent Spark APIs.
@@ -38,7 +40,7 @@ unless specified otherwise).
 
 Hence, there are various ways to indicate a Spark service URI:
 
-- `{folder}/{service}[?{version}]` - _version_ is optional.
+- `{folder}/{service}[{version}]` - _version_ is optional.
 - `service/{service_id}`
 - `version/{version_id}`
 
@@ -254,13 +256,17 @@ conduct, and the process for submitting pull requests.
 [Apache-2.0][license-url]
 
 <!-- References -->
-[version-img]: https://badge.fury.io/py/cspark.svg
+[version-img]: https://img.shields.io/pypi/v/cspark
 [version-url]: https://pypi.python.org/pypi/cspark
+[license-img]: https://img.shields.io/pypi/l/cspark
+[license-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/LICENSE
+[ci-img]: https://github.com/Coherent-Partners/spark-python-sdk/workflows/Build/badge.svg
+[ci-url]: https://github.com/Coherent-Partners/spark-python-sdk/actions/workflows/build.yml
+
 [api-key-docs]: https://docs.coherent.global/spark-apis/authorization-api-keys
 [bearer-token-docs]: https://docs.coherent.global/spark-apis/authorization-bearer-token
 [oauth2-docs]: https://docs.coherent.global/spark-apis/authorization-client-credentials
 [contributing-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/CONTRIBUTING.md
-[license-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/LICENSE
 [examples]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/examples
 [docs]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/docs
 [uri-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/src/cspark/sdk/resources/_base.py
