@@ -69,10 +69,10 @@ async def service_execute_v4(scope: Scope, receive: Receive, send: Send) -> None
     assert req_body['call_purpose'] == 'Sync Batch Execution'
     assert req_body['source_system'] == 'Spark Python SDK'
 
-    res_body = {'outputs': [{'my_output': 42}, {'my_output': 43}], 'process_time': [1, 2], 'service_id': 'uuid'}
+    res_body = '{"outputs": [{"my_output": 42}, {"my_output": 43}], "process_time": [1, 2], "service_id": "uuid"}'
     # Note that Spark may return more headers.
     await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
-    await send({'type': 'http.response.body', 'body': json.dumps(res_body).encode()})
+    await send({'type': 'http.response.body', 'body': res_body.encode()})
 
 
 async def service_execute_with_metadata(scope: Scope, receive: Receive, send: Send) -> None:

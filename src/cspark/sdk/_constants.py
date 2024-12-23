@@ -5,6 +5,7 @@ __all__ = [
     'DEFAULT_TIMEOUT_IN_MS',
     'RETRY_RANDOMIZATION_FACTOR',
     'DEFAULT_LOGGER_FORMAT',
+    'DEFAULT_LOGGER_DATEFMT',
     'SPARK_SDK',
 ]
 
@@ -13,6 +14,7 @@ DEFAULT_RETRY_INTERVAL = 1  # 1 second
 DEFAULT_TIMEOUT_IN_MS = 60000  # 60 seconds
 RETRY_RANDOMIZATION_FACTOR = 1.5
 DEFAULT_LOGGER_FORMAT = '[%(name)s] %(asctime)s %(levelname)s - %(message)s'
+DEFAULT_LOGGER_DATEFMT = '%m/%d/%Y, %I:%M:%S %p'
 SPARK_SDK = 'Spark Python SDK'
 
 

@@ -55,7 +55,7 @@ import cspark.wasm as Hybrid
 
 hybrid = Hybrid.Client(tenant='my-tenant', token='open')
 
-health = hybrid.health_check()
+health = hybrid.health.check()
 print(health.data)
 ```
 
@@ -85,7 +85,7 @@ import cspark.wasm as Hybrid
 
 hybrid = Hybrid.Client(tenant='my-tenant', token='open')
 
-version = hybrid.get_version()
+version = hybrid.version.get()
 print(version.data)
 ```
 

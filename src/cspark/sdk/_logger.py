@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Mapping, Union
 
+from ._constants import DEFAULT_LOGGER_DATEFMT
 from ._version import sdk_logger
 
 __all__ = ['get_logger', 'LoggerOptions']
@@ -12,7 +13,7 @@ class LoggerOptions:
     context: str = sdk_logger
     disabled: bool = False
     level: int = logging.DEBUG
-    datefmt: str = '%m/%d/%Y, %I:%M:%S %p'
+    datefmt: str = DEFAULT_LOGGER_DATEFMT
     colorful: bool = True
     timestamp: bool = True
 
@@ -64,7 +65,7 @@ def get_logger(
     context: str = sdk_logger,
     disabled: bool = False,
     level: int = logging.DEBUG,
-    datefmt: str = '%m/%d/%Y, %I:%M:%S %p',
+    datefmt: str = DEFAULT_LOGGER_DATEFMT,
     colorful: bool = True,
     timestamp: bool = True,
 ) -> logging.Logger:
