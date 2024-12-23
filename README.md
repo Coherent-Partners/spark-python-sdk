@@ -8,7 +8,6 @@ The Coherent Spark Python SDK is designed to elevate the developer experience an
 provide convenient access to Coherent Spark APIs.
 
 👋 **Just a heads-up:**
-
 This SDK is supported by the community. If you encounter any bumps while using it,
 please report them [here](https://github.com/Coherent-Partners/spark-python-sdk/issues)
 by creating a new issue.

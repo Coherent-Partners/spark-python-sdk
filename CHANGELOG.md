@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.1.11 (2024-12-23)
+
+- Apply bug fixes and enhancements
+- Update documentation
+
 ## 0.1.10 (2024-11-14)
 
 - Apply bug fixes and enhancements
