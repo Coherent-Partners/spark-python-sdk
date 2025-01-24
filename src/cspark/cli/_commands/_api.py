@@ -69,12 +69,19 @@ def parse_kv_pairs(pairs: list[str], *, sep: str = ':', infer_type: bool = False
     return parsed
 
 
+def json_parse(data: str, fallback: Optional[Any] = None) -> dict:
+    try:
+        return json.loads(data)
+    except Exception:
+        return fallback or {}
+
+
 class Services(ApiResource):
     def get(self, folder: str, data: Optional[str] = None):
         endpoint = f'product/{folder}/engines'
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
         body = {'page': 1, 'pageSize': 100, 'search': [], 'sort': 'name1'}
-        return self.request(url, method='POST', body=body.update(json.loads(data)) if data else body)
+        return self.request(url, method='POST', body=body.update(json_parse(data)) if data else body)
 
 
 class AliasedGroup(click.Group):

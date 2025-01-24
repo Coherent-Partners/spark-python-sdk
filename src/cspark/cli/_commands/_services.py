@@ -5,7 +5,7 @@ from cspark.sdk import Client, Config, SparkError
 from rich.console import Console
 
 from .._utils import get_active_profile
-from ._api import AliasedGroup, Services, header_option, params_option, parse_kv_pairs
+from ._api import AliasedGroup, Services, header_option, json_parse, params_option, parse_kv_pairs
 
 
 @click.group(
@@ -55,17 +55,11 @@ def search_services(data: str, headers: list[str], show_all: bool) -> None:
     profile = get_active_profile()
     console = Console()
 
-    def parse_params(data: str) -> dict:
-        try:
-            return json.loads(data)
-        except Exception:
-            return {}
-
     try:
         client = Client(**profile.to_config())
         client.config.extra_headers.update(parse_kv_pairs(headers))
         with client.services as s:
-            response = s.search(**parse_params(data))
+            response = s.search(**json_parse(data))
 
         output = response.data
         if not show_all:
