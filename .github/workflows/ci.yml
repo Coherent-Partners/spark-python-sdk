@@ -43,7 +43,7 @@ jobs:
 
   ecosystem-test:
     needs: unit-test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         python-version: ['3.7', '3.8', '3.9', '3.10', '3.12']
