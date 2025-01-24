@@ -1,5 +1,6 @@
 from ._base import *
 from ._batches import *
+from ._folders import *
 from ._history import *
 from ._impex import *
 from ._oauth2 import *

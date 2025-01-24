@@ -14,28 +14,25 @@
 | `Spark.batches.of(id).dispose()`            | [Close a batch pipeline](#close-a-batch-pipeline).|
 | `Spark.batches.of(id).cancel()`             | [Cancel a batch pipeline](#cancel-a-batch-pipeline).|
 
-The [Batches API][batch-apis] (in Beta) offers a set of endpoints that facilitate
-executing a Spark service for a large volume of input data. Spark provides a dedicated
-infrastructure specifically designed for parallel processing, capable of scaling up
-or down based on the data volume that needs to be processed.
-
-Utilizing this API will ensure optimal performance and scalability for your data
-processing tasks.
+[Batch API][batch-apis] provides a series of endpoints for processing high-volume
+data through Spark services. Built on a dedicated infrastructure, it enables efficient
+parallel processing that automatically scales based on workload demands. This API delivers
+optimal performance by dynamically adjusting computational resources to match your
+data processing needs.
 
 > [!NOTE]
-> It should be noted that the Batches API is highly recommended when dealing with
-> datasets consisting of more than 10,000 records, with a calculation time longer than 500ms.
-> Unless you have specific requirements or reasons to use a different approach,
-> such as [Services API](./services.md) as an alternative, this API is the way to go.
+> Batch API is the optimal choice for processing large datasets with over 10,000 records
+> or calculations exceeding 500ms. While alternatives like the [Services API](./services.md) exist,
+> the Batch APIs provide the most efficient solution for high-volume data processing unless
+> specific requirements dictate otherwise.
 
-For more information on the Batches API and its endpoints, refer to the [API reference][batch-apis].
+For more information on the Batch API and its endpoints, refer to the [API reference][batch-apis].
 
 ## Describe batch pipelines across a tenant
 
-This method retrieves detailed info on recently run batch pipelines across a tenant.
-It helps you keep track of existing batches and their statuses. Remember that
-this will only provide information about batches that are in progress or recently
-completed (i.e., within the past hour).
+This method provides a comprehensive overview of batch pipelines executed within a tenant.
+It allows you to monitor and track both active and recently completed batches (within the
+last hour). Use this method to efficiently manage and analyze your batch processing operations.
 
 ### Arguments
 
@@ -95,19 +92,20 @@ been granted access (e.g., `supervisor:pf`) to view other users' batches.
 
 ## Create a new batch pipeline
 
-This method allows you to start a new batch pipeline, which is a necessary step
-before you can perform any operations on it.
+This method initializes a new batch pipeline, a prerequisite step for any data
+processing operations.
 
 > [!IMPORTANT]
-> It is good practice to retain the `id` of the newly created pipeline.
-> This identifier will be used to reference the pipeline in subsequent operations.
+> Store the returned pipeline `id` securely. You'll need this unique identifier
+> for all subsequent operations on this pipeline.
 
 ### Arguments
 
-The method accepts a string or a `UriParams` object and optional keyword arguments,
-which include metadata and other pipeline configurable settings (experimental).
+The method requires a service identifier (either as a string or `UriParams` object)
+and accepts optional configuration parameters for metadata and pipeline behavior
+(experimental features).
 
-For the first argument, the service URI locator can be a string or `UriParams` object:
+For the first argument, provide the service URI as a string or `UriParams` object:
 
 | Property     | Type           | Description                                      |
 | -----------  | -------------- | ------------------------------------------------ |
@@ -123,8 +121,8 @@ spark.batches.create('my-folder/my-service')
 spark.batches.create(UriParams(folder='my-folder', service='my-service'))
 ```
 
-If needed, you can also provide additional keyword arguments to configure how the
-pipeline, once created, will scale up or down and perform its operations.
+For the second argument, you can provide optional parameters to customize the pipeline's behavior,
+including scaling and operational configurations:
 
 | Property             | Type          | Description                                      |
 | -------------------- | ------------- | ------------------------------------------------ |
@@ -181,15 +179,15 @@ or the [`cancel` method](#cancel-a-batch-pipeline).
 
 ## Define a client-side batch pipeline by ID
 
-This method performs no action on the pipeline (no API call). Instead, it
-allows you to define a client-side reference for the pipeline using its
-unique identifier (`id`), which can then be used to perform various operations
-without having to specify it repeatedly in each method call.
+This method creates a client-side reference to an existing batch pipeline using its
+unique identifier (`id`). It serves as a convenient way to interact with a specific
+pipeline without repeatedly providing its ID for each operation.
 
 ### Arguments
 
-The expected argument is the pipeline's unique identifier as a string.
-At this stage, no checks are performed to validate the provided `id`.
+The method requires a single argument: the pipeline's unique identifier (`id`) as
+a string. Note that this method does not validate the ID or make any API calls; it
+simply establishes a local reference to the pipeline.
 
 ```py
 pipeline = spark.batches.of('uuid')
@@ -197,14 +195,16 @@ pipeline = spark.batches.of('uuid')
 
 ### Returns
 
-The method returns a batch `Pipeline` object that can be used to perform subsequent
-actions on the pipeline.
+The method returns a batch `Pipeline` object that serves as an interface for all
+subsequent pipeline operations.
 
-Apart from the convenience of not having to specify the batch ID repeatedly, some other
-perks of using this object include the ability to build statistics and insights
-about the pipeline usage. For instance, if you've built a mechanism for repeatedly
-pushing and pulling data, you may retrieve details such as the total number of
-records processed, the state of the pipeline, and so on.
+This object provides more than just convenience in handling batch IDs. It maintains
+valuable pipeline metrics and status information, enabling you to:
+
+- Track the pipeline's current state
+- Monitor the total number of processed records
+- Access processing statistics
+- Manage chunk operations efficiently
 
 ```py
 print(pipeline.state) # 'open' (other values: 'closed' or 'cancelled')
@@ -289,9 +289,13 @@ pipeline.get_status()
 
 ### Returns
 
-The method returns a dictionary containing the current status of the pipeline
-and other relevant details, such as the number of records processed, the time taken
-to process the data, and the status of the pipeline.
+The method returns a dictionary containing comprehensive pipeline metrics, including:
+
+- Current pipeline and batch status
+- Record processing counts and progress
+- Computation time metrics
+- Buffer utilization statistics
+- Worker allocation information
 
 ```json
 {
@@ -327,15 +331,22 @@ Other available statuses (i.e., `batch_status`) are:
 
 ## Add input data to a batch pipeline
 
-This method allows you to push input data in bulk to an existing pipeline.
-It is also designed to facilitate data submission in different shapes and forms.
+This method enables bulk submission of input data to an existing pipeline. It
+supports various data formats and structures to provide flexible data ingestion
+options.
+
+> [!WARNING]
+> The SDK does **NOT** automatically convert regular JSON objects into JSON arrays
+> when submitting to the pipeline. Submitting data in an incorrect format may result
+> in unexpected behavior or processing errors, such as record count mismatches.
+> Always ensure your input data is properly formatted as JSON arrays.
 
 ### Arguments
 
 The method accepts 4 mutually exclusive keyword arguments:
 
-- `raw`: is the raw chunk data without no direct data manipulation. The raw dataset
-  can be of `string` or `bytes` as long as it is JSON serializable.
+- `raw`: is the dataset in its most primitive shape and can be of `string` or `bytes`
+as long as it is JSON serializable.
 
 ```py
 raw_string = """
@@ -347,8 +358,8 @@ raw_string = """
       "data": {
         "inputs": [
           ["input_1", "input_2", "input_N"],
-          [1, 2, 3],
-          [4, 5, 6]
+          [0, "zero", false],
+          [1, "one", true]
         ],
         "parameters": {"common_input": 0}
       }
@@ -359,32 +370,32 @@ raw_string = """
 pipeline.push(raw=raw_string)
 ```
 
-- `inputs`: a list of the records as input data. This is convenient when you have
-  a list of records that needs to be processed in a single chunk. That is, you are
-  in complete control of the data submission process: chunking and partitioning.
+- `inputs`: is convenient when you have a list of records that needs to be processed
+  in one single chunk. That means, if you need to submit multiple chunks, you will
+  have to call the `push` method multiple times.
 
 ```py
-pipeline.push(inputs=[{'value': 42}, {'value': 43}])
+pipeline.push(inputs=[['input_1', 'input_2', 'input_N'], [0, 'zero', False], [1, 'one', True]])
 ```
 
-- `data`: an object of `ChunkData` type. Sometimes, you may want to perform certain
-  operations, such as applying aggregations to the output data post-processing. This
+- `data`: is an object of `ChunkData` type. Sometimes, you may want to perform certain
+  operations, such as applying aggregations to the output data. This
   class lets you specify the `inputs`, `parameters` and `summary` separately.
 
 ```py
 from cspark.sdk import ChunkData
 
 data = ChunkData(
-    inputs=[{'value': 42}, {'value': 43}],
+    inputs=[['input_1', 'input_2', 'input_N'], [0, 'zero', False], [1, 'one', True]],
     parameters={'common': 40},
     summary={'ignore_error': False, 'aggregation': [{'output_name': 'total', 'operator': 'SUM'}]},
 )
 pipeline.push(data=data)
 ```
 
-- `chunks`: an object of `BatchChunk` type. This gives you full control over the
-  chunk creation process, allowing you to specify the `inputs`, `parameters`,
-  and `summary`, and indicate the `id` and `size`.
+- `chunks`: is an object of `BatchChunk` type. This gives you full control over the
+  chunk creation process, allowing you to indicate the `id` and `size` as well as
+  the `inputs`, `parameters`, and `summary`.
 
 ```py
 from cspark.sdk import BatchChunk, ChunkData
@@ -393,7 +404,7 @@ chunk = BatchChunk(
     id='uuid',
     size=2,
     data=ChunkData(
-        inputs=[{'value': 42}, {'value': 43}],
+        inputs=[['input_1', 'input_2', 'input_N'], [0, 'zero', False], [1, 'one', True]],
         parameters={'common': 40},
         summary={'ignore_error': False, 'aggregation': [{'output_name': 'total', 'operator': 'SUM'}]},
     ),
@@ -407,7 +418,10 @@ _evenly_ across the chunks.
 ```py
 from cspark.sdk import create_chunks
 
-chunks = create_chunks(inputs=[{'value': 42}, {'value': 43}, {'value': 44}], chunk_size=2)
+chunks = create_chunks(
+    inputs=[['input_1', 'input_2', 'input_N'], [0, 'zero', False], [1, 'one', True]],
+    chunk_size=2,
+)
 pipeline.push(chunks=chunks)
 ```
 
@@ -440,14 +454,14 @@ reflecting the new data that was pushed.
 
 ## Retrieve the output data from a batch pipeline
 
-Once you submit the input data, the pipeline will automatically start processing it.
-Eventually, the pipeline will produce some output data, which can be pulled once available.
+After submitting input data, the pipeline begins processing automatically. Output
+data becomes available progressively and can be retrieved through the pull operation.
 
 > [!TIP]
-> You do not have to wait for the previous chunk to be processed before submitting
-> the next one. Spark will automatically queue and process the chunks once more
-> compute resources are available. A good practice is monitoring the pipeline's
-> status and ensuring the input and output buffers are not full.
+> You can continue submitting chunks without waiting for previous ones to complete.
+> Spark manages the queue and processing automatically, allocating compute resources
+> as they become available. Best practice is to monitor the pipeline status periodically
+> and ensure input/output buffers have sufficient capacity.
 
 ### Arguments
 
@@ -512,13 +526,13 @@ Find out more about the output data structure in the
 
 ## Close a batch pipeline
 
-Once you have finished processing all your input data, it is important to close
-the pipeline to free up resources and ensure optimal performance.
+Once all data processing is complete, it's essential to close the pipeline to release
+system resources and maintain optimal performance.
 
-After you close a batch, any pending chunks will still be processed and can be retrieved.
-However, you won't be able to submit new chunks to a closed pipeline. The
-SDK maintains an internal state of the pipeline and will generate an error
-if you try to perform an unsupported operation on it.
+After closing a batch, any pending chunks in the processing queue will still complete
+and their results can be retrieved. However, the pipeline won't accept new chunk
+submissions. The SDK tracks the pipeline's state internally and will throw an error
+if you attempt any operations not supported on a closed pipeline.
 
 ### Arguments
 
@@ -531,14 +545,13 @@ pipeline.dispose()
 
 > [!WARNING]
 > Do **NOT** use the `close()` method to close a pipeline. This method is reserved
-> for closing the HTTP client of the `Pipeline` API resource and should not be
-> used to close a pipeline. If that happens unintentionally, you will need to
-> start over and build a new client-side pipeline using `Batches.of(id)`, which
-> also means you'll lose the internal states handled by the old `Pipeline` object.
+> for closing the HTTP client of the `Pipeline` API resource. If and when
+> that happens unintentionally, you will need to start over and build a new client-side
+> pipeline using `Batches.of(id)`, which also means you'll lose the internal states
+> handled by the old `Pipeline` object.
 
-Keep in mind that if the pipeline has been idle for longer than 30 minutes,
-it will automatically be closed by the system to free up resources, i.e., disposing
-of existing workers and buffers.
+Note that pipelines automatically close after 30 minutes of inactivity to optimize
+resource utilization. This automatic closure releases allocated workers and buffers.
 
 ### Returns
 
@@ -622,17 +635,17 @@ To further illustrate the practical implementation of the Batches API, consider 
 following example: the `create_and_run()` script.
 
 It's a self-contained script and should serve as a demonstration of how to harmoniously
-use the various methods of the Batches API in one go. The script performs the following
-tasks:
+use the Batches API methods. The script performs the following tasks:
 
-- reading a dataset (inputs) from a JSON file;
-- pushing it in chunks to a newly created batch pipeline;
-- checking the pipeline's status every 2 seconds;
-- retrieving the output data from the pipeline when available;
-- and finally, closing the pipeline.
+- read a dataset (inputs) from a JSON file;
+- push it in chunks to a newly created batch pipeline;
+- check the pipeline's status every 2 seconds;
+- retrieve the output data from the pipeline when available;
+- and finally, close the pipeline.
 
-The script will continue to interact with Spark till all data has been processed
-unless an error occurs, which will force an early closure of the pipeline.
+The script maintains continuous interaction with Spark until all data processing
+is complete. If an error occurs during execution, the pipeline will be safely
+terminated and all resources properly released.
 
 ```py
 import json
@@ -680,16 +693,11 @@ def create_and_run(batches: Spark.Batches):
                     results.extend(r['outputs'])
 
             time.sleep(2)
-
-    except Spark.SparkSdkError as err:
-        print(err.message)
-        if err.cause:
-            print(err.details)
-    except Spark.SparkApiError as err:
-        logger.warning(err.message)
+    except Spark.SparkError as err:
+        logger.error(err.message)
         logger.info(err.details)
     except Exception as exc:
-        logger.fatal(f'Unknown error: {exc}')
+        logger.critical(f'Unknown error: {exc}')
     finally:
         if pipeline:
             pipeline.dispose()
@@ -703,7 +711,7 @@ def create_and_run(batches: Spark.Batches):
 if __name__ == '__main__':
     load_dotenv() # load Spark settings from .env file
 
-    spark = Spark.Client(timeout=120_000) # create a Spark client
+    spark = Spark.Client(timeout=90_000, logger={'context': 'Async Batch'}) # create a Spark client
     with spark.batches as b:
         create_and_run(b)
 ```
@@ -718,11 +726,10 @@ if __name__ == '__main__':
 > to consider how you read and feed the input data to the pipeline and how to handle
 > the output data once it's available.
 
-In the example above, the script assumes that the input dataset is cleansed and
-formatted correctly. However, there may be occasions when the dataset is not in the
-desired format. In such cases, you will need to preprocess it. The `BatchChunk` and
-`ChunkData` classes can be used to manipulate the data and structure it in a way
-that is compatible with the pipeline.
+The example assumes pristine input data, which is rarely the case in real applications.
+When working with raw data, you'll likely need preprocessing steps. The `BatchChunk`
+and `ChunkData` classes provide flexible data manipulation capabilities to ensure
+your data meets pipeline requirements before processing.
 
 [Back to top](#batches-api) or [Next: Log History API](./history.md)
 

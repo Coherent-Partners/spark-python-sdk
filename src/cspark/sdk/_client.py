@@ -54,6 +54,11 @@ class Client:
         )
 
     @property
+    def folders(self) -> API.Folders:
+        """The resource to manage Folders API."""
+        return API.Folders(self.config)
+
+    @property
     def services(self) -> API.Services:
         """The resource to manage Services API."""
         return API.Services(self.config)

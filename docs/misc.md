@@ -12,17 +12,14 @@
 This method helps you download a service's [WebAssembly](https://webassembly.org/)
 module.
 
-Roughly speaking, WebAssembly (or WASM) is a binary instruction format
-for a stack-based virtual machine. It's designed as a portable compilation target
-for programming languages, enabling deployment on the web for client and server
-applications.
+[WebAssembly](https://webassembly.org/) (WASM) is a low-level binary format for
+executing code in a stack-based virtual machine. It serves as a compilation target
+for high-level programming languages, enabling efficient execution across web platforms.
 
-In the context of Spark, a WebAssembly module refers to a cohesive bundle of
-files designed for portability and execution across web and Node.js environments.
-This bundle typically includes the WebAssembly representation of the Spark service's
-encapsulated logic along with associated JavaScript files. By packaging these
-components together, a Spark WASM module becomes executable within both browser and
-Node environments.
+In Spark's context, a WebAssembly module is a self-contained package that bundles
+the compiled service logic with its supporting files. This modular approach ensures
+consistent execution in both web browsers and Node.js environments, making Spark
+services highly portable and performant.
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/webassembly-module-api)
 for more information.
@@ -31,9 +28,9 @@ for more information.
 
 You may pass in the service URI as `string` in the following format:
 
-- `version/uuid` (e.g., `version/123e4567-e89b-12d3-a456-426614174000`) - **preferred**
-- `service/uuid` (e.g., `service/123e4567-e89b-12d3-a456-426614174000`)
-- `folder/service` (e.g., `my-folder/my-service`)
+- `version/{version_id}` - **preferred**
+- `service/{service_id}`
+- `{folder}/{service}`
 
 ```python
 spark.wasm.download('version/uuid')
@@ -46,7 +43,7 @@ Alternatively, you can pass in the following parameters as an `object`.
 | _folder_      | `str \| None` | The folder name.                 |
 | _service_     | `str \| None` | The service name.                |
 | _version\_id_ | `str \| None` | The version UUID of the service. |
-| _service\_id_ | `str \| None` | The service UUID.                |
+| _service\_id_ | `str \| None` | The service UUID (points to the latest version).|
 
 > [!NOTE]
 > As of now, only the `version_id` should be used to download the WebAssembly module.

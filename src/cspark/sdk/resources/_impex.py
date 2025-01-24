@@ -31,7 +31,7 @@ class ImpEx:
     def imports(self):
         return Import(self.config)
 
-    def export(
+    def exp(
         self,
         *,
         folders: Optional[List[str]] = None,
@@ -68,7 +68,7 @@ class ImpEx:
 
             return exporter.download([f['file'] for f in files])
 
-    def import_(
+    def imp(
         self,
         destination: Union[str, List[str], Mapping[str, str], List[Mapping[str, str]]],
         file: BinaryIO,
@@ -104,6 +104,10 @@ class ImpEx:
                 importer.logger.info(f'{len(services)} service(s) imported')
 
             return status
+
+    # aliases for export and import to avoid breaking changes.
+    export = exp
+    import_ = imp
 
 
 class Export(ApiResource):

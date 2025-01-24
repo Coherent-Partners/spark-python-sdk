@@ -1,3 +1,4 @@
+# type: ignore
 import json
 import time
 
@@ -28,34 +29,27 @@ def create_and_run(batches: Spark.Batches):
     pipeline = None
     try:
         batch = batches.create('my-folder/my-service')
-        pipeline = batches.of(batch.data['id'])  # type: ignore
+        pipeline = batches.of(batch.data['id'])
         pipeline.push(chunks=chunks)
         time.sleep(5)
 
         status = pipeline.get_status().data
 
-        while status['records_completed'] < status['record_submitted']:  # type: ignore
+        while status['records_completed'] < status['record_submitted']:
             status = pipeline.get_status().data
             log_status(status)
 
-            if status['records_available'] > 0:  # type: ignore
+            if status['records_available'] > 0:
                 result = pipeline.pull()
-                log_status(result.data['status'], 'data retrieval status')  # type: ignore
-
-                for r in result.data['data']:  # type: ignore
-                    results.extend(r['outputs'])  # type: ignore
+                log_status(result.data['status'], 'data retrieval status')
+                results.extend(r['outputs'] for r in result.data['data'])
 
             time.sleep(2)
-
-    except Spark.SparkSdkError as err:
-        print(err.message)
-        if err.cause:
-            print(err.details)
-    except Spark.SparkApiError as err:
-        logger.warning(err.message)
+    except Spark.SparkError as err:
+        logger.error(err.message)
         logger.info(err.details)
     except Exception as exc:
-        logger.fatal(f'Unknown error: {exc}')
+        logger.critical(f'Unknown error: {exc}')
     finally:
         if pipeline:
             pipeline.dispose()
@@ -69,7 +63,7 @@ def create_and_run(batches: Spark.Batches):
 if __name__ == '__main__':
     load_dotenv()
 
-    spark = Spark.Client(timeout=120_000)
-    with spark.batches as b:
-        describe(b)
-        create_and_run(b)
+    spark = Spark.Client(timeout=90_000, logger={'context': 'Async Batch'})
+    with spark.batches as batches:
+        describe(batches)
+        create_and_run(batches)

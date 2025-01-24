@@ -89,7 +89,7 @@ when successful, this method returns:
 }
 ```
 
-Here's a full example how to harness this method:
+Here's a full example of how to harness this method:
 
 ```python
 import cspark.sdk as Spark
@@ -105,38 +105,38 @@ with spark.logs as logs:
 
 ## Download service execution logs
 
-This method allows you to download the service execution logs as a CSV or JSON file
-to your local machine. Unlike the `rehydrate` method, this one initiates a download
-job and continuously checks the status until the job is completed and finally downloads
-the zip file. It throws a `SparkError` if the download job fails to produce a downloadable
-file.
+This method allows you to export service execution logs in either CSV or JSON
+format to your local machine. It streamlines the download process by handling the
+complete workflow: initiating the download job, monitoring its status, and retrieving
+the final zip file once ready. If the download process encounters any issues or
+fails to generate a downloadable file, the method raises a `SparkError`.
 
 If you want to have more fine-grained control over the download process, you can use
 respectively the `Spark.logs.downloads.initiate(uri, [type])` and
 `Spark.logs.downloads.get_status(uri, [type])` methods to initiate a download
 job and check its status until it's finished. Do note that the status check is
-subject to a timeout when it reaches the maximum number of retries.
+subject to `RetryTimeoutError` when it reaches the maximum number of retries.
 
 ### Arguments
 
 This method accepts the following keyword arguments:
 
-| Property          | Type                 | Description                                                      |
-| ----------------- | -------------------- | ---------------------------------------------------------------- |
-| _folder_          | `str`                | The folder name.                                                 |
-| _service_         | `str`                | The service name.                                                |
-| _version\_id_     | `None \| string`     | The particular service version for the download.                 |
-| _type_            | `csv \| json`        | The file type (defaults to `json`).                              |
-| _call\_ids_       | `None \| List[str]`  | An array of call IDs to download logs for.                       |
+| Property          | Type                 | Description                                           |
+| ----------------- | -------------------- | ----------------------------------------------------- |
+| _folder_          | `str`                | The folder name.                                      |
+| _service_         | `str`                | The service name.                                     |
+| _version\_id_     | `None \| string`     | The particular service version for the download.      |
+| _type_            | `csv \| json`        | The file type (defaults to `json`).                   |
+| _call\_ids_       | `None \| List[str]`  | An array of call IDs to download logs for.            |
 | _start\_date_     | `None \| str \| int \| datetime` | The start date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`).|
 | _end\_date_       | `None \| str \| int \| datetime` | The end date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`). |
-| _correration\_id_ | `string`             | The correlation ID (possible fallback for `call_ids`).         |
-| _source\_system_  | `string`             | The source system (possible fallback for `call_ids`).          |
+| _correration\_id_ | `string`             | The correlation ID (possible fallback for `call_ids`).|
+| _source\_system_  | `string`             | The source system (possible fallback for `call_ids`). |
 | _max\_retries_    | `None \| int`   | The number of retries to attempt (defaults to `Config.max_retries`).|
 | _retry\_interval_ | `None \| float` | The interval between retries in seconds (defaults to `Config.retry_interval`).|
 
 ```python
-logs.download(
+spark.logs.download(
     folder='my-folder',
     service='my-service',
     call_ids=['uuid1', 'uuid2', 'uuid3'],

@@ -147,6 +147,8 @@ class Services(ApiResource):
         tables_as_array: Union[None, str, List[str]] = None,
         selected_outputs: Union[None, str, List[str]] = None,
         outputs_filter: Optional[str] = None,
+        # extra metadata if needed
+        extras: Optional[Mapping[str, Any]] = None,
     ):
         uri = Uri.validate(uri)
 
@@ -166,6 +168,7 @@ class Services(ApiResource):
             tables_as_array=tables_as_array,
             selected_outputs=selected_outputs,
             outputs_filter=outputs_filter,
+            extras=extras,
         )
 
         if executable.is_batch:
@@ -206,6 +209,8 @@ class Services(ApiResource):
         tables_as_array: Union[None, str, List[str]] = None,
         selected_outputs: Union[None, str, List[str]] = None,
         outputs_filter: Optional[str] = None,
+        # extra metadata if needed
+        extras: Optional[Mapping[str, Any]] = None,
     ):
         uri = Uri.validate(uri)
 
@@ -224,6 +229,7 @@ class Services(ApiResource):
             tables_as_array=tables_as_array,
             selected_outputs=selected_outputs,
             outputs_filter=outputs_filter,
+            extras=extras,
         )
 
         endpoint = f'transforms/{using or uri.service}/for/{uri.pick("folder", "service").encode()}'
@@ -257,6 +263,8 @@ class Services(ApiResource):
         tables_as_array: Union[None, str, List[str]] = None,
         selected_outputs: Union[None, str, List[str]] = None,
         outputs_filter: Optional[str] = None,
+        # extra metadata if needed
+        extras: Optional[Mapping[str, Any]] = None,
     ):
         uri = Uri.validate(uri)
         validation_type = StringUtils.is_not_empty(validation_type) and str(validation_type).lower() or None
@@ -277,6 +285,7 @@ class Services(ApiResource):
             tables_as_array=tables_as_array,
             selected_outputs=selected_outputs,
             outputs_filter=outputs_filter,
+            extras=extras,
         )
         url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='validation')
         body = {
@@ -298,10 +307,14 @@ class Services(ApiResource):
         version_id: Optional[str] = None,
     ):
         uri = Uri.validate(Uri.to_params(uri) if uri else UriParams(folder, service, version_id=version_id))
-        endpoint = f'product/{uri.folder}/engines/get/{uri.service}/{uri.version_id or ""}'
-        url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
+        base, folder, service = self.config.base_url, uri.folder, uri.service
+        url = (
+            Uri.partial(f'GetEngineDetailByVersionId/versionid/{uri.version_id}', base_url=base.full)
+            if StringUtils.is_not_empty(uri.version_id)
+            else Uri.of(base_url=base.value, version='api/v1', endpoint=f'product/{folder}/engines/get/{service}')
+        )
 
-        return self.request(url)
+        return self.request(url, method='POST' if uri.version_id else 'GET')
 
     def get_metadata(
         self,
@@ -497,6 +510,8 @@ class _ExecuteMeta:
         tables_as_array: Union[None, str, List[str]] = None,
         selected_outputs: Union[None, str, List[str]] = None,
         outputs_filter: Optional[str] = None,
+        # extra metadata if needed
+        extras: Optional[Mapping[str, Any]] = None,
     ):
         self._uri = uri
         self._is_batch = is_batch
@@ -524,12 +539,13 @@ class _ExecuteMeta:
         self._tables_as_array = StringUtils.join(tables_as_array)
         self._selected_outputs = StringUtils.join(selected_outputs)
         self._outputs_filter = outputs_filter
+        self._extras = extras or {}
 
     @property
     def values(self) -> Dict[str, Any]:
         if self._is_batch:
             service_uri = self._uri.pick('folder', 'service', 'version').encode(long=False)
-            return {
+            values = {
                 'service': self._uri.service_id or service_uri or None,
                 'version_id': self._uri.version_id,
                 'version_by_timestamp': self._active_since,
@@ -538,32 +554,38 @@ class _ExecuteMeta:
                 'call_purpose': self._call_purpose,
                 'source_system': self._source_system,
                 'correlation_id': self._correlation_id,
+                # extra metadata
+                **self._extras,
+            }
+        else:
+            values = {
+                # URI locator via metadata (v3 also supports URI in url path)
+                'service_id': self._uri.service_id,
+                'version_id': self._uri.version_id,
+                'version': self._uri.version,
+                # v3 expects extra metadata
+                'transaction_date': self._active_since,
+                'call_purpose': self._call_purpose,
+                'source_system': self._source_system,
+                'correlation_id': self._correlation_id,
+                'array_outputs': self._tables_as_array,
+                'compiler_type': self._compiler_type,
+                'debug_solve': self._debug_solve,
+                'excel_file': self._downloadable,
+                'requested_output': self._selected_outputs,
+                'requested_output_regex': self._outputs_filter,
+                'response_data_inputs': self._echo_inputs,
+                'service_category': self._subservices,
+                # extra metadata
+                **self._extras,
             }
 
-        return {
-            # URI locator via metadata (v3 also supports URI in url path)
-            'service_id': self._uri.service_id,
-            'version_id': self._uri.version_id,
-            'version': self._uri.version,
-            # v3 expects extra metadata
-            'transaction_date': self._active_since,
-            'call_purpose': self._call_purpose,
-            'source_system': self._source_system,
-            'correlation_id': self._correlation_id,
-            'array_outputs': self._tables_as_array,
-            'compiler_type': self._compiler_type,
-            'debug_solve': self._debug_solve,
-            'excel_file': self._downloadable,
-            'requested_output': self._selected_outputs,
-            'requested_output_regex': self._outputs_filter,
-            'response_data_inputs': self._echo_inputs,
-            'service_category': self._subservices,
-        }
+        return {k: v for k, v in values.items() if v is not None}
 
     @property
     def as_header(self) -> Dict[str, str]:
         # NOTE: this has to be a single line string: "'{\"call_purpose\":\"Single Execution\"}'"
-        value = json.dumps({k: v for k, v in self.values.items() if v is not None}, separators=(',', ':'))
+        value = json.dumps(self.values, separators=(',', ':'))
         return {'x-meta' if self._is_batch else 'x-request-meta': "'{}'".format(value)}
 
 
