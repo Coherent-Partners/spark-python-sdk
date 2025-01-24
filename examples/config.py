@@ -26,11 +26,7 @@ if __name__ == '__main__':
     try:
         retrieve_token()
         print_logs()
-    except Spark.SparkSdkError as err:
-        print(err.message)
-        if err.cause:
-            print(err.details)
-    except Spark.SparkApiError as err:
+    except Spark.SparkError as err:
         print(err.message)
         print(err.details)
     except Exception as exc:

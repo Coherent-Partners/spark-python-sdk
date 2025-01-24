@@ -34,7 +34,7 @@ def imp(settings: str, auth: str, file: typing.BinaryIO):
     destination = options.pop('services')
     spark = Spark.Client(**options, oauth=json.loads(auth))
 
-    imported = spark.impex.import_(destination, file=file, source_system=CICD_HANDLER)
+    imported = spark.impex.imp(destination, file=file, source_system=CICD_HANDLER)
     outputs = imported.data.get('outputs', {}) if isinstance(imported.data, dict) else {}
     total = len(outputs['services']) if 'services' in outputs else 0
     if total == 0:

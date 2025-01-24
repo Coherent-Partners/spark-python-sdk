@@ -24,7 +24,7 @@ def execute(services: Spark.Services):
 
 def transform(services: Spark.Services):
     inputs = {}  # inputs data
-    response = services.transform('my-folder/my-service', inputs=inputs, using='my-transform', encoding='gzip')
+    response = services.transform('my-folder/my-service', inputs=inputs, using='my-transform')
     print(response.data)
 
 
@@ -75,8 +75,7 @@ if __name__ == '__main__':
     load_dotenv()
 
     try:
-        spark = Spark.Client()
-        with spark.services as services:
+        with Spark.Client().services as services:
             create(services)
             execute(services)
             transform(services)
@@ -88,11 +87,7 @@ if __name__ == '__main__':
             recompile(services)
             validate(services)
             delete(services)
-    except Spark.SparkSdkError as err:
-        print(err.message)
-        if err.cause:
-            print(err.details)
-    except Spark.SparkApiError as err:
+    except Spark.SparkError as err:
         print(err.message)
         print(err.details)
     except Exception as exc:

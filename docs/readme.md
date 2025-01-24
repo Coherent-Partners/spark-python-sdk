@@ -60,8 +60,8 @@ which provides an elegant, feature-rich HTTP module. The SDK built a layer
 on top of it to simplify the process of making HTTP requests to the Spark platform.
 
 Presently, only the synchronous HTTP methods are supported. Hence, all the methods
-under `Spark.Client()` are synchronous and return an `HttpResponse` object with
-the following properties:
+under `Spark.Client()` are synchronous (i.e., blocking) and return an `HttpResponse`
+object with the following properties:
 
 - `status`: HTTP status code
 - `data`: Data returned by the API if any (usually JSON)
@@ -74,18 +74,19 @@ the following properties:
 > when accessing the response data.
 >
 > As a side note, we intend to leverage the asynchronous methods in the future
-> to provide a more efficient way to interact with the Spark platform.
+> to provide a more efficient (i.e., non-blocking) way to interact with the Spark platform.
 
 ## HTTP Error
 
-When attempting to communicate with the API, the SDK will wrap any sort of failure
+When attempting to communicate with the API, the SDK will wrap any failure
 (any error during the roundtrip) into a `SparkApiError`, which will include
 the HTTP `status` code of the response and the `request_id`, a unique identifier
 of the request. The most common errors are:
 
 - `UnauthorizedError`: when the user is not authenticated/authorized
 - `NotFoundError`: when the requested resource is not found
-- `BadRequestError`: when the request or payload is invalid.
+- `BadRequestError`: when the request or payload is invalid
+- `RetryTimeoutError`: when the maximum number of retries is reached.
 
 The following properties are available in a `SparkApiError`:
 
@@ -101,23 +102,18 @@ as well as the obtained response, if available.
 
 ## API Resource
 
-The Spark platform offers a wide range of functionalities that can be accessed
-programmatically via RESTful APIs. For now, the SDK only supports [Services API](./services.md)
-and [Batches API](./batches.md).
+The Spark platform provides extensive functionality through its RESTful APIs,
+with over 60 endpoints available. While the SDK currently implements a subset of
+these endpoints, it's designed to be extensible.
 
-Since the SDK does not cover all the endpoints in the platform, it provides a way
-to cover additional endpoints. So, if there's an API resource you would like to
-consume that's not available in the SDK, you can always extend this `ApiResource`
-to include it.
+If you need to consume an API endpoint that's not yet available in the SDK, you
+can easily extend the `ApiResource` class to implement it. Here's how:
 
 ```py
-from cspark.sdk import Client, Config, ApiResource, Uri
+from cspark.sdk import Client, ApiResource, Uri
 
 # 1. Prepare the additional API resource you want to consume (e.g., MyResource).
 class MyResource(ApiResource):
-    def __init__(self, config: Config):
-        super().__init__(config)
-
     def fetch_data(self):
         url = Uri.of(base_url=self.config.base_url.full, version='api/v4', endpoint='my/resource')
         return self.request(url, method='GET')
@@ -140,7 +136,8 @@ some other goodies like the `base_url`, which can be used to build other URLs
 supported by the Spark platform.
 
 The `Uri` class is also available to help you build the URL for your custom resource.
-In this particular example, the built URL will be: `https://excel.my-env.coherent.global/my-tenant/api/v4/my/resource`.
+In this particular example, the built URL will be:
+`https://excel.my-env.coherent.global/my-tenant/api/v4/my/resource`.
 
 ### Error Handling
 

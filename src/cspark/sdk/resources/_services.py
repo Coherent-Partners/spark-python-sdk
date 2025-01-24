@@ -545,7 +545,7 @@ class _ExecuteMeta:
     def values(self) -> Dict[str, Any]:
         if self._is_batch:
             service_uri = self._uri.pick('folder', 'service', 'version').encode(long=False)
-            return {
+            values = {
                 'service': self._uri.service_id or service_uri or None,
                 'version_id': self._uri.version_id,
                 'version_by_timestamp': self._active_since,
@@ -557,33 +557,35 @@ class _ExecuteMeta:
                 # extra metadata
                 **self._extras,
             }
+        else:
+            values = {
+                # URI locator via metadata (v3 also supports URI in url path)
+                'service_id': self._uri.service_id,
+                'version_id': self._uri.version_id,
+                'version': self._uri.version,
+                # v3 expects extra metadata
+                'transaction_date': self._active_since,
+                'call_purpose': self._call_purpose,
+                'source_system': self._source_system,
+                'correlation_id': self._correlation_id,
+                'array_outputs': self._tables_as_array,
+                'compiler_type': self._compiler_type,
+                'debug_solve': self._debug_solve,
+                'excel_file': self._downloadable,
+                'requested_output': self._selected_outputs,
+                'requested_output_regex': self._outputs_filter,
+                'response_data_inputs': self._echo_inputs,
+                'service_category': self._subservices,
+                # extra metadata
+                **self._extras,
+            }
 
-        return {
-            # URI locator via metadata (v3 also supports URI in url path)
-            'service_id': self._uri.service_id,
-            'version_id': self._uri.version_id,
-            'version': self._uri.version,
-            # v3 expects extra metadata
-            'transaction_date': self._active_since,
-            'call_purpose': self._call_purpose,
-            'source_system': self._source_system,
-            'correlation_id': self._correlation_id,
-            'array_outputs': self._tables_as_array,
-            'compiler_type': self._compiler_type,
-            'debug_solve': self._debug_solve,
-            'excel_file': self._downloadable,
-            'requested_output': self._selected_outputs,
-            'requested_output_regex': self._outputs_filter,
-            'response_data_inputs': self._echo_inputs,
-            'service_category': self._subservices,
-            # extra metadata
-            **self._extras,
-        }
+        return {k: v for k, v in values.items() if v is not None}
 
     @property
     def as_header(self) -> Dict[str, str]:
         # NOTE: this has to be a single line string: "'{\"call_purpose\":\"Single Execution\"}'"
-        value = json.dumps({k: v for k, v in self.values.items() if v is not None}, separators=(',', ':'))
+        value = json.dumps(self.values, separators=(',', ':'))
         return {'x-meta' if self._is_batch else 'x-request-meta': "'{}'".format(value)}
 
 

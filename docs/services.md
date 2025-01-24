@@ -40,7 +40,7 @@ This method accepts the following keyword arguments:
 | _folder_         | `str`         | The folder name.                                         |
 | _file_           | `BinaryIO`    | The binary file (e.g., `open('path/to/file.xlsx', 'rb')`).|
 | _file\_name_     | `None \| str` | The name of the Excel file (defaults to service `name`). |
-| _versioning_     | `major \| minor \| patch`| How to increment the service version (defaults to `minor`).|
+| _versioning_     | `'major' \| 'minor' \| 'patch'`| How to increment the service version (defaults to `minor`).|
 | _start\_date_    | `None \| str \| int \| datetime` | The effective start date (defaults to `datetime.now()` ).|
 | _end\_date_      | `None \| str \| int \| datetime` | The effective end date (defaults to 10 years later).|
 | _draft\_name_    | `None \| str`   | This overrides the `service` name to a custom name.                 |
@@ -159,7 +159,7 @@ to learn more about Services API.
 
 ### Arguments
 
-The method accepts a string or a `UriParams` object and optional keyword arguments,
+The method accepts a `str`ing or a `UriParams` object and optional keyword arguments,
 which include the input data and metadata. See the use cases below.
 
 - **Default inputs**:
@@ -180,7 +180,7 @@ spark.services.execute(UriParams(folder='my-folder', service='my-service'))
   a keyword argument.
 
 ```py
-spark.services.execute('my-folder/my-service', inputs={'my_input': 42})
+spark.services.execute('my-folder/my-service', inputs={'my_input': 13})
 ```
 
 - **Inputs with metadata**: metadata can be provided along with the `inputs` data.
@@ -190,7 +190,7 @@ spark.services.execute('my-folder/my-service', inputs={'my_input': 42})
 ```py
 spark.services.execute(
     'my-folder/my-service',
-    inputs={'my_input': 13},
+    inputs=[{'my_input': 13}, {'my_input': 14}],
     subservices=['sub1', 'sub2'],
     call_purpose='Demo',
 )
@@ -271,8 +271,8 @@ For the other keyword arguments:
 | Property             | Type          | Description                                      |
 | -------------------- | ------------- | ------------------------------------------------ |
 | _inputs_             | `None \| str \| Dict \| List` | The input data (single or many). |
-| _response\_format_   | `original \| alike` | Response data format to use (defaults to `alike`).|
-| _encoding_           | `gzip \| deflate`   | Compress the payload using this encoding. |
+| _response\_format_   | `'original' \| 'alike'` | Response data format to use (defaults to `alike`).|
+| _encoding_           | `'gzip' \| 'deflate'`   | Compress the payload using this encoding. |
 | _active\_since_      | `None \| str` | The transaction date (helps pinpoint a version). |
 | _source\_system_     | `None \| str` | The source system (defaults to `Spark Python SDK`).|
 | _correlation\_id_    | `None \| str` | The correlation ID.                              |
@@ -314,7 +314,7 @@ when the `response_format` is set to `alike`:
 }
 ```
 
-You may wonder why the output data is wrapped in an array for a single input.
+You may wonder why the output data is wrapped in an array for single inputs.
 This is because the `alike` format is designed to work with both single and multiple
 inputs. This should help maintain consistency in the output data format. But if you
 prefer the original format emitted by the API, you can set the `response_format`
@@ -344,8 +344,8 @@ may provide the following keyword arguments:
 | Property      | Type             | Description                                      |
 | ------------- | ---------------- | ------------------------------------------------ |
 | _using_       | `None \| str`    | The transform name (defaults to the service name if any).|
-| _api\_version_| `v3 \| v4`       | The target API version (defaults to `v3`).       |
-| _encoding_    | `gzip \| deflate`| Apply this content encoding between client and server. |
+| _api\_version_| `'v3' \| 'v4'`       | The target API version (defaults to `v3`).       |
+| _encoding_    | `'gzip' \| 'deflate'`| Apply this content encoding between client and server. |
 
 > NOTE: When using `encoding`, the SDK will automatically compress and decompress the
 > payload using the specified encoding.
@@ -525,7 +525,7 @@ original Excel file or the configured version of it.
 | Property     | Type                     | Description                                           |
 | ------------ | ------------------------ | ----------------------------------------------------- |
 | _file\_name_ | `str \| None`            | Save the downloaded file with a different name.       |
-| _type_       | `original \| configured` | The type of file to download (defaults to `original`).|
+| _type_       | `'original' \| 'configured'` | The type of file to download (defaults to `original`).|
 
 ```python
 spark.services.download('my-folder/my-service', type='configured')
@@ -563,10 +563,10 @@ using a specific compiler version, you must use additional parameters.
 | --------------   | -------------------------- | ---------------------------------------------------------- |
 | _version\_id_    | `str \| None`              | The UUID of a particular version of the service.           |
 | _compiler_       | `str \| None`              | The compiler version to use (do not confuse with type).    |
-| _upgrade_        | `major \| minor \| patch`  | which type of versioning to apply (defaults to `patch`).   |
+| _upgrade_        | `'major' \| 'minor' \| 'patch'`  | which type of versioning to apply (defaults to `patch`).   |
 | _label_          | `str \| None`              | The version label.                                         |
 | _release\_notes_ | `str \| None`              | The release notes.                                         |
-| _tags_           | `str \| List[str] \| None` | The comma-separted tags to apply to the service if string. |
+| _tags_           | `str \| List[str] \| None` | The comma-separated tags to apply to the service if string. |
 | _start\_date_    | `int \| str \| datetime \| None` | The effective start date in ISO format.              |
 | _end\_date_      | `int \| str \| datetime \| None` | The effective end date in ISO format.                |
 

@@ -42,16 +42,14 @@ def create_and_run(batches: Spark.Batches):
             if status['records_available'] > 0:
                 result = pipeline.pull()
                 log_status(result.data['status'], 'data retrieval status')
-
-                for r in result.data['data']:
-                    results.extend(r['outputs'])
+                results.extend(r['outputs'] for r in result.data['data'])
 
             time.sleep(2)
     except Spark.SparkError as err:
-        logger.warning(err.message)
+        logger.error(err.message)
         logger.info(err.details)
     except Exception as exc:
-        logger.fatal(f'Unknown error: {exc}')
+        logger.critical(f'Unknown error: {exc}')
     finally:
         if pipeline:
             pipeline.dispose()
@@ -65,7 +63,7 @@ def create_and_run(batches: Spark.Batches):
 if __name__ == '__main__':
     load_dotenv()
 
-    spark = Spark.Client(timeout=120_000, logger={'context': 'Async Batch'})
-    with spark.batches as b:
-        describe(b)
-        create_and_run(b)
+    spark = Spark.Client(timeout=90_000, logger={'context': 'Async Batch'})
+    with spark.batches as batches:
+        describe(batches)
+        create_and_run(batches)

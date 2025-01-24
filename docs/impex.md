@@ -2,10 +2,10 @@
 
 # ImpEx API
 
-| Verb                          | Description                                                                       |
-| ----------------------------- | --------------------------------------------------------------------------------- |
-| `Spark.impex.export(data)`    | [Export Spark entities (versions, services, or folders)](#export-spark-entities). |
-| `Spark.impex.import_(data)`| [Import exported Spark entities into your workspace](#import-spark-entities).     |
+| Verb                    | Description                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `Spark.impex.exp(data)` | [Export Spark entities (versions, services, or folders)](#export-spark-entities). |
+| `Spark.impex.imp(data)` | [Import exported Spark entities into your workspace](#import-spark-entities).     |
 
 ## Export Spark entities
 
@@ -23,7 +23,7 @@ The expected keyword arguments are as follows:
 | _folders_         | `None \| list[str]`     | 1+ folder name(s).                                                 |
 | _services_        | `None \| list[str]`     | 1+ service URI(s).                                                 |
 | _version\_ids_    | `None \| list[str]`     | 1+ version UUID(s) of the desired service.                         |
-| _file\_filter_    | `migrate \| onpremises` | For data migration or hybrid deployments (defaults to `migrate`).  |
+| _file\_filter_    | `'migrate' \| 'onpremises'` | For data migration or hybrid deployments (defaults to `migrate`).  |
 | _version\_filter_ | `latest \| all`         | Which version of the file to export (defaults to `latest`).        |
 | _source\_system_  | `None \| str`           | Source system name to export from (e.g., `Spark Python SDK`).      |
 | _correlation\_id_ | `None \| str`           | Correlation ID for the export (useful for tagging).                |
@@ -41,7 +41,7 @@ Check out the [API reference](https://docs.coherent.global/spark-apis/impex-apis
 for more information.
 
 ```python
-spark.impex.export(
+spark.impex.exp(
   services=['my-folder/my-service[0.4.2]', 'my-other-folder/my-service-2'],
   file_filter='onpremises',
   max_retries=5,
@@ -54,16 +54,15 @@ spark.impex.export(
 When successful, this method returns an array of exported entities, where each entity
 is an `HttpResponse` object with the buffer containing the exported entity.
 
-### Non-Transactional Methods
-
-This method is transactional. It will initiate an export job, poll its status
-until it completes, and download the exported files. If you need more control over
-these steps, consider using the `exports` resource directly. You may use the following
-methods:
-
-- `Spark.impex.exports.initiate(data)` creates an export job.
-- `Spark.impex.exports.get_status(job_id)` gets an export job's status.
-- `Spark.impex.exports.download(urls)` downloads the exported files as a ZIP.
+> [!TIP]
+> This method is transactional. It will initiate an export job, poll its status
+> until it completes, and download the exported files. If you need more control over
+> these steps, consider using the `exports` resource directly. You may use the following
+> methods:
+>
+> - `Spark.impex.exports.initiate(data)` creates an export job.
+> - `Spark.impex.exports.get_status(job_id)` gets an export job's status.
+> - `Spark.impex.exports.download(urls)` downloads the exported files as a ZIP.
 
 ## Import Spark entities
 
@@ -78,7 +77,7 @@ The expected keyword arguments are as follows:
 | --------------- | ------------------ | ------------------------------------------------------------ |
 | _file_          | `BinaryIO`         | The ZIP file containing the exported entities.               |
 | _destination_   | `str \| List[str] \| Mapping[str, str] \| List[Mapping[str, str]]`| The destination service URI(s). |
-| _if\_present_   | `abort \| replace \| add_version` | What to do if the entity already exists in the destination (defaults to `add_version`). |
+| _if\_present_   | `'abort' \| 'replace' \| 'add_version'` | What to do if the entity already exists in the destination (defaults to `add_version`). |
 | _source\_system_  | `None \| str`    | Source system name to export from (e.g., `Spark Python SDK`).|
 | _correlation\_id_ | `None \| str`    | Correlation ID for the export (useful for tagging).          |
 | _max\_retries_    | `None \| int`    | Maximum number of retries when checking the export status.   |
@@ -96,13 +95,13 @@ any of the formats indicated below:
 | --------- | ------- | ------------------------------------------ |
 | _source_  | `str`   | The service URI of the source tenant.      |
 | _target_  | `str \| None`| The service URI of the destination tenant (defaults to `source`) |
-| _upgrade_ | `major \| minor \| patch` | The version upgrade strategy (defaults to `minor`). |
+| _upgrade_ | `'major' \| 'minor' \| 'patch'` | The version upgrade strategy (defaults to `minor`). |
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/impex-apis/import#request-body)
 for more information.
 
 ```python
-spark.impex.import_(
+spark.impex.imp(
     destination={'source': 'my-folder/my-service', 'target': 'this-folder/my-service', 'upgrade': 'patch'},
     file=open('exported.zip', 'rb'),
     max_retries=7,
@@ -174,8 +173,6 @@ See the sample response below.
   "correlation_id": null
 }
 ```
-
-### Non-Transactional Methods
 
 Being transactional, this method will create an import job, and poll its status
 continuously until it completes the import process. You may consider using the

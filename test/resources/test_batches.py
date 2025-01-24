@@ -72,14 +72,16 @@ def test_batch_chunk_can_parse_raw_array_into_object():
 
 
 def test_create_chunks_distribute_input_dataset_evenly():
+    headers = ['sale_id', 'price', 'quantity']
     inputs = [[1, 20, 65], [2, 74, 73], [3, 20, 65], [4, 34, 73], [5, 62, 62]]  # 5 rows
-    chunks = create_chunks(inputs, chunk_size=3)
+    dataset = [headers] + inputs  # expecting JSON array format.
+    chunks = create_chunks(dataset, chunk_size=3)
 
     assert len(chunks) == 2
     assert chunks[0].size == 3
     assert chunks[1].size == 2
 
-    assert chunks[0].data.inputs == [[1, 20, 65], [2, 74, 73], [3, 20, 65]]
-    assert chunks[1].data.inputs == [[4, 34, 73], [5, 62, 62]]
+    assert chunks[0].data.inputs == [['sale_id', 'price', 'quantity'], [1, 20, 65], [2, 74, 73], [3, 20, 65]]
+    assert chunks[1].data.inputs == [['sale_id', 'price', 'quantity'], [4, 34, 73], [5, 62, 62]]
     assert all(chunk.data.parameters == {} for chunk in chunks)
     assert all(chunk.data.summary is None for chunk in chunks)

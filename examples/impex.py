@@ -19,14 +19,14 @@ def download(wasm: Spark.Wasm):
 
 
 def export_entities_with(impex: Spark.ImpEx):
-    downloadables = impex.export(services=['my-folder/my-service'], max_retries=5, retry_interval=3)
+    downloadables = impex.exp(services=['my-folder/my-service'], max_retries=5, retry_interval=3)
     for count, download in enumerate(downloadables):
         save_file(download.buffer, f'exported-{count}.zip')
 
 
 def import_entities_with(impex: Spark.ImpEx):
     destination = {'source': 'my-folder/my-service', 'target': 'this-folder/my-service', 'upgrade': 'patch'}
-    response = impex.import_(destination, file=open('exported.zip', 'rb'), max_retries=7, retry_interval=3)
+    response = impex.imp(destination, file=open('exported.zip', 'rb'), max_retries=7, retry_interval=3)
     print(response.data)
 
 
@@ -42,11 +42,7 @@ if __name__ == '__main__':
 
         with spark.wasm as wasm:
             download(wasm)
-    except Spark.SparkSdkError as err:
-        print(err.message)
-        if err.cause:
-            print(err.details)
-    except Spark.SparkApiError as err:
+    except Spark.SparkError as err:
         print(err.message)
         print(err.details)
     except Exception as exc:

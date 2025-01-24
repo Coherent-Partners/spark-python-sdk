@@ -17,8 +17,8 @@ support the Hybrid Runner API. To install it, run:
 pip install cspark
 ```
 
-Obviously, a runner offers a smaller subset of functionality compared to the SaaS API,
-however, extending `cspark.sdk` to support the Hybrid Runner API is a good way
+Hybrid runners offer a smaller subset of functionality compared to the SaaS API.
+However, extending `cspark.sdk` to support the Hybrid Runner API is a good way
 to keep the codebase consistent and maintainable. This also means that you may
 want to check its [documentation][cspark] to learn about its client options,
 error handling, and other features.
@@ -52,7 +52,7 @@ Explore the [examples] and [docs] folders to find out more about its capabilitie
 <!-- References -->
 
 [cspark]: https://pypi.org/project/cspark/
-[version-img]: https://badge.fury.io/py/cspark.svg
+[version-img]: https://img.shields.io/pypi/v/cspark
 [version-url]: https://pypi.python.org/pypi/cspark
 [user-guide]: https://docs.coherent.global/hybrid-runner/introduction-to-the-hybrid-runner
 [hybrid-runner]: https://github.com/orgs/Coherent-Partners/packages/container/package/nodegen-server

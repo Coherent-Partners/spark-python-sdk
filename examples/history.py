@@ -26,16 +26,11 @@ def download(logs: Spark.History):
 if __name__ == '__main__':
     load_dotenv()
 
-    spark = Spark.Client(timeout=90_000)
     try:
-        with spark.logs as logs:
+        with Spark.Client(timeout=90_000).logs as logs:
             rehydrate(logs)
             download(logs)
-    except Spark.SparkSdkError as err:
-        print(err.message)
-        if err.cause:
-            print(err.details)
-    except Spark.SparkApiError as err:
+    except Spark.SparkError as err:
         print(err.message)
         print(err.details)
     except Exception as exc:

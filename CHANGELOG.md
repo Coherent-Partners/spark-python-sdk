@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.1.12 (2025-01-23)
+
+- Add support for folder API
+- Update `create_chunks` method to handle columnar format only (headers + inputs)
+- Remove `None` values from the request payload (e.g., `Services.execute()`)
+- Support extra metadata in the request payload (e.g., `Services.execute(extras={...})`)
+- Update documentation and examples
+
 ## 0.1.11 (2024-12-23)
 
 - Apply bug fixes and enhancements

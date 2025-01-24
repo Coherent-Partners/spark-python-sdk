@@ -129,7 +129,8 @@ class Batches(ApiResource):
             'max_output_size': max_output_size,
             'acceptable_error_percentage': math.ceil((1 - min(accuracy or 1, 1.0)) * 100),
         }
-        return self.request(url, method='POST', body=body)
+
+        return self.request(url, method='POST', body={k: v for k, v in body.items() if v is not None})
 
     def of(self, batch_id: str) -> 'Pipeline':
         return Pipeline(batch_id, self.config)
@@ -182,18 +183,22 @@ class Pipeline(ApiResource):
 
         url = Uri.of(None, endpoint=f'batch/{self._id}/chunks', **self._base_uri)
         body = self.__build_chunk_data(chunks, data, inputs, raw, if_chunk_id_duplicated)
+
         response = self.request(url, method='POST', body=body)
         total = response.data['record_submitted'] if isinstance(response.data, dict) else 0
         self.logger.info(f'pushed {total} records to batch pipeline <{self._id}>')
+
         return response
 
     def pull(self, max_chunks: int = 100):
         self.__assert_state(['cancelled'])
 
         endpoint = f'batch/{self._id}/chunkresults?max_chunks={max_chunks}'
+
         response = self.request(Uri.of(None, endpoint=endpoint, **self._base_uri))
         total = response.data['status']['records_available'] if isinstance(response.data, dict) else 0
         self.logger.info(f'{total} available records from batch pipeline <{self._id}>')
+
         return response
 
     def dispose(self):
@@ -201,18 +206,22 @@ class Pipeline(ApiResource):
         self.__assert_state(['closed', 'cancelled'])
 
         url = Uri.of(None, endpoint=f'batch/{self._id}', **self._base_uri)
+
         response = self.request(url, method='PATCH', body={'batch_status': 'closed'})
         self._state = 'closed'
         self.logger.info(f'batch pipeline <{self._id}> has been closed')
+
         return response
 
     def cancel(self):
         self.__assert_state(['closed', 'cancelled'])
 
         url = Uri.of(None, endpoint=f'batch/{self._id}', **self._base_uri)
+
         response = self.request(url, method='PATCH', body={'batch_status': 'cancelled'})
         self._state = 'cancelled'
         self.logger.info(f'batch pipeline <{self._id}> has been cancelled')
+
         return response
 
     def __assert_state(self, states: List[str], throwable: bool = True) -> bool:
@@ -279,27 +288,32 @@ class Pipeline(ApiResource):
                         f'chunk id <{id}> is duplicated for this pipeline <{self._id}> '
                         f'and has been replaced with <{chunk.id}>'
                     )
-            self._chunks[chunk.id] = chunk.size or len(chunk.data.inputs)
+            self._chunks[chunk.id] = chunk.size or len(chunk.data.inputs) - 1
             assessed.append(chunk.to_dict())
         return assessed
 
 
 def create_chunks(
-    dataset: List[Any],  # input dataset
+    dataset: List[Any],  # input dataset in json array format
     *,
+    headers: Optional[List[str]] = None,  # headers for the input dataset
     chunk_size: int = 200,
     parameters: Optional[Dict[str, Any]] = None,
     summary: Optional[Dict[str, Any]] = None,
 ) -> List[BatchChunk]:
-    """Creates a list of batch chunks from a given input dataset."""
+    """Creates a list of batch chunks from a JSON array dataset."""
     length = len(dataset)
     chunk_size = max(1, chunk_size)
     batch_size = math.ceil(length / chunk_size)
+
+    headers = headers or (length > 0 and cast(List[str], dataset.pop(0))) or []
+    if not headers:
+        raise SparkError.sdk('missing headers for the input dataset', cause=dataset)
 
     chunks = []
     for i in range(batch_size):
         start = i * chunk_size
         end = min(start + chunk_size, length)
-        inputs = dataset[start:end]
-        chunks.append(BatchChunk(id=get_uuid(), data=ChunkData(inputs, parameters or {}, summary), size=len(inputs)))
+        inputs = [headers] + dataset[start:end]
+        chunks.append(BatchChunk(get_uuid(), ChunkData(inputs, parameters or {}, summary), size=len(inputs) - 1))
     return chunks

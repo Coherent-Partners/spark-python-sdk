@@ -41,8 +41,7 @@ if __name__ == '__main__':
     load_dotenv()
 
     try:
-        spark = Spark.Client()
-        with spark.folders as folders:
+        with Spark.Client().folders as folders:
             list_categories(folders)
             save_category(folders)
             delete_category(folders)
