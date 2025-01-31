@@ -5,7 +5,7 @@ from cspark.sdk import Client, SparkError
 from rich.console import Console
 
 from .._utils import get_active_profile
-from ._api import AliasedGroup, header_option, parse_kv_pairs
+from ._api import AliasedGroup, header_option, parse_pairs
 
 
 @click.group(
@@ -29,7 +29,7 @@ def list_versions(uri: str, headers: list[str], latest: bool) -> None:
 
     try:
         client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_kv_pairs(headers))
+        client.config.extra_headers.update(parse_pairs(headers))
         with client.services as s:
             versions = s.get_versions(uri).data
 

@@ -6,7 +6,7 @@ from InquirerPy import inquirer
 from rich.console import Console
 
 from .._utils import get_active_profile
-from ._api import AliasedGroup, header_option, json_parse, parse_kv_pairs
+from ._api import AliasedGroup, header_option, json_parse, parse_pairs
 
 
 @click.group(
@@ -30,7 +30,7 @@ def list_folders(name_only: bool, data: str, headers: list[str]) -> None:
 
     try:
         client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_kv_pairs(headers))
+        client.config.extra_headers.update(parse_pairs(headers))
         with client.folders as f:
             response = f.find(**json_parse(data)).data
 
@@ -59,7 +59,7 @@ def delete_services(names: list[str], headers: list[str]) -> None:
 
     try:
         client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_kv_pairs(headers))
+        client.config.extra_headers.update(parse_pairs(headers))
         with client.folders as f:
             for folder in names:
                 confirmed = inquirer.confirm(  # type: ignore

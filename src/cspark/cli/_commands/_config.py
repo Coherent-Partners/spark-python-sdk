@@ -15,7 +15,7 @@ from rich.console import Console
 from rich.text import Text
 
 from .._utils import DATE_FORMAT, Profile, add_or_update_profile, delete_profile, get_active_profile, load_profiles
-from ._api import AliasedGroup, parse_kv_pairs
+from ._api import AliasedGroup, parse_pairs
 
 _SPARK_ENVS = ['uat.us', 'uat.eu', 'uat.jp', 'uat.ca', 'uat.au', 'us', 'ca', 'eu', 'jp', 'au', 'sit', 'dev', 'test']
 
@@ -307,7 +307,7 @@ class ConfigSetCommand(click.Command):
         )
 
     def set(self, values: list[str]):
-        updates = parse_kv_pairs(values, sep='=', infer_type=True)
+        updates = parse_pairs(values, sep='=', infer_type=True)
         if len(updates) == 0:
             raise click.UsageError('no configuration values to set; expecting <key>=<value> format')
 

@@ -22,10 +22,10 @@ class Config:
     def __init__(
         self,
         *,
-        base_url: Optional[str | BaseUrl] = None,
+        base_url: Union[None, str, 'BaseUrl'] = None,
         api_key: Optional[str] = None,
         token: Optional[str] = None,
-        oauth: Optional[Mapping[str, str] | str] = None,
+        oauth: Union[None, Mapping[str, str], str] = None,
         timeout: Optional[float] = DEFAULT_TIMEOUT_IN_MS,
         max_retries: Optional[int] = DEFAULT_MAX_RETRIES,
         retry_interval: Optional[float] = DEFAULT_RETRY_INTERVAL,
@@ -72,7 +72,7 @@ class Config:
         return len(self.extra_headers) > 0
 
     @property
-    def base_url(self) -> BaseUrl:
+    def base_url(self) -> 'BaseUrl':
         return self._base_url
 
     @property
@@ -101,13 +101,13 @@ class Config:
         base_url: Optional[str] = None,
         tenant: Optional[str] = None,
         env: Optional[str] = None,
-        oauth: Optional[Mapping[str, str] | str] = None,
+        oauth: Union[None, Mapping[str, str], str] = None,
         api_key: Optional[str] = None,
         token: Optional[str] = None,
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
-    ) -> Config:
+    ) -> 'Config':
         url = (
             base_url.copy_with(tenant=tenant, env=env)
             if isinstance(base_url, BaseUrl)
@@ -171,12 +171,12 @@ class BaseUrl:
 
     def copy_with(
         self, *, url: Optional[str] = None, tenant: Optional[str] = None, env: Optional[str] = None
-    ) -> BaseUrl:
+    ) -> 'BaseUrl':
         tenant, env = tenant or self._tenant, env or self._env
         return BaseUrl.of(url=url, tenant=tenant) if url else BaseUrl.of(tenant=tenant, env=env)
 
     @staticmethod
-    def of(*, url: Optional[str] = None, tenant: Optional[str] = None, env: Optional[str] = None) -> BaseUrl:
+    def of(*, url: Optional[str] = None, tenant: Optional[str] = None, env: Optional[str] = None) -> 'BaseUrl':
         str_validator = Validators.empty_str()
         url_validator = Validators.base_url()
 

@@ -29,8 +29,8 @@ class Client:
     def __init__(
         self,
         *,
-        base_url: Optional[str | BaseUrl] = None,
-        oauth: Optional[Mapping[str, str] | str] = None,
+        base_url: Union[None, str, BaseUrl] = None,
+        oauth: Union[None, Mapping[str, str], str] = None,
         api_key: Optional[str] = None,
         token: Optional[str] = None,
         timeout: Optional[float] = None,

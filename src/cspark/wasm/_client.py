@@ -9,6 +9,14 @@ __all__ = ['Client']
 
 
 class Client:
+    """
+    The main entry point for the Hybrid Runner client.
+
+    Hybrid Runners offer a smaller subset of functionality compared to the SaaS API.
+    Thus, extending 'cspark.sdk' to support the Hybrid Runner API is a good way
+    to keep the codebase consistent and maintainable.
+    """
+
     def __init__(
         self,
         *,

@@ -41,20 +41,17 @@ def params_option(**kwargs: Any) -> Callable:
     return decorator
 
 
-def parse_kv_pairs(pairs: list[str], *, sep: str = ':', infer_type: bool = False) -> dict:
+def parse_pairs(pairs: list[str], *, sep: str = ':', infer_type: bool = False) -> dict:
     """Parse a list of key-value pairs into a dictionary"""
 
     def _infer_type(value: str):
-        _value = value.strip().lower()
-        if _value == 'true':
+        val = value.strip().lower()
+        if val == 'true':
             return True
-        elif _value == 'false':
+        elif val == 'false':
             return False
         try:
-            if '.' in _value:
-                return float(_value)
-            else:
-                return int(_value)
+            return float(val) if '.' in val else int(val)
         except ValueError:
             return value  # default to string
 

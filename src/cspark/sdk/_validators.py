@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from ._errors import SparkError
 from ._utils import StringUtils, is_positive_int
@@ -47,11 +47,11 @@ class PositiveNumberValidator(BaseValidator):
         cls.instance.reset()
         return cls.instance
 
-    def validate(self, value: Optional[int | float]):
+    def validate(self, value: Union[None, int, float]):
         if not is_positive_int(value):
             raise SparkError.sdk('must be a positive number', value)
 
-    def is_valid(self, value: Optional[int | float]) -> bool:
+    def is_valid(self, value: Union[None, int, float]) -> bool:
         try:
             self.validate(value)
             return True
