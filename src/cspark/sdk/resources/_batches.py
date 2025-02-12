@@ -162,6 +162,17 @@ class Pipeline(ApiResource):
     def stats(self):
         return {'chunks': len(self._chunks), 'records': sum(self._chunks.values())}
 
+    @property
+    def is_disposed(self) -> bool:
+        """
+        Determines if the batch pipeline is no longer active.
+
+        This is for the internal use of the SDK and does not validate the actual state
+        of the batch pipeline. Use `getStatus()` to get the actual state of the batch
+        pipeline.
+        """
+        return self._state == 'closed' or self._state == 'cancelled'
+
     def get_info(self):
         """Retrieves the batch pipeline info."""
         return self.request(Uri.of(None, endpoint=f'batch/{self._id}', **self._base_uri))

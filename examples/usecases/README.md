@@ -68,7 +68,7 @@ them out. For example, you will first need to start your hybrid runner with the
 following command:
 
 ```bash
-docker run --name ws-sync -p 3000:3000 \
+docker run --name wasm-server -p 3000:3000 \
   -v /Users/johndoe/models:/models \
   -e MODEL_LOCATION=/models \
   -e UPLOAD_ENABLED=true \

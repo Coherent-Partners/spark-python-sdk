@@ -19,20 +19,22 @@ def test_should_throw_sdk_error_if_base_url_or_authentication_is_missing():
 def test_should_throw_sdk_error_if_tenant_is_missing():
     with pytest.raises(SparkSdkError):
         Client(base_url=BASE_URL, api_key=API_KEY)
+    with pytest.raises(SparkSdkError):
+        Client(base_url=BASE_URL, token='open')
 
 
 def test_should_create_client_config_from_correct_base_url_and_api_key():
-    client = Client(base_url=BASE_URL, api_key=API_KEY, tenant=TENANT)
+    client = Client(base_url=BASE_URL, tenant=TENANT, api_key=API_KEY)
     assert client.config.base_url.value == BASE_URL
     assert client.config.base_url.tenant == TENANT
     assert client.config.auth.api_key == '********-key'
 
 
 def test_can_infer_tenant_name_from_base_url():
-    client = Client(base_url=f'{BASE_URL}/{TENANT}', api_key=API_KEY)
+    client = Client(base_url=f'{BASE_URL}/{TENANT}', api_key='open')
     assert client.config.base_url.value == BASE_URL
     assert client.config.base_url.tenant == TENANT
-    assert client.config.auth.api_key == '********-key'
+    assert client.config.auth.api_key == 'open'
 
 
 def test_can_build_base_url_from_tenant_name_only():
@@ -46,6 +48,9 @@ def test_can_be_created_with_default_values_if_not_provided():
     client = Client(base_url=BASE_URL, tenant=TENANT, api_key=API_KEY)
     assert client.config.timeout == DEFAULT_TIMEOUT_IN_MS
     assert client.config.max_retries == DEFAULT_MAX_RETRIES
+    assert client.config.has_headers is False
+    assert client.config.logger is not None
+    assert BASE_URL in str(client.config)
 
 
 def test_can_create_a_copy_with_new_values():

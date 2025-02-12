@@ -10,27 +10,34 @@ more programmatic way, without having to write code.
 
 ## Installation
 
-To install the CLI, you can use the following command:
+Using [Homebrew](https://brew.sh/):
+
+```bash
+brew tap Coherent-Partners/cspark
+brew install cspark
+```
+
+Using [pip](https://pypi.org/project/cspark/) (`Python 3.8+` required):
 
 ```bash
 pip install 'cspark[cli]'
 ```
 
-> **Python 3.8** or higher is required to install and run this CLI program.
+> We recommend installing the CLI in a virtual or isolated environment when using pip.
 
 ## Usage
 
 ```bash
-cspark --help
+$ cspark -v
+Coherent Spark CLI 0.1.0-beta (sdk v0.1.10)
 ```
 
-[![intro.png](intro.png)](intro.png)
-
-As you can see, the CLI provides the following base commands:
+Coherent Spark CLI provides the following basic commands:
 
 - `init`: Initialize a new Spark configuration profile.
 - `config`: Manage Coherent Spark configuration profiles.
 - `auth`: Authenticate with Spark using OAuth2 client credentials.
+- `folders`: Manage Spark folders.
 - `services`: Manage Spark services.
 - `versions`: Interact with versions of a Spark service.
 
