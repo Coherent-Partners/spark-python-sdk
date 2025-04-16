@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 import re
+from abc import ABC, abstractmethod
 from typing import List, Optional, Union
 
 from ._errors import SparkError
@@ -9,12 +8,24 @@ from ._utils import StringUtils, is_positive_int
 __all__ = ['Validators']
 
 
-class BaseValidator:
+class BaseValidator(ABC):
     _errors: List[SparkError] = []
 
     @property
     def errors(self):
         return self._errors
+
+    @abstractmethod
+    def validate(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def is_valid(self, *args, **kwargs) -> bool:
+        try:
+            self.validate(*args, **kwargs)
+            return True
+        except SparkError as error:
+            self._errors.append(error)
+            return False
 
     def reset(self):
         self._errors.clear()
@@ -31,14 +42,6 @@ class EmptyStringValidator(BaseValidator):
         if StringUtils.is_empty(value):
             raise SparkError.sdk(message or 'must be non-empty string value', cause=value)
 
-    def is_valid(self, value: Optional[str], message: Optional[str] = None) -> bool:
-        try:
-            self.validate(value, message)
-            return True
-        except SparkError as error:
-            self._errors.append(error)
-            return False
-
 
 class PositiveNumberValidator(BaseValidator):
     def __new__(cls):
@@ -51,17 +54,9 @@ class PositiveNumberValidator(BaseValidator):
         if not is_positive_int(value):
             raise SparkError.sdk('must be a positive number', value)
 
-    def is_valid(self, value: Union[None, int, float]) -> bool:
-        try:
-            self.validate(value)
-            return True
-        except SparkError as error:
-            self._errors.append(error)
-            return False
-
 
 class BaseUrlValidator(BaseValidator):
-    _wildcard = re.compile(r'^https?://(?:[^./]+\.)+coherent\.global(?:/[^/?#]+)*(?:[?#].*)?$', re.IGNORECASE)
+    _wildcard = re.compile(r'^https://(?:[^./]+\.)+coherent\.global(?:/[^/?#]+)*(?:[?#].*)?$', re.IGNORECASE)
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -75,14 +70,6 @@ class BaseUrlValidator(BaseValidator):
 
         if not self._wildcard.match(str(value).rstrip('/')):
             raise SparkError.sdk('must be a Spark base URL <*.coherent.global>', value)
-
-    def is_valid(self, value: Optional[str]) -> bool:
-        try:
-            self.validate(value)
-            return True
-        except SparkError as error:
-            self._errors.append(error)
-            return False
 
 
 class Validators:

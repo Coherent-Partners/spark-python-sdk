@@ -1,4 +1,4 @@
-# Coherent Spark Python SDK
+# Coherent Spark SDK
 
 [![PyPI version][version-img]][version-url]
 [![CI build][ci-img]][ci-url]
@@ -15,7 +15,7 @@ by creating a new issue.
 ## Installation
 
 ```bash
-pip install cspark # or pip install 'cspark[cli]' for CLI support.
+pip install cspark # or 'cspark[cli]' for CLI support.
 ```
 
 > 🫣 This Python library requires [Python 3.7+](https://www.python.org/downloads/).

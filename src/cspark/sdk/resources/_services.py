@@ -308,13 +308,12 @@ class Services(ApiResource):
     ):
         uri = Uri.validate(Uri.to_params(uri) if uri else UriParams(folder, service, version_id=version_id))
         base, folder, service = self.config.base_url, uri.folder, uri.service
-        url = (
-            Uri.partial(f'GetEngineDetailByVersionId/versionid/{uri.version_id}', base_url=base.full)
-            if StringUtils.is_not_empty(uri.version_id)
-            else Uri.of(base_url=base.value, version='api/v1', endpoint=f'product/{folder}/engines/get/{service}')
-        )
-
-        return self.request(url, method='POST' if uri.version_id else 'GET')
+        if StringUtils.is_not_empty(uri.version_id):
+            url = Uri.partial(f'GetEngineDetailByVersionId/versionid/{uri.version_id}', base_url=base.full)
+            return self.request(url, method='POST')
+        else:
+            url = Uri.of(base_url=base.value, version='api/v1', endpoint=f'product/{folder}/engines/get/{service}')
+            return self.request(url, method='GET')
 
     def get_metadata(
         self,
@@ -327,12 +326,8 @@ class Services(ApiResource):
         proxy: Optional[str] = None,
         public: Optional[bool] = False,
     ):
-        uri = (
-            UriParams(folder, service, service_id, version_id=version_id, proxy=proxy, public=public)
-            if uri is None
-            else Uri.to_params(uri)
-        )
-        url = Uri.of(Uri.validate(uri), base_url=self.config.base_url.full, endpoint='metadata')
+        uri = Uri.validate(uri or UriParams(folder, service, service_id, None, version_id, proxy, public))
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='metadata')
 
         response = self.request(url)
         return ServiceExecuted(response, False, 'original')
@@ -340,7 +335,7 @@ class Services(ApiResource):
     def get_versions(
         self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
     ):
-        uri = Uri.validate(UriParams(folder, service) if uri is None else Uri.to_params(uri))
+        uri = Uri.validate(uri or UriParams(folder, service))
         endpoint = f'product/{uri.folder}/engines/getversions/{uri.service}'
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
 
@@ -379,7 +374,7 @@ class Services(ApiResource):
         file_name: Optional[str] = None,
         type: Optional[str] = None,  # 'original' or 'configured'
     ):
-        uri = Uri.validate(UriParams(folder, service, version=version) if uri is None else Uri.to_params(uri))
+        uri = Uri.validate(uri or UriParams(folder, service, version=version))
         endpoint = f'product/{uri.folder}/engines/{uri.service}/download/{uri.version or ""}'
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
         params = {'filename': file_name or '', 'type': 'withmetadata' if type == 'configured' else ''}
@@ -401,7 +396,7 @@ class Services(ApiResource):
         upgrade: Optional[str] = None,  # 'major' | 'minor' | 'patch'
         tags: Union[None, str, List[str]] = None,
     ):
-        uri = Uri.validate(UriParams(folder, service, version_id=version_id) if uri is None else Uri.to_params(uri))
+        uri = Uri.validate(uri or UriParams(folder, service, version_id=version_id))
         url = Uri.of(uri.pick('folder', 'service'), base_url=self.config.base_url.full, endpoint='recompileNodgen')
         startdate, enddate = DateUtils.parse(start_date, end_date)
         data = {
@@ -420,7 +415,7 @@ class Services(ApiResource):
     def delete(
         self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
     ):
-        uri = Uri.validate(UriParams(folder, service) if uri is None else Uri.to_params(uri))
+        uri = Uri.validate(uri or UriParams(folder, service))
         endpoint = f'product/{uri.folder}/engines/delete/{uri.service}'
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
 
@@ -440,7 +435,7 @@ class Services(ApiResource):
         if encoding == 'deflate':
             return zlib.compress(json.dumps(data).encode('utf-8')), headers
         else:
-            raise SparkError.sdk('encoding is not supported', {'encoding': encoding})
+            raise SparkError.sdk(f'encoding "{encoding}" is not supported', {'encoding': encoding})
 
 
 class ServiceExecuted(HttpResponse):
