@@ -13,25 +13,36 @@ Send = typing.Callable[[typing.Dict[str, typing.Any]], typing.Coroutine[None, No
 Scope = typing.Dict[str, typing.Any]
 
 
-async def router(scope: Scope, receive: Receive, send: Send) -> None:  # noqa: ARG001
+async def router(scope: Scope, receive: Receive, send: Send) -> None:
+    assert scope['type'] == 'http'
+
     # all requests must have at least these headers: x-tenant-name, x-request-id, x-spark-ua
     headers = {k.decode(): v.decode() for k, v in scope['headers']}
     assert 'x-tenant-name' in headers
     assert 'x-request-id' in headers
     assert 'x-spark-ua' in headers
 
-    if scope['path'].startswith('/my-tenant/api/v3/folders/my-folder/services/my-service/execute'):
+    if scope['path'] == '/my-tenant/api/v3/folders/my-folder/services/my-service/execute':
         await service_execute_v3(scope, receive, send)
-    elif scope['path'].startswith('/my-tenant/api/v4/execute'):
+    elif scope['path'] == '/my-tenant/api/v4/execute':
         await service_execute_v4(scope, receive, send)
-    elif scope['path'].startswith('/my-tenant/api/v3/public/version/version_uuid'):
+    elif scope['path'] == '/my-tenant/api/v3/public/version/version_uuid':
         await service_execute_with_metadata(scope, receive, send)
+    elif scope['path'] == '/my-tenant/api/v4/batch':
+        await batch_create(scope, receive, send)
+    elif scope['path'] == '/my-tenant/api/v4/batch/batch_uuid/chunks':
+        await batch_push(scope, receive, send)
+    elif scope['path'] == '/my-tenant/api/v4/batch/batch_uuid/chunkresults':
+        await batch_pull(scope, send)
+    elif scope['path'] == '/my-tenant/api/v4/batch/batch_uuid':
+        await batch_dispose(scope, receive, send)
+    else:
+        await send({'type': 'http.response.start', 'status': 404, 'headers': []})
+        await send({'type': 'http.response.body', 'body': b'Resource not defined yet'})
 
 
 async def read_body(receive):
-    """
-    Read and return the entire body from an incoming ASGI message.
-    """
+    """Read and return the entire body from an incoming ASGI message."""
     body = b''
     more_body = True
 
@@ -44,7 +55,6 @@ async def read_body(receive):
 
 
 async def service_execute_v3(scope: Scope, receive: Receive, send: Send) -> None:
-    assert scope['type'] == 'http'
     assert scope['method'] == 'POST'
 
     req_body = json.loads(await read_body(receive))
@@ -60,7 +70,6 @@ async def service_execute_v3(scope: Scope, receive: Receive, send: Send) -> None
 
 
 async def service_execute_v4(scope: Scope, receive: Receive, send: Send) -> None:
-    assert scope['type'] == 'http'
     assert scope['method'] == 'POST'
 
     req_body = json.loads(await read_body(receive))
@@ -76,7 +85,6 @@ async def service_execute_v4(scope: Scope, receive: Receive, send: Send) -> None
 
 
 async def service_execute_with_metadata(scope: Scope, receive: Receive, send: Send) -> None:
-    assert scope['type'] == 'http'
     assert scope['method'] == 'POST'
 
     req_body = json.loads(await read_body(receive))
@@ -94,6 +102,54 @@ async def service_execute_with_metadata(scope: Scope, receive: Receive, send: Se
     assert req_meta['correlation_id'] == 'corr_uuid'
 
     res_body = '{"status":"Success","response_data":{"outputs":{"single_output":42}},"response_meta":{"version_id":"version_uuid"},"error": null}'
+    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send({'type': 'http.response.body', 'body': res_body.encode()})
+
+
+async def batch_create(scope: Scope, receive: Receive, send: Send) -> None:
+    assert scope['method'] == 'POST'
+
+    req_body = json.loads(await read_body(receive))
+    assert req_body['service'] == 'f/s'
+    assert req_body['call_purpose'] == 'Async Batch Execution'
+    assert req_body['source_system'] == 'Spark Python SDK'
+    assert req_body['initial_workers'] == 100
+    assert req_body['runner_thread_count'] == 4
+    assert req_body['acceptable_error_percentage'] == 10
+
+    res_body = '{"object": "batch", "id": "batch_uuid", "data": {}}'
+    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send({'type': 'http.response.body', 'body': res_body.encode()})
+
+
+async def batch_push(scope: Scope, receive: Receive, send: Send) -> None:
+    assert scope['method'] == 'POST'
+
+    req_body = json.loads(await read_body(receive))
+    assert len(req_body['chunks']) > 0
+
+    res_body = '{"batch_status": "in_progress", "record_submitted": 3, "records_available": 0}'  # and more...
+    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send({'type': 'http.response.body', 'body': res_body.encode()})
+
+
+async def batch_pull(scope: Scope, send: Send) -> None:
+    assert scope['method'] == 'GET'
+    query_params = dict(q.split(b'=') for q in scope['query_string'].split(b'&') if q)
+    assert b'max_chunks' in query_params and query_params[b'max_chunks'] == b'2'
+
+    res_body = '{"data":[{"outputs": [{}, {}]}, {"outputs": [{}]}], "status": {"records_available": 0}}'
+    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send({'type': 'http.response.body', 'body': res_body.encode()})
+
+
+async def batch_dispose(scope: Scope, receive: Receive, send: Send) -> None:
+    assert scope['method'] == 'PATCH'
+
+    req_body = json.loads(await read_body(receive))
+    assert req_body['batch_status'] == 'closed'
+
+    res_body = '{"object": "batch", "id": "batch_uuid", "meta": {}}'
     await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
     await send({'type': 'http.response.body', 'body': res_body.encode()})
 

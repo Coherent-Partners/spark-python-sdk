@@ -5,7 +5,7 @@ from cspark.sdk import Client, Config, SparkError
 from rich.console import Console
 
 from .._utils import get_active_profile
-from ._api import AliasedGroup, Services, header_option, params_option, parse_kv_pairs
+from ._api import AliasedGroup, Services, header_option, json_parse, params_option, parse_pairs
 
 
 @click.group(
@@ -30,7 +30,7 @@ def list_services(folder: str, name_only: bool, data: str, headers: list[str]) -
 
     try:
         config = Config(**profile.to_config())
-        config.extra_headers.update(parse_kv_pairs(headers))
+        config.extra_headers.update(parse_pairs(headers))
         with Services(config) as s:
             response = s.get(folder, data).data
 
@@ -55,17 +55,11 @@ def search_services(data: str, headers: list[str], show_all: bool) -> None:
     profile = get_active_profile()
     console = Console()
 
-    def parse_params(data: str) -> dict:
-        try:
-            return json.loads(data)
-        except Exception:
-            return {}
-
     try:
         client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_kv_pairs(headers))
+        client.config.extra_headers.update(parse_pairs(headers))
         with client.services as s:
-            response = s.search(**parse_params(data))
+            response = s.search(**json_parse(data))
 
         output = response.data
         if not show_all:
@@ -92,9 +86,9 @@ def execute_services(uri: str, inputs: str, params: list[str], headers: list[str
 
     try:
         client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_kv_pairs(headers))
+        client.config.extra_headers.update(parse_pairs(headers))
         with client.services as s:
-            metadata = parse_kv_pairs(params, infer_type=True)
+            metadata = parse_pairs(params, infer_type=True)
             outputs = s.execute(uri, inputs=inputs, source_system='Coherent Spark CLI', **metadata).data
 
         if not show_all:
@@ -122,7 +116,7 @@ def delete_services(folder: str, names: list[str], headers: list[str]) -> None:
 
     try:
         client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_kv_pairs(headers))
+        client.config.extra_headers.update(parse_pairs(headers))
 
         with client.services as s:
             for service in names:

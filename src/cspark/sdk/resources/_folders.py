@@ -25,13 +25,13 @@ class Folders(ApiResource):
         *,
         favorite: Optional[bool] = None,
         page: int = 1,
-        page_size: int = 100,
+        size: int = 100,
         sort: str = '-updated',
-        **params,
+        **params: Any,
     ):
         url = Uri.of(None, endpoint='product/list', **self._base_uri)
         search = [{'field': k, 'value': v} for k, v in {**params, 'name': name, 'isstarred': favorite}.items() if v]
-        body = {'search': search, 'page': page, 'pageSize': page_size, 'sort': sort}
+        body = {'search': search, 'page': page, 'pageSize': size, 'sort': sort}
         body.update({'shouldFetchActiveServicesCount': True})
 
         return self.request(url, method='POST', body=body)
@@ -100,11 +100,13 @@ class Folders(ApiResource):
     def delete(self, id: str):
         url = Uri.of(None, endpoint=f'product/delete/{id}', **self._base_uri)
         self.logger.warning('deleting folder will also delete all its services')
+
         return self.request(url, method='DELETE')
 
     def upload_cover(self, id: str, image: BinaryIO, filename: Optional[str] = None):
         url = Uri.of(None, endpoint='product/uploadcoverimage', **self._base_uri)
         files = {'coverImage': filename and (filename, image) or image}
+
         return self.request(url, method='POST', form={'id': id}, files=files)
 
 

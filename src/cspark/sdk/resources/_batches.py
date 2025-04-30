@@ -84,7 +84,8 @@ class Batches(ApiResource):
 
     def describe(self):
         """Describes the batch pipeline status across the tenant."""
-        return self.request(Uri.of(None, endpoint=f'batch/status', **self._base_uri))
+        url = Uri.of(None, endpoint=f'batch/status', **self._base_uri)
+        return self.request(url, method='GET')
 
     def create(
         self,
@@ -162,13 +163,26 @@ class Pipeline(ApiResource):
     def stats(self):
         return {'chunks': len(self._chunks), 'records': sum(self._chunks.values())}
 
+    @property
+    def is_disposed(self) -> bool:
+        """
+        Determines if the batch pipeline is no longer active.
+
+        This is for the internal use of the SDK and does not validate the actual state
+        of the batch pipeline. Use `getStatus()` to get the actual state of the batch
+        pipeline.
+        """
+        return self._state == 'closed' or self._state == 'cancelled'
+
     def get_info(self):
         """Retrieves the batch pipeline info."""
-        return self.request(Uri.of(None, endpoint=f'batch/{self._id}', **self._base_uri))
+        url = Uri.of(None, endpoint=f'batch/{self._id}', **self._base_uri)
+        return self.request(url, method='GET')
 
     def get_status(self):
         """Retrieves the batch pipeline status."""
-        return self.request(Uri.of(None, endpoint=f'batch/{self._id}/status', **self._base_uri))
+        url = Uri.of(None, endpoint=f'batch/{self._id}/status', **self._base_uri)
+        return self.request(url, method='GET')
 
     def push(
         self,
@@ -193,7 +207,7 @@ class Pipeline(ApiResource):
     def pull(self, max_chunks: int = 100):
         self.__assert_state(['cancelled'])
 
-        endpoint = f'batch/{self._id}/chunkresults?max_chunks={max_chunks}'
+        endpoint = f'batch/{self._id}/chunkresults?max_chunks={max(1, max_chunks)}'
 
         response = self.request(Uri.of(None, endpoint=endpoint, **self._base_uri))
         total = response.data['status']['records_available'] if isinstance(response.data, dict) else 0
@@ -201,33 +215,25 @@ class Pipeline(ApiResource):
 
         return response
 
-    def dispose(self):
-        """closes the batch pipeline."""
+    def dispose(self, state: str = 'closed'):
+        """Disposes the batch pipeline."""
         self.__assert_state(['closed', 'cancelled'])
 
         url = Uri.of(None, endpoint=f'batch/{self._id}', **self._base_uri)
 
-        response = self.request(url, method='PATCH', body={'batch_status': 'closed'})
-        self._state = 'closed'
-        self.logger.info(f'batch pipeline <{self._id}> has been closed')
+        response = self.request(url, method='PATCH', body={'batch_status': state})
+        self.logger.info(f'batch pipeline <{self._id}> has been {state}')
+        self._state = state
 
         return response
 
     def cancel(self):
-        self.__assert_state(['closed', 'cancelled'])
-
-        url = Uri.of(None, endpoint=f'batch/{self._id}', **self._base_uri)
-
-        response = self.request(url, method='PATCH', body={'batch_status': 'cancelled'})
-        self._state = 'cancelled'
-        self.logger.info(f'batch pipeline <{self._id}> has been cancelled')
-
-        return response
+        return self.dispose(state='cancelled')
 
     def __assert_state(self, states: List[str], throwable: bool = True) -> bool:
         if self._state in states:
             error = SparkError.sdk(f'batch pipeline <{self._id}> is already {self._state}')
-            self.logger.error(error)
+            self.logger.error(error.message)
             if throwable:
                 raise error
             return False
@@ -256,7 +262,7 @@ class Pipeline(ApiResource):
             cause = {'chunks': chunks, 'data': data, 'inputs': inputs, 'raw': raw}
             raise SparkError.sdk(
                 message=f'wrong data params were provided for this pipeline <{self._id}>.\n'
-                'Expecting either "chunks=List[BatchChunk]", "data=ChunkData" or "inputs=List[Any]"',
+                'Expecting either "raw=str/bytes", "chunks=List[BatchChunk]", "data=ChunkData" or "inputs=List[Any]"',
                 cause=json.dumps(cause),
             )
         except SparkError as error:

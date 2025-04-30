@@ -8,6 +8,7 @@ Additional information can be found on [Spark's User Guide](https://docs.coheren
 ## Table of Contents
 
 - [Authentication](./authentication.md)
+- [Folders API](./folders.md)
 - [Services API](./services.md)
 - [Batches API](./batches.md)
 - [Log History API](./history.md)
@@ -16,6 +17,41 @@ Additional information can be found on [Spark's User Guide](https://docs.coheren
 - [Hybrid Deployment](./hybrid.md)
 
 ## Getting Started
+
+The `cspark` package is a Python library that includes multiple modules:
+
+- `cspark.sdk` - the main SDK module and all its resources;
+- `cspark.wasm` - a convenience module built on top of the `cspark.sdk` to interact
+   with hybrid-deployed services;
+- `cspark.cli` - a module for the CLI application to interact with the Spark platform,
+  which is only available when the `cspark[cli]` extra is installed (or via homebrew
+  if you're on macOS).
+
+You're most likely interested in the `cspark.sdk` module, which this guide
+is all about. So, you may import the SDK module using the following syntax:
+
+```py
+import cspark.sdk as Spark
+```
+
+To maintain consistency across the examples used in the SDK documentation, this
+format will be used in all the code snippets. For brevity, the import statement
+may be omitted in some cases.
+
+### Health Check
+
+The best (perhaps fastest) way to get started is to check the health status of a
+given Spark environment (e.g., `uat.us`, `us`, etc.). This will ensure that your
+SDK is properly configured and that you can communicate with the Spark platform.
+
+```py
+import cspark.sdk as Spark;
+
+response = Spark.health_check()
+print(response.data)
+```
+
+### Spark URI Locator
 
 You may notice by now that `folder` and `service` names when combined form a
 base identifier to locate a resource in the Spark platform for a particular

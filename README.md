@@ -1,4 +1,4 @@
-# Coherent Spark Python SDK
+# Coherent Spark SDK
 
 [![PyPI version][version-img]][version-url]
 [![CI build][ci-img]][ci-url]
@@ -15,10 +15,10 @@ by creating a new issue.
 ## Installation
 
 ```bash
-pip install cspark # or pip install 'cspark[cli]' for CLI support.
+pip install cspark # or 'cspark[cli]' for CLI support.
 ```
 
-> 🫣 This Python library requires [Python 3.7+](https://www.python.org/downloads/).
+> This Python library requires [Python 3.7+](https://www.python.org/downloads/).
 
 ## Usage
 
@@ -32,18 +32,24 @@ To use the SDK, you need a Coherent Spark account that lets you access the follo
   - `service` - the service name
   - `version` - the semantic version a.k.a revision number (e.g., 0.4.2)
 
-A `folder` contains one or more `service`s, which can have multiple `version`s.
-Technically speaking, when you're operating with a service, you're actually
-interacting with a specific version of that service (the latest version by default -
-unless specified otherwise).
+In Spark, a `folder` acts as a container that holds one or more `service`s.
+Think of folders as a way to organize and group related services together.
+Each `service` represents an Excel model that has been converted into a Spark
+service. Services can exist in multiple `version`s, representing different
+iterations or updates of that service over time.
 
-Hence, there are various ways to indicate a Spark service URI:
+When interacting with a Spark service, you are always working with a specific
+version - the latest one by default. You can explicitly specify an older
+version if you need to work with a previous iteration of the service.
+
+Hence, there are various ways to indicate a Spark service URI in the SDK:
 
 - `{folder}/{service}[{version}]` - _version_ is optional.
 - `service/{service_id}`
 - `version/{version_id}`
 
-> **IMPORTANT:** Avoid using URL-encoded characters in the service URI.
+> It is **important** to avoid using URL-encoded characters in the service URI as
+> the SDK will take care of URL encoding for you.
 
 Here's an example of how to execute a Spark service:
 
@@ -100,6 +106,9 @@ the base URL.
 ```py
 spark = Spark.Client(env='my-env', tenant='my-tenant')
 ```
+
+> For more advanced customizations, you can extend the `BaseUrl` class and make
+> the appropriate changes to support custom `base_url`s.
 
 ### Authentication
 
@@ -203,14 +212,24 @@ OAuth2.0 Client Credentials flow:
 
 - `Authorization.oauth.retrieve_token(config)` generates new access tokens.
 
+[Folders API](./docs/folders.md) - manages folders:
+
+- `Spark.folders.categories.list()` gets the list of folder categories.
+- `Spark.folders.create(data)` creates a new folder with additional info.
+- `Spark.folders.find(name)` finds folders by name, status, category, or favorite.
+- `Spark.folders.update(id, data)` updates a folder's information by id.
+- `Spark.folders.delete(id)` deletes a folder by id, including all its services.
+
 [Services API](./docs/services.md) - manages Spark services:
 
 - `Spark.services.create(data)` creates a new Spark service.
 - `Spark.services.execute(uri, inputs)` executes a Spark service.
 - `Spark.services.transform(uri, inputs)` executes a Spark service using `Transforms`.
 - `Spark.services.get_versions(uri)` lists all the versions of a service.
+- `Spark.services.get_swagger(uri)` gets the Swagger documentation of a service.
 - `Spark.services.get_schema(uri)` gets the schema of a service.
 - `Spark.services.get_metadata(uri)` gets the metadata of a service.
+- `Spark.services.search([params])` searches for services with pagination and filtering options.
 - `Spark.services.download(uri)` downloads the excel file of a service.
 - `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
 - `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
@@ -237,9 +256,11 @@ OAuth2.0 Client Credentials flow:
 
 - `Spark.impex.exp(data)` exports Spark entities (versions, services, or folders).
 - `Spark.impex.imp(data)` imports previously exported Spark entities into the platform.
+- `Spark.impex.exports.cancel(job_id)` cancels an in-progress export job.
 
 [Other APIs](./docs/misc.md) - for other functionality:
 
+- `Spark.health.check()` checks the health status of a Spark environment.
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
 - `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
 

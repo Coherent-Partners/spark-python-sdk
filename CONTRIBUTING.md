@@ -64,7 +64,7 @@ rye build --clean
 ```
 
 To run an example, you will need to follow the instructions in the
-[examples/main.py](./examples/main.py) file, then run the following command:
+[examples/README.md](./examples/README.md) file, then run the following command:
 
 ```bash
 yarn demo

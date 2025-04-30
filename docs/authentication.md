@@ -14,6 +14,7 @@ and access the following APIs:
 - [Execute API][execute-api]
 - [Batch APIs][batch-apis]
 - [Metadata API][metadata-api]
+- [Transforms API][transform-api]
 - [Validation API][validation-api]
 
 If and when you need that API key to access additional APIs, you'll have to review and
@@ -137,12 +138,13 @@ print(f'access token: {spark.config.auth.oauth.access_token}')
 If more than one authentication mechanism are provided, the SDK will prioritize in
 the following order: OAuth2.0 client credentials grant > API key > Bearer token.
 
-[Back to top](#authentication) or [Next: Services API](./services.md)
+[Back to top](#authentication) or [Next: Folders API](./folders.md)
 
 <!-- References  -->
 [batch-apis]: https://docs.coherent.global/spark-apis/batch-apis
 [execute-api]: https://docs.coherent.global/spark-apis/execute-api
 [metadata-api]: https://docs.coherent.global/spark-apis/metadata-api
+[transform-api]: https://docs.coherent.global/spark-apis/transforms-api
 [validation-api]: https://docs.coherent.global/spark-apis/validation-api
 [feature-permissions]: https://docs.coherent.global/spark-apis/authorization-api-keys/permissions-features-permissions
 [openai-api-keys]: https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety

@@ -41,20 +41,17 @@ def params_option(**kwargs: Any) -> Callable:
     return decorator
 
 
-def parse_kv_pairs(pairs: list[str], *, sep: str = ':', infer_type: bool = False) -> dict:
+def parse_pairs(pairs: list[str], *, sep: str = ':', infer_type: bool = False) -> dict:
     """Parse a list of key-value pairs into a dictionary"""
 
     def _infer_type(value: str):
-        _value = value.strip().lower()
-        if _value == 'true':
+        val = value.strip().lower()
+        if val == 'true':
             return True
-        elif _value == 'false':
+        elif val == 'false':
             return False
         try:
-            if '.' in _value:
-                return float(_value)
-            else:
-                return int(_value)
+            return float(val) if '.' in val else int(val)
         except ValueError:
             return value  # default to string
 
@@ -69,12 +66,19 @@ def parse_kv_pairs(pairs: list[str], *, sep: str = ':', infer_type: bool = False
     return parsed
 
 
+def json_parse(data: str, fallback: Optional[Any] = None) -> dict:
+    try:
+        return json.loads(data)
+    except Exception:
+        return fallback or {}
+
+
 class Services(ApiResource):
     def get(self, folder: str, data: Optional[str] = None):
         endpoint = f'product/{folder}/engines'
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
         body = {'page': 1, 'pageSize': 100, 'search': [], 'sort': 'name1'}
-        return self.request(url, method='POST', body=body.update(json.loads(data)) if data else body)
+        return self.request(url, method='POST', body=body.update(json_parse(data)) if data else body)
 
 
 class AliasedGroup(click.Group):

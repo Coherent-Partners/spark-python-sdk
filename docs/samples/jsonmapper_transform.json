@@ -1,0 +1,6 @@
+{
+  "transform_type": "JSONtransforms_v1.0.1",
+  "target_api_version": "v3",
+  "input_body_transform": "{'radius':$.'radius_field'>=0?$.'radius_field','height':$.'height_field'>=0?$.'height_field'}",
+  "output_body_transform": "{'volume_field':$.response_data.outputs.volume}"
+}

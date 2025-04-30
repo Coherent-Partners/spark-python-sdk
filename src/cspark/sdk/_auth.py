@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from typing import Mapping, Optional
+from typing import Mapping, Optional, Union
 
 from ._config import Config
 from ._constants import ENV_VARS
@@ -17,14 +17,14 @@ __all__ = ['Authorization', 'OAuth']
 
 
 class Authorization:
-    _oauth: Optional[OAuth]
+    _oauth: Optional['OAuth']
 
     def __init__(
         self,
         *,
         api_key: Optional[str] = None,
         token: Optional[str] = None,
-        oauth: Optional[Mapping[str, str] | str] = None,
+        oauth: Union[None, Mapping[str, str], str] = None,
     ) -> None:
         client_id = os.getenv(ENV_VARS.CLIENT_ID)
         client_secret = os.getenv(ENV_VARS.CLIENT_SECRET)
@@ -68,7 +68,7 @@ class Authorization:
         return self._token
 
     @property
-    def oauth(self) -> Optional[OAuth]:
+    def oauth(self) -> Optional['OAuth']:
         return self._oauth
 
     @property
@@ -104,13 +104,13 @@ class OAuth:
             )
 
     @staticmethod
-    def when(value: Mapping[str, str] | str) -> OAuth:
+    def when(value: Union[Mapping[str, str], str]) -> 'OAuth':
         if isinstance(value, str):
             return OAuth.file(value)
         return OAuth(value)
 
     @staticmethod
-    def file(path: str) -> OAuth:
+    def file(path: str) -> 'OAuth':
         try:
             with open(path) as file:
                 creds = json.load(file)
