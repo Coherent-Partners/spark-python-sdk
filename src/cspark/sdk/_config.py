@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 import os
 import re
@@ -12,7 +10,7 @@ from ._logger import LoggerOptions
 from ._utils import StringUtils
 from ._validators import Validators
 
-__all__ = ['Config', 'BaseUrl']
+__all__ = ['Config', 'BaseUrl', 'HealthUrl']
 
 
 class Config:
@@ -204,3 +202,16 @@ class BaseUrl:
             else 'cannot build base URL from invalid parameters',
             cause=json.dumps({'url': url, 'tenant': tenant, 'env': env}),
         )
+
+
+class HealthUrl(BaseUrl):
+    def __init__(self, base_url: str):
+        super().__init__(base_url, tenant='')
+
+    @staticmethod
+    def when(url: Union[str, BaseUrl]) -> 'HealthUrl':
+        parsed_url = urlparse(url if isinstance(url, str) else url.to('excel'))
+        if parsed_url.scheme:
+            return HealthUrl(f'{parsed_url.scheme}://{parsed_url.netloc}')
+        else:
+            return HealthUrl(f'https://excel.{url}.coherent.global')  # otherwise treat as environment

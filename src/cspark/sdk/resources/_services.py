@@ -9,6 +9,7 @@ from .._constants import SPARK_SDK
 from .._errors import RetryTimeoutError, SparkError
 from .._utils import DateUtils, StringUtils, get_retry_timeout
 from ._base import ApiResource, HttpResponse, Uri, UriParams
+from ._transforms import TransformParams
 
 __all__ = ['Services', 'ServiceExecuted']
 
@@ -192,7 +193,7 @@ class Services(ApiResource):
         *,
         # data for calculations
         inputs: Any,  # required
-        using: Optional[str] = None,
+        using: Union[str, Dict[str, str], None] = None,
         api_version: str = 'v3',  # 'v3' | 'v4'
         encoding: Optional[str] = None,  # 'gzip' | 'deflate'
         # Metadata for calculations
@@ -232,7 +233,14 @@ class Services(ApiResource):
             extras=extras,
         )
 
-        endpoint = f'transforms/{using or uri.service}/for/{uri.pick("folder", "service").encode()}'
+        if isinstance(using, str):
+            # (legacy) using transform name for Documents saved under Options > /apps/transforms
+            endpoint = f'transforms/{using}/for/folders/{uri.folder}/services/{uri.service}'
+        else:
+            using = using or {}  # use 'folder' and 'service' as fallback if using is wrong
+            transform = TransformParams(using.get('folder', uri.folder), using.get('service', uri.service))
+            endpoint = f'transforms/{transform.folder}/{transform.name}/for/{uri.folder}/{uri.service}'
+
         url = Uri.of(base_url=self.config.base_url.full, version='api/v4', endpoint=endpoint)
 
         if encoding:
@@ -342,6 +350,22 @@ class Services(ApiResource):
         response = self.request(url)
         return response.copy_with(data=response.data.get('data', []) if isinstance(response.data, dict) else [])
 
+    def get_swagger(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        version_id: Optional[str] = None,
+        downloadable: Optional[bool] = False,
+        subservice: str = 'All',
+    ):
+        uri = Uri.validate(uri or UriParams(folder, service))
+        endpoint = f'downloadswagger/{subservice}/{downloadable}/{version_id or ""}'
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint=endpoint)
+
+        return self.request(url, method='GET')
+
     def search(
         self,
         *,
@@ -350,15 +374,15 @@ class Services(ApiResource):
         sort: str = 'name1_co',
         query: Optional[List[Any]] = None,
         fields: Optional[List[str]] = None,
-        **params,
+        **params: Any,
     ):
         uri = Uri.of(base_url=self.config.base_url.full, endpoint='services/search')
         search_params = {
             'page': page,
             'page_size': limit,
             'sort': sort,
-            'query': query or [],
-            'fields': fields or ['id', 'foldername', 'filename', 'version', 'tags', 'modifiedDate'],
+            'search': query or [],
+            'fields': fields or ['id', 'foldername', 'filename', 'version', 'modifiedDate'],
             **params,  # other query parameters
         }
 
@@ -370,12 +394,12 @@ class Services(ApiResource):
         *,
         folder: Optional[str] = None,
         service: Optional[str] = None,
-        version: Optional[str] = None,
+        version_id: Optional[str] = None,
         file_name: Optional[str] = None,
         type: Optional[str] = None,  # 'original' or 'configured'
     ):
-        uri = Uri.validate(uri or UriParams(folder, service, version=version))
-        endpoint = f'product/{uri.folder}/engines/{uri.service}/download/{uri.version or ""}'
+        uri = Uri.validate(uri or UriParams(folder, service))
+        endpoint = f'product/{uri.folder}/engines/{uri.service}/download/{version_id or ""}'
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
         params = {'filename': file_name or '', 'type': 'withmetadata' if type == 'configured' else ''}
 

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.0 (2025-04-30)
+
+- Add support for Transform documents API (including Transform validator)
+- Add health check functionality (for Spark environment only)
+- Update rehydration of service execution to support new (and legacy) format
+- WASM download is now available using different Uri locators
+- Update SDK documentation to reflect changes
+
 ## 0.1.12 (2025-01-23)
 
 - Add support for folder API

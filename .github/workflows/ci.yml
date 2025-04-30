@@ -2,12 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [dev]
-    paths-ignore: ['**.md', 'LICENSE', '.python-version']
+    branches: ['*', '!main']
+    paths-ignore: ['**/*.md', 'LICENSE', '.python-version', 'examples/*']
 
 jobs:
   unit-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4

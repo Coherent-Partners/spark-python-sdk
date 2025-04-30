@@ -1,0 +1,162 @@
+{
+  "info": {
+    "title": "my-service",
+    "description": "\n **Product Name** : my-folder\n **Service Name** : my-service\n",
+    "contact": {
+      "name": "Spark",
+      "url": "https://www.coherent.global/products#spark"
+    },
+    "version": "v3"
+  },
+  "paths": {
+    "/{tenant}/api/v3/folders/{product}/services/{engine}/execute": {
+      "post": {
+        "tags": ["Spark Api"],
+        "parameters": [
+          {
+            "name": "tenant",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "x-example": "my-tenant",
+            "description": "Tenant Name"
+          },
+          {
+            "name": "product",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "x-example": "my-folder",
+            "description": "Product Name"
+          },
+          {
+            "name": "engine",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "x-example": "my-service",
+            "description": "Engine Name"
+          },
+          {
+            "name": "x-tenant-name",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "x-example": "my-tenant",
+            "description": "Tenant Name  - This is optional if Bearer Authorization is used."
+          },
+          {
+            "name": "x-synthetic-key",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "description": "API key provided by Coherent  - This is optional if Bearer Authorization is used."
+          },
+          {
+            "name": "Access-Control-Allow-Origin",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "x-example": "https://editor.swagger.io/"
+          },
+          {
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "request_data": {
+                  "type": "object",
+                  "properties": {
+                    "inputs": {
+                      "type": "object",
+                      "properties": {
+                        "my_input": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "request_data": {
+                  "inputs": { "my_input": 13 }
+                },
+                "request_meta": {
+                  "version_id": "uuid",
+                  "transaction_date": null,
+                  "call_purpose": null,
+                  "source_system": null,
+                  "correlation_id": null,
+                  "service_category": "#Default#",
+                  "requested_output": null
+                }
+              }
+            },
+            "x-example": "https://editor.swagger.io/",
+            "description": "Engine Request Object."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "response_data": {
+                  "type": "object",
+                  "properties": {
+                    "outputs": {
+                      "type": "object",
+                      "properties": {
+                        "my_output": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "status": "Success",
+                "response_data": {
+                  "outputs": { "my_output": 42 },
+                  "warnings": null,
+                  "errors": null,
+                  "service_chain": null
+                },
+                "response_meta": {
+                  "service_id": "uuid",
+                  "version_id": "uuid",
+                  "version": "0.4.2",
+                  "process_time": 123,
+                  "call_id": "uuid",
+                  "compiler_type": "Neuron",
+                  "compiler_version": "1.12.0",
+                  "source_hash": null,
+                  "engine_id": "alpha-numeric-id",
+                  "correlation_id": "",
+                  "parameterset_version_id": null,
+                  "system": "SPARK",
+                  "request_timestamp": "1970-12-03T04:56:56.186Z"
+                },
+                "error": null
+              }
+            }
+          },
+          "401": {
+            "description": "Access token is missing or invalid"
+          },
+          "404": {
+            "description": "Service cannot be found"
+          },
+          "500": {
+            "description": "Internal server error occurred. Please contact administrator."
+          }
+        },
+        "consumes": ["application/json"]
+      }
+    }
+  },
+  "host": "excel.my-env.coherent.global",
+  "schemes": ["https", "http"],
+  "swagger": "2.0"
+}

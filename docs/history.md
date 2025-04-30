@@ -37,7 +37,8 @@ Here's a list of keyword parameters you can use:
 | _call\_id_  | `str`         | The call ID of the service execution. |
 | _folder_    | `str \| None` | The folder name.                      |
 | _service_   | `str \| None` | The service name.                     |
-| _index_     | `int \| None` | For [v4 format][v4-format], indicate which record of the list to rehydrate (e.g., `0` is the first record). |
+| _index_     | `int \| None` | For [v4 format][v4-format], indicate which record of the list to rehydrate (e.g., `0` is the 1st record). |
+| _legacy_    | `bool`        | Use the legacy rehydration format (defaults to `False`).|
 
 ```python
 spark.logs.rehydrate('my-folder/my-service', call_id='call-id') # for v3 format

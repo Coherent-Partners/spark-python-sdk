@@ -1,5 +1,5 @@
 import pytest
-from cspark.sdk import BaseUrl, Config, SparkSdkError
+from cspark.sdk import BaseUrl, Config, HealthUrl, SparkSdkError
 from cspark.sdk._constants import *
 
 BASE_URL = 'https://excel.test.coherent.global'
@@ -121,3 +121,22 @@ def test_throw_error_if_base_url_is_not_of_spark():
         BaseUrl.of(url='file://excel.test.coherent.global/tenant')
     with pytest.raises(SparkSdkError):
         BaseUrl.of(url='https://excel.spark.global/tenant')
+
+
+def test_health_url_can_build_from_different_parts():
+    VALID_URL, TENANT = 'https://excel.my.env.coherent.global', 'tenant'
+    SPARK_URL = f'https://spark.test.coherent.global/{TENANT}'
+
+    # from environment name
+    assert HealthUrl.when('my.env').value == VALID_URL
+    assert HealthUrl.when('test').value == 'https://excel.test.coherent.global'
+
+    # from URL string
+    assert HealthUrl.when(VALID_URL).value == VALID_URL
+    assert HealthUrl.when(f'{VALID_URL}/{TENANT}').value == VALID_URL
+    assert HealthUrl.when(SPARK_URL).value == 'https://excel.test.coherent.global'
+
+    # from BaseUrl object
+    assert HealthUrl.when(BaseUrl.of(url=VALID_URL, tenant=TENANT)).value == VALID_URL
+    assert HealthUrl.when(BaseUrl.of(url=f'{VALID_URL}/{TENANT}')).value == VALID_URL
+    assert HealthUrl.when(BaseUrl.of(url=SPARK_URL)).value == 'https://excel.test.coherent.global'

@@ -45,10 +45,6 @@ Alternatively, you can pass in the following parameters as an `object`.
 | _version\_id_ | `str \| None` | The version UUID of the service. |
 | _service\_id_ | `str \| None` | The service UUID (points to the latest version).|
 
-> [!NOTE]
-> As of now, only the `version_id` should be used to download the WebAssembly module.
-> The other properties are currently being tested. Otherwise, they might throw an `UnknownApiError`.
-
 ```python
 spark.wasm.download(version_id='uuid')
 ```

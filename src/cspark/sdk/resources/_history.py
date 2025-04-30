@@ -22,12 +22,14 @@ class History(ApiResource):
         folder: Optional[str] = None,
         service: Optional[str] = None,
         index: Optional[int] = None,
+        legacy: bool = False,
     ):
         if StringUtils.is_empty(call_id):
             raise SparkError.sdk('call_id is required when rehydrating', {'call_id': call_id})
 
         uri = Uri.validate(UriParams(folder, service) if uri is None else Uri.to_params(uri))
-        url = Uri.of(uri.pick('folder', 'service'), base_url=self.config.base_url.full, endpoint=f'download/{call_id}')
+        endpoint = f'download/{call_id}' if legacy else f'download/xml/{call_id}'
+        url = Uri.of(uri.pick('folder', 'service'), base_url=self.config.base_url.full, endpoint=endpoint)
         params = {'index': str(index)} if is_int(index) and cast(int, index) >= 0 else None
         response = self.request(url, params=params)
 
@@ -79,6 +81,7 @@ class History(ApiResource):
                 job_id=job_id,
                 folder=folder,
                 service=service,
+                type=type,
                 max_retries=max_retries,
                 retry_interval=retry_interval,
             )

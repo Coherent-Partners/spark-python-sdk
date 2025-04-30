@@ -8,6 +8,7 @@
 | `Spark.services.execute(uri, inputs)`  | [Execute a Spark service](#execute-a-spark-service).                          |
 | `Spark.services.transform(uri, inputs)`| [Execute a Spark service using Transforms](#execute-a-spark-service-using-transforms).|
 | `Spark.services.get_versions(uri)`     | [Get all the versions of a service](#get-all-the-versions-of-a-service).      |
+| `Spark.services.get_swagger(uri)`      | [Get the Swagger documentation of a service](#get-the-swagger-documentation). |
 | `Spark.services.get_schema(uri)`       | [Get the schema for a given service](#get-the-schema-for-a-service).          |
 | `Spark.services.get_metadata(uri)`     | [Get the metadata of a service](#get-the-metadata-of-a-service).              |
 | `Spark.services.download(uri)`         | [Download the excel file of a service](#download-the-excel-file-of-a-service).|
@@ -28,7 +29,8 @@ If you're uncertain of how to prepare an Excel file for Spark, take a look at th
 information.
 
 > [!IMPORTANT]
-> You must create a folder before you can create a service.
+> You must create a folder before you can create a service. Please refer to the
+> [Folders API](./folders.md) to learn more about creating a folder.
 
 ### Arguments
 
@@ -79,8 +81,8 @@ individually. For example, if you only want to compile the service, you can call
 
 ### Returns
 
-This method returns a JSON with detailed information on the upload, compilation,
-and publication processes.
+This method returns a JSON (not the `HttpResponse` object) with detailed information
+on the upload, compilation, and publication processes as shown below.
 
 ```json
 {
@@ -148,11 +150,11 @@ and publication processes.
 
 This method allows you to execute a Spark service.
 
-Currently, Spark supports two versions of Execute API: v3 and v4. The SDK will use
-the [v3 format][v3-format] for a single input and the [v4 format][v4-format] for
-multiple inputs.
+Currently, Coherent Spark supports two versions of Execute API: `v3` (or [v3 format][v3-format])
+and `v4` (or [v4 format][v4-format]), which are used respectively for single-input and
+multiple-input data formats.
 By default, the SDK will return the output data in the [v4 format][v4-format]
-unless you prefer to work with the original format emitted by the API.
+unless you prefer to work with the original format, i.e., the one emitted by the API.
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/execute-api)
 to learn more about Services API.
@@ -164,9 +166,9 @@ which include the input data and metadata. See the use cases below.
 
 - **Default inputs**:
   the following example demonstrates how to execute a service with default values.
-  Obviously, the SDK ignores those default values. Under the hood, the SDK
-  uses an empty object `{}` as the input data, which is an indicator for Spark to
-  use the default inputs defined in the Excel file.
+  As you may probably guess, the SDK ignores those default values. Under the hood,
+  the SDK uses an empty object `{}` as the input data, which is an indicator for Spark
+  to use the default inputs defined in the Excel file.
 
 ```py
 spark.services.execute('my-folder/my-service')
@@ -242,7 +244,8 @@ spark.services.execute(UriParams(folder='my-folder', service='service', version=
 ```
 
 - using **proxy** endpoints:
-  `proxy` is the custom endpoint associated with the service.
+  `proxy` is the custom endpoint associated with the service. Remember that custom
+  endpoints are only available for the [v3 format][v3-format].
 
 ```py
 spark.services.execute('proxy/custom-endpoint')
@@ -291,7 +294,7 @@ For the other keyword arguments:
 This method returns the output data of the service execution in the following
 format:
 
-- `original`: the output data as dictionary in its original format (as returned by the API).
+- `original`: the output data as JSON in its original format (i.e., as returned by the API).
 - `alike`: the output data as dictionary in the v4 format whether it's a single or multiple inputs.
 
 For instance, the output data of a service execution for a single input looks like this
@@ -314,14 +317,14 @@ when the `response_format` is set to `alike`:
 }
 ```
 
-You may wonder why the output data is wrapped in an array for single inputs.
+You may wonder why the output data is wrapped up in an array for single inputs.
 This is because the `alike` format is designed to work with both single and multiple
 inputs. This should help maintain consistency in the output data format. But if you
 prefer the original format emitted by the API, you can set the `response_format`
 to `original`.
 
 > [!IMPORTANT]
-> Executing multiple inputs is a synchronous operation and may take some time to complete.
+> Executing multiple inputs is a synchronous operation in Spark and may take some time to complete.
 > The default timeout for this client is 60 seconds, and for Spark servers, it is 55 seconds.
 > Another good practice is to split the batch into smaller chunks and submit separate requests.
 
@@ -330,24 +333,26 @@ to `original`.
 This method allows you to execute a Spark service using unstructured data. It is
 quite useful especially when the service in question does not conform to the client
 application's data structure. This is the perfect opportunity to use a middle layer
-such as Transforms on the Spark side to adapt the service execution to the client
+such as **Transforms** on the Spark side to adapt the service execution to the client
 application.
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/transforms-api)
-to learn more about Transforms API.
+to learn more about Transforms API, including how to create, update, and delete
+[Transform documents](./samples/jsonmapper_transform.json).
 
 ### Arguments
 
 This method requires a service URI locator and the input data. Additionally, you
 may provide the following keyword arguments:
 
-| Property      | Type             | Description                                      |
-| ------------- | ---------------- | ------------------------------------------------ |
-| _using_       | `None \| str`    | The transform name (defaults to the service name if any).|
-| _api\_version_| `'v3' \| 'v4'`       | The target API version (defaults to `v3`).       |
+| Property      | Type                 | Description                                            |
+| ------------- | -------------------- | -----------------------------------------------------  |
+| _inputs_      | `Any`                | The (unstructured) input data.                         |
+| _using_       | `None \| str`        | The transform URI locator.                             |
+| _api\_version_| `'v3' \| 'v4'`       | The target API version (defaults to `v3`).             |
 | _encoding_    | `'gzip' \| 'deflate'`| Apply this content encoding between client and server. |
 
-> NOTE: When using `encoding`, the SDK will automatically compress and decompress the
+> Note that, when using `encoding`, the SDK will automatically compress and decompress the
 > payload using the specified encoding.
 
 As for the metadata of a Spark service execution, this method follows the same
@@ -361,6 +366,27 @@ spark.services.transform(
     using='my-transform', # transform name
     call_purpose='Demo'
 )
+```
+
+> [!TIP]
+> The `using` property can be a string or a dictionary with `name` and `folder` properties.
+> When **string**, it will be interpreted as the name of the transform, which follows the
+> legacy naming convention for transform documents saved under the `apps/transforms` folder.
+> Do know that the **dictionary** way is the new, preferred method of creating and saving
+> Transform documents.
+>
+> With the SDK, you can perform CRUD operations on Transform documents using the
+> `spark.transforms.*` methods.
+
+```python
+spark.transforms.validate('stringified transform content goes here')
+# or
+spark.transforms.validate(
+  schema='JSONtransforms_v1.0.1',
+  api_version='v3',
+  inputs='your-jsonata-expression goes here',
+)
+# NOTE: The validation is performed via the Spark server and not the SDK.
 ```
 
 ### Returns
@@ -424,6 +450,43 @@ spark.services.get_versions(folder='my-folder', service='my-service')
 ]
 ```
 
+> Note that the API returns a different format for the versions of a service.
+> The SDK flattens the response and returns a single array of objects to make it
+> easier to work with.
+
+## Get the Swagger documentation
+
+This method returns the JSON content or downloads the swagger file of a service.
+
+### Arguments
+
+The method accepts a string or a `UriParams` object as an argument.
+
+```py
+spark.services.get_swagger('my-folder/my-service')
+# or
+spark.services.get_swagger(folder='my-folder', service='my-service')
+```
+
+When using the `UriParams` object, you can also specify additional options:
+
+| Property       | Type      | Description                                                            |
+| -------------- | --------- | ---------------------------------------------------------------------- |
+| _folder_       | `str`  | The folder name.                                                          |
+| _service_      | `str`  | The service name.                                                         |
+| _version\_id_  | `str`  | The UUID to target a specific version of the service (optional).          |
+| _downloadable_ | `bool` | If `true`, the method downloads the swagger file; else, the JSON content. |
+| _subservice_   | `str`  | The list of the subservices being requested or `all` subservices.         |
+
+```py
+spark.services.get_swagger(folder='my-folder', service='my-service', downloadable=True)
+```
+
+### Returns
+
+See a [sample swagger JSON](./samples/service-swagger.json) for more information
+about the swagger content.
+
 ## Get the schema for a service
 
 This method returns the schema of a service. A service schema is a JSON object
@@ -452,7 +515,13 @@ See a [sample service schema](./samples/service-swagger.json) for more informati
 
 ## Get the metadata of a service
 
-This method returns the metadata of a service.
+A service metadata is a series of key-value pairs that are used for other purposes
+than computed output data. For example, you may want to embed details such as fonts
+and colors in the Excel file of a service. This method helps you retrieve these
+metadata fields as part of the output data.
+
+Check out the [API reference](https://docs.coherent.global/spark-apis/metadata-api)
+to learn more about Metadata API.
 
 ### Arguments
 
@@ -466,42 +535,51 @@ spark.services.get_metadata(folder='my-folder', service='my-service')
 
 ### Returns
 
-This method returns the output data of the service execution in the same format
-as the [execute method](#execute-a-spark-service).
+Do know that metadata fields created with
+[Subservices](https://docs.coherent.global/build-spark-services/subservices#metadata-subservice)
+are retrieved faster and more efficiently as they are not computed as regular
+outputs from Execute API.
 
 ```json
 {
-  "outputs": [
-    {
-      "Metadata.Date": "1970-01-23",
-      "Metadata.Number": 456,
-      "Metadata.Text": "DEF",
-      "METADATA.IMAGE": "data:image/png;base64,..."
-    }
-  ],
-  "warnings": [null],
-  "errors": [null],
-  "service_id": "uuid",
-  "version_id": "uuid",
-  "version": "1.2.3",
-  "process_time": 0,
-  "call_id": "uuid",
-  "compiler_type": "Type3",
-  "compiler_version": "1.2.0",
-  "source_hash": null,
-  "engine_id": "hash-info",
-  "correlation_id": null,
-  "system": "SPARK",
-  "request_timestamp": "1970-01-23T00:58:20.752Z"
+  "status": "Success",
+  "error": null,
+  "response_data": {
+    "outputs": {
+      "Metadata.PrimaryColor": "#FF0",
+      "Metadata.Font": "Arial",
+      "Metadata.Logo": "data:image/png;base64,..."
+    },
+    "warnings": null,
+    "errors": null,
+    "service_chain": null
+  },
+  "response_meta": {
+    "service_id": "uuid",
+    "version_id": "uuid",
+    "version": "1.2.3",
+    "process_time": 0,
+    "call_id": "uuid",
+    "compiler_type": "Type3",
+    "compiler_version": "1.2.0",
+    "source_hash": null,
+    "engine_id": "hash-info",
+    "correlation_id": null,
+    "system": "SPARK",
+    "request_timestamp": "1970-01-23T00:58:20.752Z"
+  }
 }
 ```
 
 ## Download the Excel file of a service
 
 During the conversion process, Spark builds a service from the Excel file and keeps
-a _configured_ version of the service for version control. This configured version
+a _configured version_ of the service for version control. This configured version
 is nothing but the Excel file that was uploaded to Spark with some additional
-metadata for version control.
+metadata, i.e., service properties stored as custom XML. Benefits of downloading
+the configured version include the ability to link it with the
+[Coherent Assistant Add-in](https://docs.coherent.global/assistant) and operate
+that service using Microsoft Excel.
 
 This method lets you download either the configured version or the original Excel
 file of a service.
@@ -511,12 +589,12 @@ file of a service.
 The method accepts a string or keyword arguments `folder`, `service` and `version`.
 
 ```python
-spark.services.download('my-folder/my-service[0.4.2]')
+spark.services.download('my-folder/my-service')
 # or
-spark.services.download(folder='my-folder', service='my-service', version='0.4.2')
+spark.services.download(folder='my-folder', service='my-service', version_id='uuid')
 ```
 
-> **Note:** The version piece is optional. If not provided, the latest version
+> Note that the version piece is optional. If not provided, the latest version
 > will be downloaded.
 
 You may use additional options to indicate whether you intend to download the
@@ -534,11 +612,12 @@ spark.services.download('my-folder/my-service', type='configured')
 ### Returns
 
 When successful, the method returns an `HttpResponse` object with the buffer
-containing the Excel file.
+containing the Excel file. Remember to implement mechanisms to save the file
+to your local machine.
 
 ## Recompile a service
 
-Every service in Spark is compiled using a specific compiler version -- usually
+Every service in Spark is compiled using a specific compiler version - usually
 the latest one. However, you may want to recompile a service using a specific
 compiler version for various reasons. Keep in mind that a service recompilation
 is considered an update to the underlying Spark service but not to the Excel file
@@ -627,9 +706,9 @@ to Spark services.
 Check out the [API reference](https://docs.coherent.global/spark-apis/validation-api)
 to learn more about validation of the inputs and outputs.
 
-> **Note:** This method works similarly to the `Spark.services.execute()` method but
+> Note that this method works similarly to the `Spark.services.execute` method but
 > with a different purpose. If you want to know more about the input and output
-> data format, check the [excute(...)](#execute-a-spark-service) method.
+> data format, check the [execute(...)](#execute-a-spark-service) method.
 
 ### Arguments
 

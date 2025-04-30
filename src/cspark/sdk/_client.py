@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 from typing import Any, Mapping, Optional, Union
 
 import cspark.sdk.resources as API
 
 from ._auth import Authorization
-from ._config import BaseUrl, Config
+from ._config import BaseUrl, Config, HealthUrl
 from ._logger import LoggerOptions
 from .resources._base import download as download_file
 
@@ -54,6 +52,11 @@ class Client:
         )
 
     @property
+    def health(self) -> API.Health:
+        """The resource to manage health checks."""
+        return API.Health(self.config)
+
+    @property
     def folders(self) -> API.Folders:
         """The resource to manage Folders API."""
         return API.Folders(self.config)
@@ -62,6 +65,11 @@ class Client:
     def services(self) -> API.Services:
         """The resource to manage Services API."""
         return API.Services(self.config)
+
+    @property
+    def transforms(self) -> API.Transforms:
+        """The resource to manage Transforms API."""
+        return API.Transforms(self.config)
 
     @property
     def batches(self) -> API.Batches:
@@ -87,6 +95,12 @@ class Client:
     def impex(self) -> API.ImpEx:
         """The resource to import and export Spark services."""
         return API.ImpEx.only(self.config)
+
+    @staticmethod
+    def health_check(base_url: Union[str, BaseUrl], token: str = 'open', **options):
+        config = Config(base_url=HealthUrl.when(base_url), token=token, **options)
+        with API.Health(config) as health:
+            return health.check()
 
     @staticmethod
     def download(url: str, auth: Optional[Authorization] = None) -> bytes:

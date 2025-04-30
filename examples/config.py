@@ -22,10 +22,33 @@ def retrieve_token():
     print(f'access token: {oauth.access_token}')
 
 
+def check_health(env='uat.us'):
+    response = Spark.Client.health_check(env)
+    print(response.data)
+
+
+def test_extended_resource():
+    config = Spark.Config()  # same as client options.
+    with ExtendedResource(config) as resource:
+        response = resource.fetch_config()
+        print(response.data)
+
+
+class ExtendedResource(Spark.ApiResource):
+    def fetch_config(self):
+        endpoint = 'config/GetAllSparkConfiguration'
+        url = Spark.Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
+        self.logger.info(f'fetching Spark configurations...')
+
+        return self.request(url, method='GET')
+
+
 if __name__ == '__main__':
     try:
         retrieve_token()
         print_logs()
+        check_health()
+        test_extended_resource()
     except Spark.SparkError as err:
         print(err.message)
         print(err.details)

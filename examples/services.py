@@ -44,7 +44,7 @@ def get_versions(services: Spark.Services):
 
 
 def search(services: Spark.Services):
-    response = services.search()
+    response = services.search(limit=5)
     print(response.data)
 
 
