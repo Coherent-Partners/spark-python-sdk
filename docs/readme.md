@@ -47,7 +47,7 @@ SDK is properly configured and that you can communicate with the Spark platform.
 ```py
 import cspark.sdk as Spark;
 
-response = Spark.health_check()
+response = Spark.Client.health_check('uat.us')
 print(response.data)
 ```
 

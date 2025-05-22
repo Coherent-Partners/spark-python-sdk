@@ -2,6 +2,7 @@ from typing import Any, Mapping, Optional, Union
 
 import cspark.wasm.resources as API
 from cspark.sdk import BaseUrl, LoggerOptions
+from httpx import Client as HttpClient
 
 from ._config import Config, RunnerUrl
 
@@ -27,6 +28,7 @@ class Client:
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
+        http_client: Optional[HttpClient] = None,
         logger: Union[bool, Mapping[str, Any], LoggerOptions] = True,
     ) -> None:
         self.config = Config(
@@ -36,6 +38,7 @@ class Client:
             timeout=timeout,
             max_retries=max_retries,
             retry_interval=retry_interval,
+            http_client=http_client,
             logger=logger,
         )
 

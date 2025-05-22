@@ -4,6 +4,8 @@ import re
 from typing import Any, Mapping, Optional, Union, cast
 from urllib.parse import urlparse
 
+from httpx import Client as HttpClient
+
 from ._constants import *
 from ._errors import SparkError
 from ._logger import LoggerOptions
@@ -21,15 +23,17 @@ class Config:
         self,
         *,
         base_url: Union[None, str, 'BaseUrl'] = None,
+        tenant: Optional[str] = None,
+        env: Optional[str] = None,
         api_key: Optional[str] = None,
         token: Optional[str] = None,
         oauth: Union[None, Mapping[str, str], str] = None,
         timeout: Optional[float] = DEFAULT_TIMEOUT_IN_MS,
         max_retries: Optional[int] = DEFAULT_MAX_RETRIES,
         retry_interval: Optional[float] = DEFAULT_RETRY_INTERVAL,
-        tenant: Optional[str] = None,
-        env: Optional[str] = None,
         logger: Union[bool, Mapping[str, Any], LoggerOptions] = True,
+        # A custom HTTP client to use with extra capabilities (proxy, auth, verify, etc).
+        http_client: Optional[HttpClient] = None,
     ) -> None:
         from ._auth import Authorization  # NOTE: help avoid circular import
 
@@ -45,8 +49,8 @@ class Config:
         self._max_retries = max_retries if num_validator.is_valid(max_retries) else DEFAULT_MAX_RETRIES
         self._retry_interval = retry_interval if num_validator.is_valid(retry_interval) else DEFAULT_RETRY_INTERVAL
         self._logger = LoggerOptions.when(logger)
-        self._env = self._base_url.env
 
+        self.http_client = http_client
         self.extra_headers = {}
         self._options = str(
             {
@@ -58,7 +62,6 @@ class Config:
                 'max_retries': self._max_retries,
                 'retry_interval': self._retry_interval,
                 'logger': self._logger,
-                'env': self._env,
             }
         )
 
@@ -105,6 +108,7 @@ class Config:
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
+        http_client: Optional[HttpClient] = None,
     ) -> 'Config':
         url = (
             base_url.copy_with(tenant=tenant, env=env)
@@ -119,6 +123,7 @@ class Config:
             timeout=timeout or self._timeout,
             max_retries=max_retries or self._max_retries,
             retry_interval=retry_interval or self._retry_interval,
+            http_client=http_client or self.http_client,
         )
 
 

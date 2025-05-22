@@ -149,7 +149,7 @@ spark = Spark.Client(oauth='path/to/oauth/credentials.json')
 
 ### Additional Settings
 
-- `timeout` (default: `60000` ms) indicates the maximum amount of time that the
+- `timeout` (default: `60_000` ms) indicates the maximum amount of time that the
   client should wait for a response from Spark servers before timing out a request.
 
 - `max_retries` (default: `2`) indicates the maximum number of times that the client
@@ -173,6 +173,21 @@ spark = Spark.Client(oauth='path/to/oauth/credentials.json')
 spark = Spark.Client(logger=False)
 # or
 spark = Spark.Client(logger={'colorful': False})
+```
+
+- `http_client` (default: `None`) indicates the custom HTTP client to use to
+  perform HTTP requests. It is an instance of [httpx.Client][httpx-client] and
+  can be used to configure proxy, cookies, timeout, SSL verification, etc.
+
+```py
+import httpx
+import cspark.sdk as Spark
+
+spark = Spark.Client(
+    base_url='https://spark.my-env.coherent.global/my-tenant',
+    token='Bearer my-access-token',
+    http_client=httpx.Client(proxy='https://my-proxy-url')
+)
 ```
 
 ## Client Errors
@@ -291,3 +306,4 @@ conduct, and the process for submitting pull requests.
 [docs]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/docs
 [uri-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/src/cspark/sdk/resources/_base.py
 [logging-level]: https://docs.python.org/3/library/logging.html#logging-levels
+[httpx-client]: https://www.python-httpx.org/api/#client
