@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 from cspark.sdk import BaseUrl, SparkError
 from cspark.sdk import Config as BaseConfig
+from httpx import Client as HttpClient
 
 from ._constants import *
 
@@ -22,6 +23,7 @@ class Config(BaseConfig):
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
+        http_client: Optional[HttpClient] = None,
         **kwargs,  # noqa: ARG002
     ) -> 'Config':
         """Overrides parent's copyWith as `env` and `oauth` are not applicable."""
@@ -37,6 +39,7 @@ class Config(BaseConfig):
             timeout=timeout or self._timeout,
             max_retries=max_retries or self._max_retries,
             retry_interval=retry_interval or self._retry_interval,
+            http_client=http_client or self.http_client,
         )
 
 

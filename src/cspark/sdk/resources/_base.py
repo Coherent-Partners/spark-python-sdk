@@ -20,8 +20,8 @@ __all__ = ['ApiResource', 'UriParams', 'Uri', 'HttpResponse']
 class ApiResource:
     def __init__(self, config: Config):
         self.config = config
-        self._client = Client()
         self.logger = get_logger(**config.logger.__dict__)
+        self._client = config.http_client or Client(timeout=config.timeout / 1000)
 
     def __enter__(self):
         return self
@@ -32,6 +32,9 @@ class ApiResource:
         exc: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
+        # Ideally, let users handle the closing of the custom HTTP client.
+        if self.config.http_client:
+            return
         self.close()
 
     def close(self):
@@ -50,7 +53,7 @@ class ApiResource:
 
     def request(
         self,
-        url: Union[str, 'Uri'],
+        url: Union[str, 'Uri', URL],
         *,
         method: str = 'GET',
         headers: Mapping[str, str] = {},
@@ -60,7 +63,7 @@ class ApiResource:
         form=None,
         files=None,
     ) -> 'HttpResponse':
-        url = url.value if isinstance(url, Uri) else url
+        url = str(url)
         request = self._client.build_request(
             method,
             url,
@@ -70,7 +73,6 @@ class ApiResource:
             json=body,
             content=content,
             files=files,
-            timeout=self.config.timeout / 1000,
         )
 
         self.logger.debug(f'{method} {url}')

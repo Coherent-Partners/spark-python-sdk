@@ -1,6 +1,7 @@
 from typing import Any, Mapping, Optional, Union
 
 import cspark.sdk.resources as API
+from httpx import Client as HttpClient
 
 from ._auth import Authorization
 from ._config import BaseUrl, Config, HealthUrl
@@ -28,26 +29,28 @@ class Client:
         self,
         *,
         base_url: Union[None, str, BaseUrl] = None,
+        tenant: Optional[str] = None,
+        env: Optional[str] = None,
         oauth: Union[None, Mapping[str, str], str] = None,
         api_key: Optional[str] = None,
         token: Optional[str] = None,
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
-        tenant: Optional[str] = None,
-        env: Optional[str] = None,
+        http_client: Optional[HttpClient] = None,
         logger: Union[bool, Mapping[str, Any], LoggerOptions] = True,
     ) -> None:
         self.config = Config(
             base_url=base_url,
+            tenant=tenant,
+            env=env,
             oauth=oauth,
             api_key=api_key,
             token=token,
             timeout=timeout,
             max_retries=max_retries,
             retry_interval=retry_interval,
-            tenant=tenant,
-            env=env,
+            http_client=http_client,
             logger=logger,
         )
 
@@ -98,6 +101,7 @@ class Client:
 
     @staticmethod
     def health_check(base_url: Union[str, BaseUrl], token: str = 'open', **options):
+        """Checks the health status of the Coherent Spark environment."""
         config = Config(base_url=HealthUrl.when(base_url), token=token, **options)
         with API.Health(config) as health:
             return health.check()
