@@ -45,7 +45,7 @@ given Spark environment (e.g., `uat.us`, `us`, etc.). This will ensure that your
 SDK is properly configured and that you can communicate with the Spark platform.
 
 ```py
-import cspark.sdk as Spark;
+import cspark.sdk as Spark
 
 response = Spark.Client.health_check('uat.us')
 print(response.data)

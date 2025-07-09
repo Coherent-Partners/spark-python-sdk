@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
-## 0.2.0 (2025-04-30)
+## 0.2.0 (2025-07-09)
 
 - Add support for Transform documents API (including Transform validator)
 - Add health check functionality (for Spark environment only)

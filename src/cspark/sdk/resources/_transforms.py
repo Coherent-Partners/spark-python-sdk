@@ -78,6 +78,9 @@ class Transforms(ApiResource):
     def __build(self, value: Union[str, Transform]) -> str:
         value = Transform(**loads(value)) if isinstance(value, str) else value
 
+        if value.schema and 'nodejs22' in value.schema.lower():
+            return dumps({'transform_type': value.schema, 'transform_code': value.inputs})
+
         transform = dumps(
             {
                 'transform_type': value.schema or 'JSONtransforms_v1.0.1',

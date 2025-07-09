@@ -9,8 +9,7 @@ provide convenient access to Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 This SDK is supported by the community. If you encounter any bumps while using it,
-please report them [here](https://github.com/Coherent-Partners/spark-python-sdk/issues)
-by creating a new issue.
+please report them [by creating a new issue](https://github.com/Coherent-Partners/spark-python-sdk/issues).
 
 ## Installation
 
@@ -24,9 +23,9 @@ pip install cspark # or 'cspark[cli]' for CLI support.
 
 To use the SDK, you need a Coherent Spark account that lets you access the following:
 
+- Base URL (including the environment and tenant name)
 - User authentication ([API key][api-key-docs], [bearer token][bearer-token-docs],
   or [OAuth2.0 client credentials][oauth2-docs] details)
-- Base URL (including the environment and tenant name)
 - Spark service URI (to locate a specific resource):
   - `folder` - the folder name (where the service is located)
   - `service` - the service name
