@@ -36,7 +36,7 @@ You may pass in the service URI as `string` in the following format:
 spark.wasm.download('version/uuid')
 ```
 
-Alternatively, you can pass in the following parameters as an `object`.
+Alternatively, you can pass in the following parameters as keyword arguments.
 
 | Property      | Type          | Description                      |
 | ------------- | ------------- | -------------------------------- |
@@ -99,7 +99,7 @@ Spark.Client.download('https://my-spark-file-url/with/token')
 ```
 
 It should be noted that the `Client.download()` method is a static one and doesn't require
-any Spark configuration. It also accepts a second argument, [Authorization](../src/cspark/sdk/_auth.py),
+any Spark configuration. It also accepts a second argument, [Authorization](../../src/cspark/sdk/_auth.py),
 which can be used if user authorization is required to access and download a file.
 
 ```py
@@ -114,4 +114,4 @@ Client.download('https://my-spark-file-url', auth)
 When successful, this method returns a buffer containing the file. You may then write
 this buffer to disk (as shown above) or process it further.
 
-[Back to top](#other-apis) or [Main Documentation](./readme.md)
+[Back to top](#other-apis) or [Main Documentation](../readme.md)

@@ -338,7 +338,7 @@ application.
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/transforms-api)
 to learn more about Transforms API, including how to create, update, and delete
-[Transform documents](./samples/jsonmapper_transform.json).
+[Transform documents](../samples/jsonmapper_transform.json).
 
 ### Arguments
 
@@ -484,7 +484,7 @@ spark.services.get_swagger(folder='my-folder', service='my-service', downloadabl
 
 ### Returns
 
-See a [sample swagger JSON](./samples/service-swagger.json) for more information
+See a [sample swagger JSON](../samples/service-swagger.json) for more information
 about the swagger content.
 
 ## Get the schema for a service
@@ -511,7 +511,7 @@ spark.services.get_schema(folder='my-folder', service='my-service')
 
 ### Returns
 
-See a [sample service schema](./samples/service-swagger.json) for more information.
+See a [sample service schema](../samples/service-schema.json) for more information.
 
 ## Get the metadata of a service
 

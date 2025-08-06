@@ -624,7 +624,7 @@ containing the details of the canceled pipeline.
 
 ---
 
-# Workflow Example
+## Workflow Example
 
 The content above describes the building blocks of the [Batches API][batch-apis]
 and its potential for efficiently processing large data volumes. How you choose
@@ -700,7 +700,9 @@ def create_and_run(batches: Spark.Batches):
         logger.critical(f'Unknown error: {exc}')
     finally:
         if pipeline:
-            pipeline.dispose()
+            if pipeline.state == 'open':
+                pipeline.dispose()
+            pipeline.close()
 
         with open('path/to/outputs.json', 'w') as f:
             json.dump(results, f, indent=2)

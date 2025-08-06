@@ -31,7 +31,7 @@ class History(ApiResource):
         endpoint = f'download/{call_id}' if legacy else f'download/xml/{call_id}'
         url = Uri.of(uri.pick('folder', 'service'), base_url=self.config.base_url.full, endpoint=endpoint)
         params = {'index': str(index)} if is_int(index) and cast(int, index) >= 0 else None
-        response = self.request(url, params=params)
+        response = self.request(url, method='POST', params=params)
 
         if isinstance(response.data, dict) and isinstance(response.data['response_data'], dict):
             download_url = response.data['response_data']['download_url']

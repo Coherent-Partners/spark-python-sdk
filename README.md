@@ -155,7 +155,7 @@ spark = Spark.Client(oauth='path/to/oauth/credentials.json')
   will retry a request in case of a temporary failure, such as an unauthorized
   response or a status code greater than 400.
 
-- `retry_interval` (default: `1` second) indicates the delay between each retry.
+- `retry_interval` (default: `1.0` second) indicates the delay between each retry.
 
 - `logger` (default: `True`) enables or disables the logger for the SDK.
   - If `bool`, determines whether or not the SDK should print logs.
@@ -221,12 +221,12 @@ Some of the derived `SparkApiError` are:
 The SDK aims to provide full parity with the Spark APIs over time. Below is a list
 of the currently supported APIs.
 
-[Authentication API](./docs/authentication.md) - manages access tokens using
+[Authentication API](./docs/sdk/authentication.md) - manages access tokens using
 OAuth2.0 Client Credentials flow:
 
 - `Authorization.oauth.retrieve_token(config)` generates new access tokens.
 
-[Folders API](./docs/folders.md) - manages folders:
+[Folders API](./docs/sdk/folders.md) - manages folders:
 
 - `Spark.folders.categories.list()` gets the list of folder categories.
 - `Spark.folders.create(data)` creates a new folder with additional info.
@@ -234,7 +234,7 @@ OAuth2.0 Client Credentials flow:
 - `Spark.folders.update(id, data)` updates a folder's information by id.
 - `Spark.folders.delete(id)` deletes a folder by id, including all its services.
 
-[Services API](./docs/services.md) - manages Spark services:
+[Services API](./docs/sdk/services.md) - manages Spark services:
 
 - `Spark.services.create(data)` creates a new Spark service.
 - `Spark.services.execute(uri, inputs)` executes a Spark service.
@@ -249,7 +249,7 @@ OAuth2.0 Client Credentials flow:
 - `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
 - `Spark.services.delete(uri)` deletes an existing service, including all its versions.
 
-[Batches API](./docs/batches.md) - manages asynchronous batch processing:
+[Batches API](./docs/sdk/batches.md) - manages asynchronous batch processing:
 
 - `Spark.batches.describe()` describes the batch pipelines across a tenant.
 - `Spark.batches.create(params, [options])` creates a new batch pipeline.
@@ -261,18 +261,18 @@ OAuth2.0 Client Credentials flow:
 - `Spark.batches.of(id).dispose()` closes a batch pipeline.
 - `Spark.batches.of(id).cancel()` cancels a batch pipeline.
 
-[Log History API](./docs/history.md) - manages service execution logs:
+[Log History API](./docs/sdk/history.md) - manages service execution logs:
 
 - `Spark.logs.rehydrate(uri, call_id)` rehydrates the executed model into the original Excel file.
 - `Spark.logs.download(data)` downloads service execution logs as `csv` or `json` file.
 
-[ImpEx API](./docs/impex.md) - imports and exports Spark services:
+[ImpEx API](./docs/sdk/impex.md) - imports and exports Spark services:
 
 - `Spark.impex.exp(data)` exports Spark entities (versions, services, or folders).
 - `Spark.impex.imp(data)` imports previously exported Spark entities into the platform.
 - `Spark.impex.exports.cancel(job_id)` cancels an in-progress export job.
 
-[Other APIs](./docs/misc.md) - for other functionality:
+[Other APIs](./docs/sdk/misc.md) - for other functionality:
 
 - `Spark.health.check()` checks the health status of a Spark environment.
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.

@@ -7,13 +7,13 @@ Additional information can be found on [Spark's User Guide](https://docs.coheren
 
 ## Table of Contents
 
-- [Authentication](./authentication.md)
-- [Folders API](./folders.md)
-- [Services API](./services.md)
-- [Batches API](./batches.md)
-- [Log History API](./history.md)
-- [ImpEx API](./impex.md)
-- [Other APIs](./misc.md)
+- [Authentication](./sdk/authentication.md)
+- [Folders API](./sdk/folders.md)
+- [Services API](./sdk/services.md)
+- [Batches API](./sdk/batches.md)
+- [Log History API](./sdk/history.md)
+- [ImpEx API](./sdk/impex.md)
+- [Other APIs](./sdk/misc.md)
 - [Hybrid Deployment](./hybrid.md)
 
 ## Getting Started
@@ -204,4 +204,4 @@ or submit a pull request following these [guidelines](../CONTRIBUTING.md).
 
 Happy coding! 🚀
 
-[Back to top](#sdk-documentation) or [Next: Authentication](./authentication.md)
+[Back to top](#sdk-documentation) or [Next: Authentication](./sdk/authentication.md)
