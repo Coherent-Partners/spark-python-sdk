@@ -62,6 +62,8 @@ with spark.services as services:
 ```
 
 Explore the [examples] and [docs] folders to find out more about the SDK's capabilities.
+For more AI-powered guidance and code documentation, check out the [DeepWiki][wiki]
+(powered by [Devin.ai](https://devin.ai)).
 
 > **PRO TIP:**
 > A service URI locator can be combined with other parameters to locate a specific
@@ -73,14 +75,12 @@ Explore the [examples] and [docs] folders to find out more about the SDK's capab
 import cspark.sdk as Spark
 
 spark = Spark.Client(env='my-env', tenant='my-tenant', api_key='open')
-
 with spark.services as services:
     uri = Spark.UriParams(folder='my-folder', service='my-service', public=True)
+    # the final URI in this case is:
+    # 'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
     response = services.execute(uri, inputs={'value': 42})
     print(response.data)
-
-# The final URI in this case is:
-#    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
 ```
 
 See the [Uri and UriParams][uri-url] classes for more details.
@@ -303,6 +303,7 @@ conduct, and the process for submitting pull requests.
 [contributing-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/CONTRIBUTING.md
 [examples]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/examples
 [docs]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/docs
+[wiki]: https://deepwiki.com/Coherent-Partners/spark-python-sdk
 [uri-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/src/cspark/sdk/resources/_base.py
 [logging-level]: https://docs.python.org/3/library/logging.html#logging-levels
 [httpx-client]: https://www.python-httpx.org/api/#client
