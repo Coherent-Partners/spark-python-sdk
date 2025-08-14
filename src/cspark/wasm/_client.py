@@ -51,6 +51,10 @@ class Client:
         return API.Health(self.config)
 
     @property
+    def status(self) -> API.Status:
+        return API.Status(self.config)
+
+    @property
     def services(self) -> API.Services:
         return API.Services(self.config)
 
@@ -65,3 +69,9 @@ class Client:
         config = Config(base_url=RunnerUrl.no_tenant(base_url or ''), token=token, **options)
         with API.Version(config) as version:
             return version.get()
+
+    @staticmethod
+    def get_status(base_url: Optional[str] = None, token: str = 'open', **options):
+        config = Config(base_url=RunnerUrl.no_tenant(base_url or ''), token=token, **options)
+        with API.Status(config) as status:
+            return status.get()

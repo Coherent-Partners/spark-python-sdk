@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.1 (2025-08-13)
+
+- Add status (v1.46.0+ only), validation and metadata APIs for WASM services
+- Add examples for batch status check: `examples/usecases/async_batch/check_status.py`
+- Update documentation and references for SDK and WASM APIs
+- Fix bug in `Spark.history.rehydrate()` method (use `POST` instead of `GET`)
+
 ## 0.2.0 (2025-07-09)
 
 - Add support for Transform documents API (including Transform validator)

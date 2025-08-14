@@ -1,4 +1,4 @@
-from typing import Any, BinaryIO, Dict, List, Optional, Union
+from typing import Any, BinaryIO, Dict, List, Mapping, Optional, Union
 
 from cspark.sdk import ApiResource, Uri, UriParams
 from cspark.sdk import Services as SdkServices
@@ -50,3 +50,50 @@ class Services(ApiResource):
                 selected_outputs=selected_outputs,
                 outputs_filter=outputs_filter,
             )
+
+    def validate(
+        self,
+        uri: Union[str, UriParams],  # only version_id or service_id formats are supported
+        *,
+        service_id: Optional[str] = None,
+        version_id: Optional[str] = None,
+        inputs: Union[None, Dict[str, Any]] = None,  # data for validations
+        validation_type: Optional[str] = None,  # 'dynamic' | 'static'
+        metadata: Optional[Mapping[str, Any]] = None,  # extra metadata for validations
+    ):
+        uri = Uri.validate(uri or UriParams(service_id=service_id, version_id=version_id))
+        url = Uri.of(base_url=self.config.base_url.full, endpoint='validation')
+        body = {
+            'request_data': {'inputs': inputs},
+            'request_meta': {
+                **(metadata or {}),
+                'service_id': uri.service_id,
+                'version_id': uri.version_id,
+                'version': uri.version,
+                'validation_type': 'dynamic' if validation_type == 'dynamic' else 'default_values',
+            },
+        }
+
+        return self.request(url, method='POST', body=body)
+
+    def get_metadata(
+        self,
+        uri: Union[str, UriParams],  # only version_id or service_id formats are supported
+        *,
+        inputs: Union[None, Dict[str, Any]] = None,
+        service_id: Optional[str] = None,
+        version_id: Optional[str] = None,
+        metadata: Optional[Mapping[str, Any]] = None,  # extra metadata fields
+    ):
+        uri = Uri.validate(uri or UriParams(service_id=service_id, version_id=version_id))
+        url = Uri.of(base_url=self.config.base_url.full, endpoint='metadata')
+        body = {
+            'request_data': {'inputs': inputs},
+            'request_meta': {
+                **(metadata or {}),
+                'service_id': uri.service_id,
+                'version_id': uri.version_id,
+            },
+        }
+
+        return self.request(url, method='POST', body=body)
