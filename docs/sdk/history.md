@@ -126,13 +126,13 @@ This method accepts the following keyword arguments:
 | ----------------- | -------------------- | ----------------------------------------------------- |
 | _folder_          | `str`                | The folder name.                                      |
 | _service_         | `str`                | The service name.                                     |
-| _version\_id_     | `None \| string`     | The particular service version for the download.      |
-| _type_            | `csv \| json`        | The file type (defaults to `json`).                   |
+| _version\_id_     | `None \| str`        | The particular service version for the download.      |
+| _type_            | `'csv' \| 'json'`    | The file type (defaults to `json`).                   |
 | _call\_ids_       | `None \| List[str]`  | An array of call IDs to download logs for.            |
 | _start\_date_     | `None \| str \| int \| datetime` | The start date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`).|
 | _end\_date_       | `None \| str \| int \| datetime` | The end date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`). |
-| _correration\_id_ | `string`             | The correlation ID (possible fallback for `call_ids`).|
-| _source\_system_  | `string`             | The source system (possible fallback for `call_ids`). |
+| _correration\_id_ | `str`                | The correlation ID (possible fallback for `call_ids`).|
+| _source\_system_  | `str`                | The source system (possible fallback for `call_ids`). |
 | _max\_retries_    | `None \| int`   | The number of retries to attempt (defaults to `Config.max_retries`).|
 | _retry\_interval_ | `None \| float` | The interval between retries in seconds (defaults to `Config.retry_interval`).|
 

@@ -60,6 +60,7 @@ def run_batch():
 
             processor = ChunkProcessor(False, Config.OUTPUT_DIR)
             elapsed_time = process_chunks(pipeline, processor)
+            pipeline.dispose()
 
             status = pipeline.get_status().data
             avg = status['records_completed'] / elapsed_time  # type: ignore
@@ -71,7 +72,9 @@ def run_batch():
             logger.debug('Canceling the pipeline due to an error...')
             pipeline.cancel()
     finally:
-        if pipeline and pipeline.state == 'open':
+        if pipeline:
+            if pipeline.state == 'open':
+                pipeline.dispose()
             pipeline.close()
 
 

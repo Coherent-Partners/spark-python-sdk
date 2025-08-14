@@ -136,7 +136,7 @@ Otherwise, it will throw a `SparkApiError`:
 
 ## Find folders by criteria
 
-This method helps you search folders by name, status, category, or favorite.
+This method helps you search folders by name, category, or favorite.
 
 ### Arguments
 
@@ -146,7 +146,7 @@ You may search a folder by its unique ID.
 spark.folders.find('uuid')
 ```
 
-Or, you can pass in the following parameters as an `object` to filter the folders.
+Or, you can pass in the following parameters as keyword arguments to filter the folders.
 
 | Property   | Type             | Description                               |
 | ---------- | ---------------- | ----------------------------------------- |

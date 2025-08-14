@@ -23,8 +23,8 @@ The expected keyword arguments are as follows:
 | _folders_         | `None \| list[str]`     | 1+ folder name(s).                                                 |
 | _services_        | `None \| list[str]`     | 1+ service URI(s).                                                 |
 | _version\_ids_    | `None \| list[str]`     | 1+ version UUID(s) of the desired service.                         |
-| _file\_filter_    | `'migrate' \| 'onpremises'` | For data migration or hybrid deployments (defaults to `migrate`).  |
-| _version\_filter_ | `latest \| all`         | Which version of the file to export (defaults to `latest`).        |
+| _file\_filter_    | `'migrate' \| 'onpremises'`| For data migration or hybrid deployments (defaults to `migrate`).|
+| _version\_filter_ | `'latest' \| 'all'`     | Which version of the file to export (defaults to `latest`).        |
 | _source\_system_  | `None \| str`           | Source system name to export from (e.g., `Spark Python SDK`).      |
 | _correlation\_id_ | `None \| str`           | Correlation ID for the export (useful for tagging).                |
 | _max\_retries_    | `None \| int`           | Maximum number of retries when checking the export status.         |
