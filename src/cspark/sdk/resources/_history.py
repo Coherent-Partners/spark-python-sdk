@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import datetime
 from typing import List, Optional, Union, cast
@@ -13,6 +14,15 @@ class History(ApiResource):
     @property
     def downloads(self) -> 'LogDownload':
         return LogDownload(self.config)
+
+    def get(self, call_id: str):
+        url = Uri.of(base_url=self.config.base_url.full, endpoint=f'log/getexecutionhistorybycallid/{call_id}')
+
+        response = self.request(url, method='GET')
+        if isinstance(response.data, dict):
+            formatted = json.loads(response.data.get('response_data', '{}'))
+            response = response.copy_with(data=formatted)
+        return response
 
     def rehydrate(
         self,

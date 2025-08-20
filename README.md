@@ -263,6 +263,7 @@ OAuth2.0 Client Credentials flow:
 
 [Log History API](./docs/sdk/history.md) - manages service execution logs:
 
+- `Spark.logs.get(call_id)` retrieves the detailed log of a service execution.
 - `Spark.logs.rehydrate(uri, call_id)` rehydrates the executed model into the original Excel file.
 - `Spark.logs.download(data)` downloads service execution logs as `csv` or `json` file.
 

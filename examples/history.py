@@ -1,5 +1,15 @@
+import json
+
 import cspark.sdk as Spark
 from dotenv import load_dotenv
+
+
+def retrieve_log(logs: Spark.History):
+    call_id = 'uuid'
+    response = logs.get(call_id)
+    with open(f'{call_id}.json', 'w') as file:
+        json.dump(response.data, file, indent=2)
+        print(f'Detailed log for call ID {call_id} retrieved successfully 🎉')
 
 
 def rehydrate(logs: Spark.History):
@@ -28,6 +38,7 @@ if __name__ == '__main__':
 
     try:
         with Spark.Client(timeout=90_000).logs as logs:
+            retrieve_log(logs)
             rehydrate(logs)
             download(logs)
     except Spark.SparkError as err:
