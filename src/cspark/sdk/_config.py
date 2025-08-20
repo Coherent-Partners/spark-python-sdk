@@ -126,6 +126,12 @@ class Config:
             http_client=http_client or self.http_client,
         )
 
+    def get(self):
+        """Fetches the SaaS configuration for the current user (via API)."""
+        from .resources import Platform
+
+        return Platform(self).get_config()
+
 
 class BaseUrl:
     __services = ['excel', 'keycloak', 'utility', 'entitystore']

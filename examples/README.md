@@ -41,6 +41,7 @@ Assuming that you have cloned this repository, you can run any example:
 - Authentication and token management
 - Logging configuration
 - Environment variable handling
+- Platform configuration retrieval
 
 **Folders (`folders.py`)** includes examples of folder management operations:
 

@@ -276,6 +276,7 @@ OAuth2.0 Client Credentials flow:
 [Other APIs](./docs/sdk/misc.md) - for other functionality:
 
 - `Spark.health.check()` checks the health status of a Spark environment.
+- `Spark.config.get()` fetches the platform configuration for the current user.
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
 - `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
 
