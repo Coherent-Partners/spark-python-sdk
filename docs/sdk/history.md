@@ -4,6 +4,7 @@
 
 | Verb                                 | Description                                                                                 |
 | ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `Spark.logs.get(call_id)`            | [Retrieve detailed logs of a service execution](#retrieve-detailed-logs-of-a-service-execution).|
 | `Spark.logs.rehydrate(uri, call_id)` | [Rehydrate the executed model into the original excel file](#rehydrate-the-executed-model). |
 | `Spark.logs.download(data)`          | [Download service execution logs as csv or json file](#download-service-execution-logs).    |
 
@@ -11,6 +12,26 @@
 > The service execution history is a good source of truth for auditing and debugging
 > purposes. Though practical, log history is not intended to be a data storage solution.
 > So, do use the following methods **responsibly**.
+
+## Retrieve detailed logs of a service execution
+
+Similarly to the Spark UI, this method returns the detailed log of a Spark service execution,
+which is identified by a unique call ID.
+Check out the [API reference](https://docs.coherent.global/spark-apis/api-call-history-apis/get-call-id)
+for more information.
+
+### Arguments
+
+This method accepts one string argument, which is the call ID of the service execution.
+
+```python
+spark.logs.get('uuid')
+```
+
+### Returns
+
+When successful, this method returns a JSON payload containing the detailed log.
+See a [sample](../samples/detailed-log.json) for more information.
 
 ## Rehydrate the executed model
 

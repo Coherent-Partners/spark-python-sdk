@@ -27,6 +27,12 @@ def check_health(env='uat.us'):
     print(response.data)
 
 
+def fetch_platform_config():
+    load_dotenv()  # load tenant credentials from .env file.
+
+    print(Spark.Config().get())
+
+
 def test_extended_resource():
     config = Spark.Config()  # same as client options.
     with ExtendedResource(config) as resource:
@@ -48,6 +54,7 @@ if __name__ == '__main__':
         retrieve_token()
         print_logs()
         check_health()
+        fetch_platform_config()
         test_extended_resource()
     except Spark.SparkError as err:
         print(err.message)

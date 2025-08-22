@@ -75,6 +75,14 @@ def test_build_base_url_from_parts():
     assert BaseUrl.of(env='my.env', tenant='tenant').full == VALID_URL
 
 
+def test_base_url_can_be_converted_to_other_services():
+    base_url = BaseUrl.of(url='https://spark.my.env.coherent.global/tenant')  # 'spark' is not a supported service name
+    assert base_url.full == 'https://excel.my.env.coherent.global/tenant'
+    assert base_url.to('utility', with_tenant=True) == 'https://utility.my.env.coherent.global/tenant'
+    assert base_url.to('keycloak', with_tenant=False) == 'https://keycloak.my.env.coherent.global'
+    assert base_url.oauth2 == 'https://keycloak.my.env.coherent.global/auth/realms/tenant'
+
+
 def test_copy_base_url_with_new_values():
     base_url = BaseUrl.of(url='https://excel.my.env.coherent.global/tenant')
     assert base_url.copy_with().full == 'https://excel.my.env.coherent.global/tenant'

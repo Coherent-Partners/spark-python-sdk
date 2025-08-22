@@ -263,6 +263,7 @@ OAuth2.0 Client Credentials flow:
 
 [Log History API](./docs/sdk/history.md) - manages service execution logs:
 
+- `Spark.logs.get(call_id)` retrieves the detailed log of a service execution.
 - `Spark.logs.rehydrate(uri, call_id)` rehydrates the executed model into the original Excel file.
 - `Spark.logs.download(data)` downloads service execution logs as `csv` or `json` file.
 
@@ -275,6 +276,7 @@ OAuth2.0 Client Credentials flow:
 [Other APIs](./docs/sdk/misc.md) - for other functionality:
 
 - `Spark.health.check()` checks the health status of a Spark environment.
+- `Spark.config.get()` fetches the platform configuration for the current user.
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
 - `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
 

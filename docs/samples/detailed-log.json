@@ -1,0 +1,73 @@
+{
+  "EngineCallId": "uuid",
+  "LogTime": "1970-01-01T00:00:00.000000",
+  "TransactionDate": "1970-01-01T00:00:00.000000",
+  "SourceSystem": "SPARK",
+  "Purpose": "Spark - API Tester",
+  "UserName": "john.doe@coherent.global",
+  "HostName": "excel.uat.us.coherent.global",
+  "Tenant": "my-tenant",
+  "Service": "my-service",
+  "Product": "my-folder",
+  "EngineDetails": {
+    "response_data": {
+      "outputs": {
+        "value": "value",
+        "table": [
+          {
+            "column1": "value1",
+            "column2": "value2"
+          }
+        ]
+      },
+      "warnings": null,
+      "errors": null,
+      "service_chain": null
+    },
+    "response_meta": {
+      "spark_total_time": 0,
+      "service_id": "uuid",
+      "version_id": "uuid",
+      "version": "0.0.0",
+      "process_time": 25,
+      "call_id": "uuid",
+      "compiler_type": "Neuron",
+      "compiler_version": "0.0.0",
+      "source_hash": null,
+      "engine_id": "alpha-numeric-id",
+      "correlation_id": "",
+      "parameterset_version_id": null,
+      "system": "SPARK",
+      "request_timestamp": "1970-01-01T00:00:00.000z"
+    },
+    "request_data": {
+      "inputs": {
+        "input1": "value1",
+        "input2": "value2"
+      }
+    },
+    "request_meta": {
+      "service_uri": null,
+      "service_id": "uuid",
+      "version": "0.0.0",
+      "version_id": "uuid",
+      "transaction_date": "1970-01-01T00:00:00.000000",
+      "call_purpose": "Spark - API Tester",
+      "source_system": "SPARK",
+      "correlation_id": "",
+      "requested_output": null,
+      "service_category": "",
+      "compiler_type": "Neuron",
+      "array_outputs": null,
+      "response_data_inputs": false,
+      "parameterset_version_id": null,
+      "validation_type": null,
+      "xreport_options": null
+    }
+  },
+  "CalcTime": 25,
+  "SparkTotalTime": 60,
+  "ServiceRevision": "0.4.2",
+  "APIVersion": "V3",
+  "ControlLogReference": null
+}

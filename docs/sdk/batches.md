@@ -727,6 +727,8 @@ if __name__ == '__main__':
 > logging, among other capabilities to make it more robust and reliable. You may also want
 > to consider how you read and feed the input data to the pipeline and how to handle
 > the output data once it's available.
+> That said, take a look at the [async batch use case](../../examples/usecases/async_batch/)
+> which is a more complete example.
 
 The example assumes pristine input data, which is rarely the case in real applications.
 When working with raw data, you'll likely need preprocessing steps. The `BatchChunk`
