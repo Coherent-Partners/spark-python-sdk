@@ -176,7 +176,7 @@ class BaseUrl:
         return f'{self.to("keycloak")}/auth/realms/{self._tenant}'
 
     def to(self, service: str = 'excel', with_tenant: bool = False) -> str:
-        return (self.full if with_tenant else self.value).replace('excel', service)
+        return (self.full if with_tenant else self.value).replace(self._service or 'excel', service)
 
     def copy_with(
         self, *, url: Optional[str] = None, tenant: Optional[str] = None, env: Optional[str] = None

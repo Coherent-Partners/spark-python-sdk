@@ -4,12 +4,19 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.2 (2025-08-22)
+
+- Add support for fetching platform configuration
+- `History` API resource now supports log retrieval by call ID
+- Fix bug in `BaseUrl.to(...)` method (service name swap was broken)
+- Update `token_validation` use case and corresponding documentation
+
 ## 0.2.1 (2025-08-13)
 
 - Add status (v1.46.0+ only), validation and metadata APIs for WASM services
 - Add examples for batch status check: `examples/usecases/async_batch/check_status.py`
 - Update documentation and references for SDK and WASM APIs
-- Fix bug in `Spark.history.rehydrate()` method (use `POST` instead of `GET`)
+- Fix bug in `Spark.logs.rehydrate()` method (use `POST` instead of `GET`)
 
 ## 0.2.0 (2025-07-09)
 
