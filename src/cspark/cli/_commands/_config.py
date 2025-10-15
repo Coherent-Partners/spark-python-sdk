@@ -337,7 +337,7 @@ class ConfigGetCommand(click.Command):
         profile = get_active_profile()
 
         key = key.lower()
-        if key in ['tenant', 'env', 'environment', 'url']:
+        if key in ['tenant', 'env', 'environment', 'region', 'url']:
             self._get_url_keys(key, profile)
         elif key in ['auth', 'oauth']:
             self._get_auth_keys(key, profile)

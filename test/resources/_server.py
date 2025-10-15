@@ -136,7 +136,7 @@ async def batch_push(scope: Scope, receive: Receive, send: Send) -> None:
 async def batch_pull(scope: Scope, send: Send) -> None:
     assert scope['method'] == 'GET'
     query_params = dict(q.split(b'=') for q in scope['query_string'].split(b'&') if q)
-    assert b'max_chunks' in query_params and query_params[b'max_chunks'] == b'2'
+    assert b'max' in query_params and query_params[b'max'] == b'2'
 
     res_body = '{"data":[{"outputs": [{}, {}]}, {"outputs": [{}]}], "status": {"records_available": 0}}'
     await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})

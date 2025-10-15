@@ -207,7 +207,7 @@ class Pipeline(ApiResource):
     def pull(self, max_chunks: int = 100):
         self.__assert_state(['cancelled'])
 
-        endpoint = f'batch/{self._id}/chunkresults?max_chunks={max(1, max_chunks)}'
+        endpoint = f'batch/{self._id}/chunkresults?max={max(1, max_chunks)}'
 
         response = self.request(Uri.of(None, endpoint=endpoint, **self._base_uri))
         total = response.data['status']['records_available'] if isinstance(response.data, dict) else 0

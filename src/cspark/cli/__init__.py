@@ -8,6 +8,6 @@ except ImportError:
         print(  # noqa: T201
             'The cspark command-line client could not run because the required '
             'dependencies were not installed.\nMake sure you have installed '
-            "everything with: pip install 'cspark[cli]'"
+            f"everything with: \x1b[32mpip install 'cspark[cli]'\x1b[39m"
         )
         sys.exit(1)
