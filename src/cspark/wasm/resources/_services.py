@@ -1,12 +1,14 @@
 from typing import Any, BinaryIO, Dict, List, Mapping, Optional, Union
 
-from cspark.sdk import ApiResource, Uri, UriParams
 from cspark.sdk import Services as SdkServices
+from cspark.sdk import Uri, UriParams
+
+from ._base import HybridResource
 
 __all__ = ['Services']
 
 
-class Services(ApiResource):
+class Services(HybridResource):
     def upload(self, file: BinaryIO, file_name: Optional[str] = None):
         url = Uri.of(base_url=self.config.base_url.value, endpoint='upload')
         return self.request(url, method='POST', files={'file': (file_name or 'package.zip', file)})
