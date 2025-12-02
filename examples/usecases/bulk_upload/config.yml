@@ -1,0 +1,17 @@
+version: 1.0
+logging: INFO
+
+outdir: outputs/
+allowed_formats: ['.xlsx', '.xls']
+max_file_size_mb: 25
+bulk_size: 2
+
+upload:
+  folder: my-folder
+  versioning: patch
+  max_retries: 20
+  retry_interval: 4.0
+
+services:
+  - path/to/your/file.xlsx
+  - path/to/your/other/file.xlsx
