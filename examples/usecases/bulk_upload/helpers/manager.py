@@ -45,6 +45,7 @@ class Manager:
                 upload_stats = Path(self._outdir) / f'{service["name"]}.json'
                 upload_stats.write_text(dumps(response, indent=2))
 
+            logger.debug(f'uploaded service {service["name"]} successfully')
             report['success'] = True
         except SparkError as e:
             logger.warning(f'failed to upload service {service["name"]}: {e}')

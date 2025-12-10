@@ -17,6 +17,7 @@ including data ingestion, data processing, and data export.
 - [Asynchronous batch processing](async_batch/readme.md)
 - [Promote services across tenants or environments](service_promotion/readme.md)
 - [Validate JWTs against Keycloak](token_validation/readme.md)
+- [Bulk upload services to Spark](bulk_upload/readme.md)
 
 ## How to Run Use Cases
 

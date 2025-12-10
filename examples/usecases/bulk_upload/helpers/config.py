@@ -5,17 +5,14 @@ import re
 import sys
 
 import cspark.sdk as Spark
-import jsonschema
+import jsonschema  # type: ignore
 import yaml
 
 logging.basicConfig(filename='console.log', filemode='w', format=Spark.DEFAULT_LOGGER_FORMAT)
 logger = Spark.get_logger(context='Bulk Upload')
 
 
-class ConfigError(ValueError):
-    """Inappropriate configuration values."""
-
-    ...
+class ConfigError(ValueError): ...
 
 
 def load_config(file: pathlib.Path = pathlib.Path('config.yml')) -> dict:

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from json import dumps, loads
-from typing import Any, List, Optional, Union
+from typing import Any, List, Mapping, Optional, Union
 
 from .._config import Config
 from .._errors import SparkError
@@ -16,6 +16,7 @@ class Transform:
     api_version: Optional[str] = None
     inputs: Optional[str] = None
     outputs: Optional[str] = None
+    extras: Optional[Mapping[str, Any]] = None
 
 
 @dataclass(frozen=True)
@@ -77,9 +78,10 @@ class Transforms(ApiResource):
 
     def __build(self, value: Union[str, Transform]) -> str:
         value = Transform(**loads(value)) if isinstance(value, str) else value
+        extras = value.extras or {}
 
         if value.schema and 'nodejs22' in value.schema.lower():
-            return dumps({'transform_type': value.schema, 'transform_code': value.inputs})
+            return dumps({'transform_type': value.schema, 'transform_code': value.inputs, **extras})
 
         transform = dumps(
             {
@@ -87,6 +89,7 @@ class Transforms(ApiResource):
                 'target_api_version': value.api_version or 'v3',
                 'input_body_transform': value.inputs,
                 'output_body_transform': value.outputs,
+                **extras,
             }
         )
         Validators.transform().validate(transform)

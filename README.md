@@ -55,8 +55,7 @@ Here's an example of how to execute a Spark service:
 ```py
 import cspark.sdk as Spark
 
-spark = Spark.Client(env='my-env', tenant='my-tenant', api_key='my-api-key')
-with spark.services as services:
+with Spark.Client(env='my-env', tenant='my-tenant', api_key='my-api-key').services as services:
     response = services.execute('my-folder/my-service', inputs={'value': 42})
     print(response.data)
 ```
@@ -74,11 +73,8 @@ For more AI-powered guidance and code documentation, check out the [DeepWiki][wi
 ```py
 import cspark.sdk as Spark
 
-spark = Spark.Client(env='my-env', tenant='my-tenant', api_key='open')
-with spark.services as services:
+with Spark.Client(env='my-env', tenant='my-tenant', api_key='open').services as services:
     uri = Spark.UriParams(folder='my-folder', service='my-service', public=True)
-    # the final URI in this case is:
-    # 'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
     response = services.execute(uri, inputs={'value': 42})
     print(response.data)
 ```

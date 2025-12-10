@@ -107,7 +107,7 @@ pygments==2.18.0
 pyproject-hooks==1.2.0
     # via build
     # via poetry
-pyright==1.1.403
+pyright==1.1.407
 pytest==8.1.2
 python-dotenv==1.0.1
 pyyaml==6.0.2
