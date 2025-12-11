@@ -28,10 +28,9 @@ def list_versions(uri: str, headers: list[str], latest: bool) -> None:
     console = Console()
 
     try:
-        client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_pairs(headers))
-        with client.services as s:
-            versions = s.get_versions(uri).data
+        with Client(**profile.to_config()) as client:
+            client.config.extra_headers.update(parse_pairs(headers))
+            versions = client.services.get_versions(uri).data
 
         if latest and isinstance(versions, (list, tuple)) and len(versions) > 0:
             versions = versions[0]

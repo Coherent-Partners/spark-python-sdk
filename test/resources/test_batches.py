@@ -88,14 +88,14 @@ def test_create_chunks_distribute_input_dataset_evenly():
 
 
 def test_batches_can_create_batch_pipeline_from_start_to_finish(server):
-    batches = Client(base_url=server.url, api_key='open', logger=False).batches
-
-    batch = batches.create('f/s', min_runners=100, runners_per_vm=4, accuracy=0.9)
+    spark = Client(base_url=server.url, api_key='open', logger=False)
+    batch = spark.batches.create('f/s', min_runners=100, runners_per_vm=4, accuracy=0.9)
     assert batch.status == 200
+    assert isinstance(batch.data, dict)
     assert batch.data['object'] == 'batch'
     assert batch.data['id'] == 'batch_uuid'
 
-    pipeline = batches.of(batch.data['id'])
+    pipeline = spark.batches.of(batch.data['id'])
     assert pipeline.is_disposed is False
     assert pipeline.state == 'open'
     assert pipeline.stats == {'records': 0, 'chunks': 0}
@@ -107,6 +107,7 @@ def test_batches_can_create_batch_pipeline_from_start_to_finish(server):
     submission = pipeline.push(raw=RAW_STRING)
     assert pipeline.stats == {'records': 3, 'chunks': 2}
     assert submission.status == 200
+    assert isinstance(submission.data, dict)
     assert submission.data['record_submitted'] == 3
 
     with pytest.raises(SparkSdkError):
@@ -115,6 +116,7 @@ def test_batches_can_create_batch_pipeline_from_start_to_finish(server):
 
     results = pipeline.pull(2)
     assert results.status == 200
+    assert isinstance(results.data, dict)
     data = results.data['data']
     assert len(data) == 2
     assert len(data[0]['outputs'] + data[1]['outputs']) == 3  # 2+1=3 outputs
@@ -123,8 +125,7 @@ def test_batches_can_create_batch_pipeline_from_start_to_finish(server):
     assert pipeline.is_disposed is True
 
     with pytest.raises(SparkSdkError):
-        # pipeline can't get canceled if it's already disposed of.
+        # pipeline can't get cancelled if it's already disposed of.
         pipeline.cancel()
 
-    pipeline.close()
-    batches.close()
+    spark.close()

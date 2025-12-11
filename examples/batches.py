@@ -63,7 +63,6 @@ def create_and_run(batches: Spark.Batches):
 if __name__ == '__main__':
     load_dotenv()
 
-    spark = Spark.Client(timeout=90_000, logger={'context': 'Async Batch'})
-    with spark.batches as batches:
-        describe(batches)
-        create_and_run(batches)
+    with Spark.Client(timeout=90_000, logger={'context': 'Async Batch'}) as spark:
+        describe(spark.batches)
+        create_and_run(spark.batches)

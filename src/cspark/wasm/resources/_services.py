@@ -34,24 +34,23 @@ class Services(HybridResource):
         selected_outputs: Union[None, str, List[str]] = None,
         outputs_filter: Optional[str] = None,
     ):
-        with SdkServices(self.config) as services:
-            return services.execute(
-                uri,
-                inputs=inputs,
-                response_format=response_format,
-                encoding=encoding,
-                subservices=subservices,
-                active_since=active_since,
-                source_system=source_system,
-                correlation_id=correlation_id,
-                call_purpose=call_purpose,
-                compiler_type=compiler_type,
-                debug_solve=debug_solve,
-                echo_inputs=echo_inputs,
-                tables_as_array=tables_as_array,
-                selected_outputs=selected_outputs,
-                outputs_filter=outputs_filter,
-            )
+        return SdkServices(self.config, self._client).execute(
+            uri,
+            inputs=inputs,
+            response_format=response_format,
+            encoding=encoding,
+            subservices=subservices,
+            active_since=active_since,
+            source_system=source_system,
+            correlation_id=correlation_id,
+            call_purpose=call_purpose,
+            compiler_type=compiler_type,
+            debug_solve=debug_solve,
+            echo_inputs=echo_inputs,
+            tables_as_array=tables_as_array,
+            selected_outputs=selected_outputs,
+            outputs_filter=outputs_filter,
+        )
 
     def validate(
         self,

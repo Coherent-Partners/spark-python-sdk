@@ -17,7 +17,7 @@ __all__ = ['Services', 'ServiceExecuted']
 class Services(ApiResource):
     @property
     def compilation(self):
-        return Compilation(self.config)
+        return Compilation(self.config, self._client)
 
     def create(
         self,
@@ -73,27 +73,27 @@ class Services(ApiResource):
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
     ):
-        with self.compilation as compilation:
-            upload = compilation.initiate(
-                folder=folder,
-                service=service,
-                file=file,
-                file_name=file_name,
-                versioning=versioning,
-                start_date=start_date,
-                end_date=end_date,
-            )
+        compilation = self.compilation
+        upload = self.compilation.initiate(
+            folder=folder,
+            service=service,
+            file=file,
+            file_name=file_name,
+            versioning=versioning,
+            start_date=start_date,
+            end_date=end_date,
+        )
 
-            status = compilation.get_status(
-                job_id=isinstance(upload.data, dict)
-                and upload.data.get('response_data', {}).get('nodegen_compilation_jobid')
-                or '',  # NOTE: this should never happen (only bypassing type checker)
-                folder=folder,
-                service=service,
-                max_retries=max_retries,
-                retry_interval=retry_interval,
-            )
-            return {'upload': upload.data, 'compilation': status.data}
+        status = compilation.get_status(
+            job_id=isinstance(upload.data, dict)
+            and upload.data.get('response_data', {}).get('nodegen_compilation_jobid')
+            or '',  # NOTE: this should never happen (only bypassing type checker)
+            folder=folder,
+            service=service,
+            max_retries=max_retries,
+            retry_interval=retry_interval,
+        )
+        return {'upload': upload.data, 'compilation': status.data}
 
     def publish(
         self,

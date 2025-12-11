@@ -5,6 +5,8 @@ import os
 import re
 from typing import Mapping, Optional, Union
 
+from httpx import Client as HttpClient
+
 from ._config import Config
 from ._constants import ENV_VARS
 from ._errors import SparkError
@@ -150,16 +152,16 @@ class OAuth:
     def to_dict(self) -> Mapping[str, str]:
         return {'client_id': self._client_id, 'client_secret': self._client_secret}
 
-    def retrieve_token(self, config: Config) -> AccessToken:
+    def retrieve_token(self, config: Config, http_client: HttpClient) -> AccessToken:
         logger = get_logger(**config.logger.__dict__)
 
         try:
-            with OAuthManager(config) as manager:
-                logger.info('retrieving OAuth2 access token...')
-                self._access_token = manager.get_access_token()
-                if not self._access_token:
-                    raise SparkError('no access token found')
-                return self._access_token
+            manager = OAuthManager(config, http_client)
+            logger.info('retrieving OAuth2 access token...')
+            self._access_token = manager.get_access_token()
+            if not self._access_token:
+                raise SparkError('no access token found')
+            return self._access_token
         except Exception as cause:
             error = SparkError('failed to retrieve OAuth2 access token', cause)
             logger.warning(error.message)

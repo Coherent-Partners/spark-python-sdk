@@ -3,6 +3,8 @@ import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union, cast
 
+from httpx import Client
+
 from .._config import Config
 from .._constants import SPARK_SDK
 from .._errors import SparkError
@@ -78,8 +80,8 @@ class BatchChunk:
 
 
 class Batches(ApiResource):
-    def __init__(self, config: Config):
-        super().__init__(config)
+    def __init__(self, config: Config, http_client: Client):
+        super().__init__(config, http_client)
         self._base_uri = {'base_url': self.config.base_url.full, 'version': 'api/v4'}
 
     def describe(self):
@@ -134,15 +136,15 @@ class Batches(ApiResource):
         return self.request(url, method='POST', body={k: v for k, v in body.items() if v is not None})
 
     def of(self, batch_id: str) -> 'Pipeline':
-        return Pipeline(batch_id, self.config)
+        return Pipeline(batch_id, self.config, self._client)
 
 
 class Pipeline(ApiResource):
     _state: str = 'open'
     _chunks: Dict[str, int] = dict()
 
-    def __init__(self, batch_id: str, config: Config):
-        super().__init__(config)
+    def __init__(self, batch_id: str, config: Config, http_client: Client):
+        super().__init__(config, http_client)
         self._id = batch_id
         self._base_uri = {'base_url': self.config.base_url.full, 'version': 'api/v4'}
 

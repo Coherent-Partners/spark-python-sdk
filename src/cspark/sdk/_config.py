@@ -32,8 +32,6 @@ class Config:
         max_retries: Optional[int] = DEFAULT_MAX_RETRIES,
         retry_interval: Optional[float] = DEFAULT_RETRY_INTERVAL,
         logger: Union[bool, Mapping[str, Any], LoggerOptions] = True,
-        # A custom HTTP client to use with extra capabilities (proxy, auth, verify, etc).
-        http_client: Optional[HttpClient] = None,
     ) -> None:
         from ._auth import Authorization  # NOTE: help avoid circular import
 
@@ -50,7 +48,6 @@ class Config:
         self._retry_interval = retry_interval if num_validator.is_valid(retry_interval) else DEFAULT_RETRY_INTERVAL
         self._logger = LoggerOptions.when(logger)
 
-        self.http_client = http_client
         self.extra_headers = {}
         self._options = str(
             {
@@ -85,6 +82,10 @@ class Config:
         return cast(float, self._timeout)
 
     @property
+    def timeout_in_sec(self) -> float:
+        return cast(float, self._timeout) / 1000
+
+    @property
     def max_retries(self) -> int:
         return cast(int, self._max_retries)
 
@@ -108,7 +109,6 @@ class Config:
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
-        http_client: Optional[HttpClient] = None,
     ) -> 'Config':
         url = (
             base_url.copy_with(tenant=tenant, env=env)
@@ -123,14 +123,13 @@ class Config:
             timeout=timeout or self._timeout,
             max_retries=max_retries or self._max_retries,
             retry_interval=retry_interval or self._retry_interval,
-            http_client=http_client or self.http_client,
         )
 
-    def get(self):
+    def get(self, client: Optional[HttpClient] = None):
         """Fetches the SaaS configuration for the current user (via API)."""
         from .resources import Platform
 
-        return Platform(self).get_config()
+        return Platform(self, client or HttpClient(timeout=self.timeout_in_sec)).get_config()
 
 
 class BaseUrl:

@@ -39,9 +39,7 @@ if __name__ == '__main__':
         spark = Spark.Client()
         export_entities_with(spark.impex)
         import_entities_with(spark.impex)
-
-        with spark.wasm as wasm:
-            download(wasm)
+        download(spark.wasm)
     except Spark.SparkError as err:
         print(err.message)
         print(err.details)

@@ -37,7 +37,8 @@ if __name__ == '__main__':
     load_dotenv()
 
     try:
-        with Spark.Client(timeout=90_000).logs as logs:
+        with Spark.Client(timeout=90_000) as spark:
+            logs = spark.logs
             retrieve_log(logs)
             rehydrate(logs)
             download(logs)

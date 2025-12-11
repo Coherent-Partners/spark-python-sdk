@@ -75,7 +75,8 @@ if __name__ == '__main__':
     load_dotenv()
 
     try:
-        with Spark.Client().services as services:
+        with Spark.Client() as spark:
+            services = spark.services
             create(services)
             execute(services)
             transform(services)

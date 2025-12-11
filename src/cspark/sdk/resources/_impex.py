@@ -2,6 +2,8 @@ import json
 import time
 from typing import BinaryIO, List, Mapping, Optional, Union
 
+from httpx import Client
+
 from .._config import Config
 from .._constants import SPARK_SDK
 from .._errors import RetryTimeoutError, SparkError
@@ -12,24 +14,25 @@ __all__ = ['ImpEx', 'Export', 'Import', 'Migration', 'Wasm', 'Files']
 
 
 class ImpEx:
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, http_client: Client):
         self.config = config
+        self._client = http_client
 
     @staticmethod
-    def only(config: Config):
-        return ImpEx(config)
+    def only(config: Config, http_client: Client):
+        return ImpEx(config, http_client)
 
     @staticmethod
-    def migration(exports: Config, imports: Config):
-        return Migration(exports=exports, imports=imports)
+    def migration(exports: Config, imports: Config, http_client: Client):
+        return Migration(exports=exports, imports=imports, http_client=http_client)
 
     @property
     def exports(self):
-        return Export(self.config)
+        return Export(self.config, self._client)
 
     @property
     def imports(self):
-        return Import(self.config)
+        return Import(self.config, self._client)
 
     def exp(
         self,
@@ -44,29 +47,29 @@ class ImpEx:
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
     ):
-        with self.exports as exporter:
-            response = exporter.initiate(
-                folders=folders,
-                services=services,
-                version_ids=version_ids,
-                file_filter=file_filter,
-                version_filter=version_filter,
-                source_system=source_system,
-                correlation_id=correlation_id,
-            )
-            status = exporter.get_status(
-                job_id=response.data['id'],  # type: ignore
-                max_retries=max_retries,
-                retry_interval=retry_interval,
-            )
+        exporter = Export(self.config, self._client)
+        response = exporter.initiate(
+            folders=folders,
+            services=services,
+            version_ids=version_ids,
+            file_filter=file_filter,
+            version_filter=version_filter,
+            source_system=source_system,
+            correlation_id=correlation_id,
+        )
+        status = exporter.get_status(
+            job_id=response.data['id'],  # type: ignore
+            max_retries=max_retries,
+            retry_interval=retry_interval,
+        )
 
-            files = isinstance(status.data, dict) and status.data.get('outputs', {}).get('files', []) or []
-            if len(files) == 0:
-                error = SparkError.sdk('export job failed to produce any files', status)
-                exporter.logger.error(error.message)
-                raise error
+        files = isinstance(status.data, dict) and status.data.get('outputs', {}).get('files', []) or []
+        if len(files) == 0:
+            error = SparkError.sdk('export job failed to produce any files', status)
+            exporter.logger.error(error.message)
+            raise error
 
-            return exporter.download([f['file'] for f in files])
+        return exporter.download([f['file'] for f in files])
 
     def imp(
         self,
@@ -79,31 +82,31 @@ class ImpEx:
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
     ):
-        with self.imports as importer:
-            response = importer.initiate(
-                destination=destination,
-                file=file,
-                if_present=if_present,
-                source_system=source_system,
-                correlation_id=correlation_id,
-            )
-            status = importer.get_status(
-                job_id=response.data['id'],  # type: ignore
-                max_retries=max_retries,
-                retry_interval=retry_interval,
-            )
+        importer = Import(self.config, self._client)
+        response = importer.initiate(
+            destination=destination,
+            file=file,
+            if_present=if_present,
+            source_system=source_system,
+            correlation_id=correlation_id,
+        )
+        status = importer.get_status(
+            job_id=response.data['id'],  # type: ignore
+            max_retries=max_retries,
+            retry_interval=retry_interval,
+        )
 
-            services = isinstance(status.data, dict) and status.data.get('outputs', {}).get('services', []) or []
-            if isinstance(status.data, dict) and status.data.get('errors'):
-                error = SparkError.sdk('import job failed with errors', status)
-                importer.logger.error(error.message)
-                raise error
-            elif len(services) == 0:
-                importer.logger.warning('import job completed without any services')
-            else:
-                importer.logger.info(f'{len(services)} service(s) imported')
+        services = isinstance(status.data, dict) and status.data.get('outputs', {}).get('services', []) or []
+        if isinstance(status.data, dict) and status.data.get('errors'):
+            error = SparkError.sdk('import job failed with errors', status)
+            importer.logger.error(error.message)
+            raise error
+        elif len(services) == 0:
+            importer.logger.warning('import job completed without any services')
+        else:
+            importer.logger.info(f'{len(services)} service(s) imported')
 
-            return status
+        return status
 
     # aliases for export and import to avoid breaking changes.
     export = exp
@@ -111,9 +114,9 @@ class ImpEx:
 
 
 class Export(ApiResource):
-    def __init__(self, config: Config):
-        super().__init__(config)
-        self._base_uri = {'base_url': self.config.base_url.full, 'version': 'api/v4'}
+    @property
+    def base_uri(self) -> dict[str, str]:
+        return {'base_url': self.config.base_url.full, 'version': 'api/v4'}
 
     def initiate(
         self,
@@ -147,7 +150,7 @@ class Export(ApiResource):
             self.logger.error(error.message)
             raise error
 
-        url = Uri.of(None, endpoint='export', **self._base_uri)
+        url = Uri.of(None, endpoint='export', **self.base_uri)
         response = self.request(url, method='POST', body={'inputs': inputs, **metadata})
         if isinstance(response.data, dict):
             self.logger.info(f'export job created <{response.data["id"]}>')
@@ -168,7 +171,7 @@ class Export(ApiResource):
 
         max_retries = max_retries or self.config.max_retries
         retry_interval = retry_interval or self.config.retry_interval
-        status_url = Uri.of(None, endpoint=f'export/{job_id}/status', **self._base_uri) if job_id else url
+        status_url = Uri.of(None, endpoint=f'export/{job_id}/status', **self.base_uri) if job_id else url
 
         retries = 0
         while retries < max_retries:
@@ -187,7 +190,7 @@ class Export(ApiResource):
         raise RetryTimeoutError(err_msg, retries=retries, interval=retry_interval)
 
     def cancel(self, job_id: str):
-        url = Uri.of(None, endpoint=f'export/{job_id}', **self._base_uri)
+        url = Uri.of(None, endpoint=f'export/{job_id}', **self.base_uri)
         response = self.request(url, method='PATCH', body={'export_status': 'cancelled'})
         if isinstance(response.data, dict):
             self.logger.info(f'export job <${response.data["id"]}> has been cancelled')
@@ -210,9 +213,9 @@ class Export(ApiResource):
 
 
 class Import(ApiResource):
-    def __init__(self, config: Config):
-        super().__init__(config)
-        self._base_uri = {'base_url': self.config.base_url.full, 'version': 'api/v4'}
+    @property
+    def base_uri(self) -> dict[str, str]:
+        return {'base_url': self.config.base_url.full, 'version': 'api/v4'}
 
     def initiate(
         self,
@@ -231,7 +234,7 @@ class Import(ApiResource):
             'correlation_id': correlation_id,
         }
 
-        url = Uri.of(None, endpoint='import', **self._base_uri)
+        url = Uri.of(None, endpoint='import', **self.base_uri)
         response = self.request(url, method='POST', form={'importRequestEntity': json.dumps(metadata)}, files=files)
         if isinstance(response.data, dict):
             self.logger.info(f'import job created <{response.data["id"]}>')
@@ -252,7 +255,7 @@ class Import(ApiResource):
 
         max_retries = max_retries or self.config.max_retries
         retry_interval = retry_interval or self.config.retry_interval
-        status_url = Uri.of(None, endpoint=f'import/{job_id}/status', **self._base_uri) if job_id else url
+        status_url = Uri.of(None, endpoint=f'import/{job_id}/status', **self.base_uri) if job_id else url
 
         retries = 0
         while retries < max_retries:
@@ -272,16 +275,17 @@ class Import(ApiResource):
 
 
 class Migration:
-    def __init__(self, *, exports: Config, imports: Config):
+    def __init__(self, *, exports: Config, imports: Config, http_client: Client):
         self.configs = {'exports': exports, 'imports': imports}
+        self.http_client = http_client
 
     @property
     def exports(self):
-        return Export(self.configs['exports'])
+        return Export(self.configs['exports'], self.http_client)
 
     @property
     def imports(self):
-        return Import(self.configs['imports'])
+        return Import(self.configs['imports'], self.http_client)
 
     def migrate(self):
         raise NotImplementedError('not implemented yet')

@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from types import TracebackType
 from typing import Any, Mapping, Optional, Union
 
 import cspark.wasm.resources as API
@@ -38,40 +41,73 @@ class Client:
             timeout=timeout,
             max_retries=max_retries,
             retry_interval=retry_interval,
-            http_client=http_client,
             logger=logger,
         )
+        self.http_client = http_client or HttpClient(timeout=self.config.timeout_in_sec)
+
+    def __enter__(self) -> Client:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Optional[type[BaseException]],
+        exc: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        self.close()
+
+    def close(self):
+        if not self.http_client.is_closed:
+            self.http_client.close()
 
     @property
     def version(self) -> API.Version:
-        return API.Version(self.config)
+        return API.Version(self.config, self.http_client)
 
     @property
     def health(self) -> API.Health:
-        return API.Health(self.config)
+        return API.Health(self.config, self.http_client)
 
     @property
     def status(self) -> API.Status:
-        return API.Status(self.config)
+        return API.Status(self.config, self.http_client)
 
     @property
     def services(self) -> API.Services:
-        return API.Services(self.config)
+        return API.Services(self.config, self.http_client)
 
     @staticmethod
-    def health_check(base_url: Optional[str] = None, token: str = 'open', **options):
+    def health_check(
+        base_url: Optional[str] = None, token: str = 'open', http_client: Optional[HttpClient] = None, **options: Any
+    ):
         config = Config(base_url=RunnerUrl.no_tenant(base_url or ''), token=token, **options)
-        with API.Health(config) as health:
-            return health.check()
+        http_client = http_client or HttpClient(timeout=config.timeout_in_sec)
+        try:
+            return API.Health(config, http_client).check()
+        finally:
+            if not http_client.is_closed:
+                http_client.close()
 
     @staticmethod
-    def get_version(base_url: Optional[str] = None, token: str = 'open', **options):
+    def get_version(
+        base_url: Optional[str] = None, token: str = 'open', http_client: Optional[HttpClient] = None, **options: Any
+    ):
         config = Config(base_url=RunnerUrl.no_tenant(base_url or ''), token=token, **options)
-        with API.Version(config) as version:
-            return version.get()
+        http_client = http_client or HttpClient(timeout=config.timeout_in_sec)
+        try:
+            return API.Version(config, http_client).get()
+        finally:
+            if not http_client.is_closed:
+                http_client.close()
 
     @staticmethod
-    def get_status(base_url: Optional[str] = None, token: str = 'open', **options):
+    def get_status(
+        base_url: Optional[str] = None, token: str = 'open', http_client: Optional[HttpClient] = None, **options: Any
+    ):
         config = Config(base_url=RunnerUrl.no_tenant(base_url or ''), token=token, **options)
-        with API.Status(config) as status:
-            return status.get()
+        http_client = http_client or HttpClient(timeout=config.timeout_in_sec)
+        try:
+            return API.Status(config, http_client).get()
+        finally:
+            if not http_client.is_closed:
+                http_client.close()
