@@ -36,6 +36,8 @@ async def router(scope: Scope, receive: Receive, send: Send) -> None:
         await batch_pull(scope, send)
     elif scope['path'] == '/my-tenant/api/v4/batch/batch_uuid':
         await batch_dispose(scope, receive, send)
+    elif scope['path'] == '/auth/realms/my-tenant/protocol/openid-connect/token':
+        await retrieve_access_token(scope, send)
     else:
         await send({'type': 'http.response.start', 'status': 404, 'headers': []})
         await send({'type': 'http.response.body', 'body': b'Resource not defined yet'})
@@ -52,6 +54,19 @@ async def read_body(receive):
         more_body = message.get('more_body', False)
 
     return body
+
+
+async def retrieve_access_token(scope: Scope, send: Send):
+    assert scope['type'] == 'http'
+    assert scope['method'] == 'POST'
+
+    headers = {k.decode(): v.decode() for k, v in scope['headers']}
+    assert 'content-type' in headers
+    assert headers['content-type'] == 'application/x-www-form-urlencoded'
+
+    res_body = '{"access_token":"fake access token", "expires_in":360, "token_type":"Bearer"}'
+    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send({'type': 'http.response.body', 'body': res_body.encode()})
 
 
 async def service_execute_v3(scope: Scope, receive: Receive, send: Send) -> None:
