@@ -4,6 +4,7 @@ import re
 from typing import Any, Mapping, Optional, Union, cast
 from urllib.parse import urlparse
 
+from httpx import AsyncClient as AsyncHttpClient
 from httpx import Client as HttpClient
 
 from ._constants import *
@@ -130,6 +131,12 @@ class Config:
         from .resources import Platform
 
         return Platform(self, client or HttpClient(timeout=self.timeout_in_sec)).get_config()
+
+    async def aget(self, client: Optional[AsyncHttpClient] = None):
+        """Fetches asynchronously the SaaS configuration for the current user (via API)."""
+        from .resources._async import AsyncPlatform
+
+        return await AsyncPlatform(self, client or AsyncHttpClient(timeout=self.timeout_in_sec)).get_config()
 
 
 class BaseUrl:

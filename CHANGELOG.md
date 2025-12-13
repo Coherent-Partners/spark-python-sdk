@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.3.0-rc.1 (2025-12-13)
+
+- Add asynchronous client and resources
+- Add basic tests for asynchronous client and resources
+- Refactor synchronous client to use context manager pattern
+- Update documentation and examples
+
 ## 0.2.3 (2025-10-15)
 
 - Swap `max_chunks` with `max` in `Batches.pull(...)` method

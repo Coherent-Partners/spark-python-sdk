@@ -21,7 +21,8 @@ def main():
     logger = Spark.get_logger()
 
     writer = open(output_path, 'w')
-    services = Spark.Client(base_url=base_url, token=token).services
+    spark = Spark.Client(base_url=base_url, token=token)
+    services = spark.services
 
     # 1. Read data from a source file
     dataset = read_file(source_path)
@@ -44,7 +45,7 @@ def main():
             logger.error(exc)
 
     # 3. Clean up resources
-    services.close()
+    spark.close()
     writer.write('\n]')
     writer.close()
 

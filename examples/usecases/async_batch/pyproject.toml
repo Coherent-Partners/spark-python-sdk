@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "async_batch"
-version = "0.1.0"
+version = "0.2.0"
 description = "Asynchronous batch processing with Spark"
 authors = ["Coherent <team@coherent.global>"]
 readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-cspark = "^0.1.10"
+cspark = "^0.3.0-rc.1"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.0.1"

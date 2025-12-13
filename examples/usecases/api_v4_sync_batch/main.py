@@ -21,7 +21,7 @@ def main():
     logger = Spark.get_logger()
 
     writer = open(output_path, 'w')
-    services = Spark.Client(base_url=base_url, token=token, timeout=90_000).services
+    spark = Spark.Client(base_url=base_url, token=token, timeout=90_000)
 
     # 1. Read data from a source file
     dataset = read_file(source_path)
@@ -32,7 +32,7 @@ def main():
 
     # 2. Execute sync batch and save results to a file
     try:
-        response = services.execute(service_uri, inputs=dataset)
+        response = spark.services.execute(service_uri, inputs=dataset)
         result = {'inputs': dataset, 'outputs': response.data['outputs']}  # type: ignore
 
         writer.write(json.dumps(result, indent=2))
@@ -42,7 +42,7 @@ def main():
         logger.error(exc)
 
     # 3. Clean up resources
-    services.close()
+    spark.close()
     writer.write('\n]')
     writer.close()
 

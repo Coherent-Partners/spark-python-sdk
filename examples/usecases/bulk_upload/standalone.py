@@ -139,11 +139,12 @@ class Manager:
     async def _upload_service(self, service: dict):
         report = {'file_name': service['file_name'], 'folder': service['using']['folder'], 'service': service['name']}
         try:
-            with self._client.services as client:
-                # FIXME: add support for async upload (await client.create(...))
-                response = client.create(name=service['name'], file=open(service['file'], 'rb'), **service['using'])
-                upload_stats = Path(self._outdir) / f'{service["name"]}.json'
-                upload_stats.write_text(dumps(response, indent=2))
+            # FIXME: add support for async upload (await client.create(...))
+            response = self._client.services.create(
+                name=service['name'], file=open(service['file'], 'rb'), **service['using']
+            )
+            upload_stats = Path(self._outdir) / f'{service["name"]}.json'
+            upload_stats.write_text(dumps(response, indent=2))
 
             logger.debug(f'uploaded service {service["name"]} successfully')
             report['success'] = True
