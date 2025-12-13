@@ -117,41 +117,6 @@ class ApiResource:
         return HttpResponse(**ok_response)
 
 
-def download(
-    url: str,
-    *,
-    method: str = 'GET',
-    headers: Mapping[str, str] = {},
-    params: Optional[Mapping[str, str]] = None,
-    body=None,
-    form=None,
-    timeout: Optional[float] = 60,
-):
-    with Client() as client:
-        request = client.build_request(
-            method,
-            url,
-            params=params,
-            headers=headers,
-            data=form,
-            json=body,
-            timeout=timeout,
-        )
-
-        response = client.send(request)
-        if response.status_code >= 400:
-            raise SparkError.api(response.status_code, SparkApiError.to_cause(request, response))
-
-        return HttpResponse(
-            status=response.status_code,
-            data=None,
-            buffer=response.content,
-            headers=response.headers,
-            raw_request=request,
-            raw_response=response,
-        )
-
-
 @dataclass
 class HttpResponse:
     status: int

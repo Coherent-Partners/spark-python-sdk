@@ -2,12 +2,11 @@ from dataclasses import dataclass
 from json import dumps, loads
 from typing import Any, List, Mapping, Optional, Union
 
-# from httpx import Client
 from .._errors import SparkError
 from .._validators import Validators
 from ._base import ApiResource, Uri
 
-__all__ = ['Transforms', 'Transform']
+__all__ = ['Transforms', 'Transform', 'TransformParams', 'build_transform']
 
 
 @dataclass(frozen=True)
@@ -54,7 +53,7 @@ class Transforms(ApiResource):
 
     def validate(self, transform: Union[str, Transform]):
         url = Uri.of(None, endpoint=f'transform/validation', **self.base_uri)
-        body = {'transform_content': self.__build(transform)}
+        body = {'transform_content': build_transform(transform)}
 
         return self.request(url, method='POST', body=body)
 
@@ -66,7 +65,7 @@ class Transforms(ApiResource):
 
     def save(self, *, folder: str, name: str, transform: Union[str, Transform]):
         url = Uri.of(None, endpoint=f'transform/{folder}/{name}', **self.base_uri)
-        body = {'transform_content': self.__build(transform)}
+        body = {'transform_content': build_transform(transform)}
 
         return self.request(url, method='POST', body=body)
 
@@ -76,22 +75,23 @@ class Transforms(ApiResource):
 
         return self.request(url, method='DELETE')
 
-    def __build(self, value: Union[str, Transform]) -> str:
-        value = Transform(**loads(value)) if isinstance(value, str) else value
-        extras = value.extras or {}
 
-        if value.schema and 'nodejs22' in value.schema.lower():
-            return dumps({'transform_type': value.schema, 'transform_code': value.inputs, **extras})
+def build_transform(value: Union[str, Transform]) -> str:
+    value = Transform(**loads(value)) if isinstance(value, str) else value
+    extras = value.extras or {}
 
-        transform = dumps(
-            {
-                'transform_type': value.schema or 'JSONtransforms_v1.0.1',
-                'target_api_version': value.api_version or 'v3',
-                'input_body_transform': value.inputs,
-                'output_body_transform': value.outputs,
-                **extras,
-            }
-        )
-        Validators.transform().validate(transform)
+    if value.schema and 'nodejs22' in value.schema.lower():
+        return dumps({'transform_type': value.schema, 'transform_code': value.inputs, **extras})
 
-        return transform
+    transform = dumps(
+        {
+            'transform_type': value.schema or 'JSONtransforms_v1.0.1',
+            'target_api_version': value.api_version or 'v3',
+            'input_body_transform': value.inputs,
+            'output_body_transform': value.outputs,
+            **extras,
+        }
+    )
+    Validators.transform().validate(transform)
+
+    return transform

@@ -9,8 +9,8 @@ from httpx import Client as HttpClient
 
 from ._auth import Authorization
 from ._config import BaseUrl, Config, HealthUrl
+from ._errors import SparkApiError, SparkError
 from ._logger import LoggerOptions
-from .resources._base import download as download_file
 
 __all__ = ['Client', 'AsyncClient']
 
@@ -130,17 +130,21 @@ class Client:
     ):
         """Checks the health status of the Coherent Spark environment."""
         config = Config(base_url=HealthUrl.when(base_url), token=token, **options)
-        http_client = http_client or HttpClient(timeout=config.timeout_in_sec)
-        try:
-            return API.Health(config, http_client).check()
-        finally:
-            if not http_client.is_closed:
-                http_client.close()
+        with http_client or HttpClient(timeout=config.timeout_in_sec) as client:
+            return API.Health(config, client).check()
 
     @staticmethod
     def download(url: str, auth: Optional[Authorization] = None) -> bytes:
         """Downloads a file from the given URL."""
-        return download_file(url, headers=auth.as_header if auth else {}).buffer
+        try:
+            with HttpClient() as client:
+                request = client.build_request('GET', url, headers=auth.as_header if auth else {})
+                response = client.send(request)
+                if response.status_code >= 400:
+                    raise SparkError.api(response.status_code, SparkApiError.to_cause(request, response))
+            return response.content
+        except Exception as exc:
+            raise SparkError.sdk(f'failed to download file from {url}', cause=exc) from exc
 
 
 class AsyncClient:
@@ -199,3 +203,73 @@ class AsyncClient:
     @property
     def config(self) -> Config:
         return self._config
+
+    @property
+    def health(self) -> API.AsyncHealth:
+        """The resource to manage health checks."""
+        return API.AsyncHealth(self.config, self.http_client)
+
+    @property
+    def folders(self) -> API.AsyncFolders:
+        """The resource to manage Folders API."""
+        return API.AsyncFolders(self.config, self.http_client)
+
+    @property
+    def services(self) -> API.AsyncServices:
+        """The resource to manage Services API."""
+        return API.AsyncServices(self.config, self.http_client)
+
+    @property
+    def transforms(self) -> API.AsyncTransforms:
+        """The resource to manage Transforms API."""
+        return API.AsyncTransforms(self.config, self.http_client)
+
+    @property
+    def batches(self) -> API.AsyncBatches:
+        """The resource to manage asynchronous batch processing."""
+        return API.AsyncBatches(self.config, self.http_client)
+
+    @property
+    def logs(self) -> API.AsyncHistory:
+        """The resource to manage service execution logs."""
+        return API.AsyncHistory(self.config, self.http_client)
+
+    @property
+    def files(self) -> API.AsyncFiles:
+        """The resource to manage files."""
+        return API.AsyncFiles(self.config, self.http_client)
+
+    @property
+    def wasm(self) -> API.AsyncWasm:
+        """The resource to manage a service's WebAssembly module."""
+        return API.AsyncWasm(self.config, self.http_client)
+
+    @property
+    def impex(self) -> API.AsyncImpEx:
+        """The resource to import and export Spark services."""
+        return API.AsyncImpEx.only(self.config, self.http_client)
+
+    @staticmethod
+    async def health_check(
+        base_url: Union[str, BaseUrl],
+        token: str = 'open',
+        http_client: Optional[AsyncHttpClient] = None,
+        **options: Any,
+    ):
+        """Checks the health status of the Coherent Spark environment."""
+        config = Config(base_url=HealthUrl.when(base_url), token=token, **options)
+        async with http_client or AsyncHttpClient(timeout=config.timeout_in_sec) as client:
+            return await API.AsyncHealth(config, client).check()
+
+    @staticmethod
+    async def download(url: str, auth: Optional[Authorization] = None) -> bytes:
+        """Downloads a file from the given URL."""
+        try:
+            async with AsyncHttpClient() as client:
+                request = client.build_request('GET', url, headers=auth.as_header if auth else {})
+                response = await client.send(request)
+                if response.status_code >= 400:
+                    raise SparkError.api(response.status_code, SparkApiError.to_cause(request, response))
+            return await response.aread()
+        except Exception as exc:
+            raise SparkError.sdk(f'failed to download file from {url}', cause=exc) from exc
