@@ -55,9 +55,9 @@ Here's an example of how to execute a Spark service:
 ```py
 import cspark.sdk as Spark
 
-with Spark.Client(env='my-env', tenant='my-tenant', api_key='my-api-key').services as services:
-    response = services.execute('my-folder/my-service', inputs={'value': 42})
-    print(response.data)
+with Spark.Client(env='my-env', tenant='my-tenant', api_key='my-api-key') as spark:
+    response = spark.services.execute('my-folder/my-service', inputs={'value': 42})
+print(response.data)
 ```
 
 Explore the [examples] and [docs] folders to find out more about the SDK's capabilities.
@@ -73,9 +73,9 @@ For more AI-powered guidance and code documentation, check out the [DeepWiki][wi
 ```py
 import cspark.sdk as Spark
 
-with Spark.Client(env='my-env', tenant='my-tenant', api_key='open').services as services:
+with Spark.Client(env='my-env', tenant='my-tenant', api_key='open') as spark:
     uri = Spark.UriParams(folder='my-folder', service='my-service', public=True)
-    response = services.execute(uri, inputs={'value': 42})
+    response = spark.services.execute(uri, inputs={'value': 42})
     print(response.data)
 ```
 
@@ -92,7 +92,7 @@ It is quite flexible and can be configured with the following options:
 Coherent Spark APIs. It should include the tenant and environment information.
 
 ```py
-spark = Spark.Client(base_url='https://excel.my-env.coherent.global/my-tenant')
+spark = Spark.Client(base_url='https://excel.my-env.coherent.global/my-tenant', ...)
 ```
 
 Alternatively, a combination of `env` and `tenant` options can be used to construct

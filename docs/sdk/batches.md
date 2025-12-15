@@ -543,13 +543,6 @@ was previously defined using the `of(id)` method.
 pipeline.dispose()
 ```
 
-> [!WARNING]
-> Do **NOT** use the `close()` method to close a pipeline. This method is reserved
-> for closing the HTTP client of the `Pipeline` API resource. If and when
-> that happens unintentionally, you will need to start over and build a new client-side
-> pipeline using `Batches.of(id)`, which also means you'll lose the internal states
-> handled by the old `Pipeline` object.
-
 Note that pipelines automatically close after 30 minutes of inactivity to optimize
 resource utilization. This automatic closure releases allocated workers and buffers.
 
@@ -702,7 +695,6 @@ def create_and_run(batches: Spark.Batches):
         if pipeline:
             if pipeline.state == 'open':
                 pipeline.dispose()
-            pipeline.close()
 
         with open('path/to/outputs.json', 'w') as f:
             json.dump(results, f, indent=2)
@@ -713,9 +705,8 @@ def create_and_run(batches: Spark.Batches):
 if __name__ == '__main__':
     load_dotenv() # load Spark settings from .env file
 
-    spark = Spark.Client(timeout=90_000, logger={'context': 'Async Batch'}) # create a Spark client
-    with spark.batches as b:
-        create_and_run(b)
+    with Spark.Client(timeout=90_000, logger={'context': 'Async Batch'}) as spark:
+        create_and_run(spark.batches)
 ```
 
 > [!IMPORTANT]
