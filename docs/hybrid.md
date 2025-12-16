@@ -36,9 +36,8 @@ from cspark.wasm import Client
 
 def main():
     try:
-        hybrid = Client(tenant='my-tenant', token='open')  # no authentication
-        with hybrid.services as s:
-            response = s.execute('my-folder/my-service', inputs={'value': 42})
+        with Client(tenant='my-tenant', token='open') as hybrid: # no authentication
+            response = hybrid.services.execute('my-folder/my-service', inputs={'value': 42})
             print(response.data)
     except SparkError as e:
         print(e)
@@ -47,7 +46,8 @@ if __name__ == "__main__":
     main()
 ```
 
-Explore the [examples] and [docs] folders to find out more about its capabilities.
+`AsyncClient` can be used similarly to the `Client` class. Explore the [examples]
+and [docs] folders to find out more about its capabilities.
 
 <!-- References -->
 

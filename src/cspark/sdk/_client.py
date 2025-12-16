@@ -126,7 +126,7 @@ class Client:
 
     @staticmethod
     def health_check(
-        base_url: Union[str, BaseUrl], token: str = 'open', http_client: Optional[HttpClient] = None, **options
+        base_url: Union[str, BaseUrl], token: str = 'open', http_client: Optional[HttpClient] = None, **options: Any
     ):
         """Checks the health status of the Coherent Spark environment."""
         config = Config(base_url=HealthUrl.when(base_url), token=token, **options)
@@ -149,7 +149,7 @@ class Client:
 
 class AsyncClient:
     """
-    The main entry point for the Coherent Spark SDK asynchronous client.
+    The main entry point for the Coherent Spark SDK "async" client.
 
     This class provides access to all the resources available in the SDK.
     Do note that this client is asynchronous and non-blocking. For a synchronous client,

@@ -1,0 +1,100 @@
+from typing import Any, BinaryIO, Dict, List, Mapping, Optional, Union
+
+from cspark.sdk import AsyncServices as AsyncSdkServices
+from cspark.sdk import Uri, UriParams
+
+from ._base import AsyncHybridResource
+
+__all__ = ['AsyncServices']
+
+
+class AsyncServices(AsyncHybridResource):
+    async def upload(self, file: BinaryIO, file_name: Optional[str] = None):
+        url = Uri.of(base_url=self.config.base_url.value, endpoint='upload')
+        return await self.request(url, method='POST', files={'file': (file_name or 'package.zip', file)})
+
+    async def execute(
+        self,
+        uri: Union[str, UriParams],
+        *,
+        inputs: Union[None, str, Dict[str, Any], List[Any]] = None,
+        encoding: Optional[str] = None,
+        response_format: Optional[str] = None,
+        # Metadata for calculations
+        active_since: Optional[str] = None,
+        source_system: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+        call_purpose: Optional[str] = None,
+        compiler_type: Optional[str] = None,
+        subservices: Union[None, str, List[str]] = None,
+        # Available only in v3
+        debug_solve: Optional[bool] = None,
+        echo_inputs: Optional[bool] = False,
+        tables_as_array: Union[None, str, List[str]] = None,
+        selected_outputs: Union[None, str, List[str]] = None,
+        outputs_filter: Optional[str] = None,
+    ):
+        return await AsyncSdkServices(self.config, self._client).execute(
+            uri,
+            inputs=inputs,
+            response_format=response_format,
+            encoding=encoding,
+            subservices=subservices,
+            active_since=active_since,
+            source_system=source_system,
+            correlation_id=correlation_id,
+            call_purpose=call_purpose,
+            compiler_type=compiler_type,
+            debug_solve=debug_solve,
+            echo_inputs=echo_inputs,
+            tables_as_array=tables_as_array,
+            selected_outputs=selected_outputs,
+            outputs_filter=outputs_filter,
+        )
+
+    async def validate(
+        self,
+        uri: Union[str, UriParams],  # only version_id or service_id formats are supported
+        *,
+        service_id: Optional[str] = None,
+        version_id: Optional[str] = None,
+        inputs: Union[None, Dict[str, Any]] = None,  # data for validations
+        validation_type: Optional[str] = None,  # 'dynamic' | 'static'
+        metadata: Optional[Mapping[str, Any]] = None,  # extra metadata for validations
+    ):
+        uri = Uri.validate(uri or UriParams(service_id=service_id, version_id=version_id))
+        url = Uri.of(base_url=self.config.base_url.full, endpoint='validation')
+        body = {
+            'request_data': {'inputs': inputs},
+            'request_meta': {
+                **(metadata or {}),
+                'service_id': uri.service_id,
+                'version_id': uri.version_id,
+                'version': uri.version,
+                'validation_type': 'dynamic' if validation_type == 'dynamic' else 'default_values',
+            },
+        }
+
+        return await self.request(url, method='POST', body=body)
+
+    async def get_metadata(
+        self,
+        uri: Union[str, UriParams],  # only version_id or service_id formats are supported
+        *,
+        inputs: Union[None, Dict[str, Any]] = None,
+        service_id: Optional[str] = None,
+        version_id: Optional[str] = None,
+        metadata: Optional[Mapping[str, Any]] = None,  # extra metadata fields
+    ):
+        uri = Uri.validate(uri or UriParams(service_id=service_id, version_id=version_id))
+        url = Uri.of(base_url=self.config.base_url.full, endpoint='metadata')
+        body = {
+            'request_data': {'inputs': inputs},
+            'request_meta': {
+                **(metadata or {}),
+                'service_id': uri.service_id,
+                'version_id': uri.version_id,
+            },
+        }
+
+        return await self.request(url, method='POST', body=body)

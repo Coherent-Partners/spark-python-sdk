@@ -4,12 +4,12 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
-## 0.3.0-rc.1 (2025-12-13)
+## 0.3.0-rc.1 (2025-12-16)
 
-- Add asynchronous client and resources
+- Refactor synchronous clients to use context manager pattern
+- Add asynchronous client and resources for both SaaS and Hybrid Runner APIs
 - Add basic tests for asynchronous client and resources
-- Refactor synchronous client to use context manager pattern
-- Update documentation and examples
+- Update documentation and examples for both SaaS and Hybrid Runner APIs
 
 ## 0.2.3 (2025-10-15)
 
