@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.4 (2025-01-09)
+
+- Remove `dataclasses` dependency (supported as built-in from Python 3.7+)
+- Update documentation and tests to reflect changes
+
 ## 0.2.3 (2025-10-15)
 
 - Swap `max_chunks` with `max` in `Batches.pull(...)` method
