@@ -1,6 +1,6 @@
 [project]
 name = "cspark"
-version = "0.2.4-rc.1"
+version = "0.2.4"
 description = "A Python SDK for interacting with Coherent Spark APIs"
 license = "Apache-2.0"
 authors = [{ name = "Coherent", email = "team@coherent.global" }]
