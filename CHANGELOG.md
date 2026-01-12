@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.5 (2026-01-12)
+
+- Fix bug in `Batches.create(...)`:
+  - `max_input_size` parameter was renamed to `max_input_in_mb`
+  - `max_output_size` parameter was renamed to `max_output_in_mb`
+  - add fail-safe `extras` to support additional parameters in the request body
+
 ## 0.2.4 (2025-01-09)
 
 - Remove `dataclasses` dependency (supported as built-in from Python 3.7+)
