@@ -15,8 +15,6 @@ certifi==2024.6.2
     # via httpx
 click==8.1.7
     # via cspark
-dataclasses==0.6
-    # via cspark
 h11==0.14.0
     # via httpcore
 httpcore==1.0.5

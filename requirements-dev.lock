@@ -30,8 +30,6 @@ click==8.1.7
 crashtest==0.4.1
     # via cleo
     # via poetry
-dataclasses==0.6
-    # via cspark
 distlib==0.3.9
     # via virtualenv
 dulwich==0.21.7
