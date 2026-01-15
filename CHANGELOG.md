@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.6 (2026-01-15)
+
+- Describe import and export jobs across a tenant
+- Introduce additional metadata when creating a service
+
 ## 0.2.5 (2026-01-12)
 
 - Fix bug in `Batches.create(...)`:

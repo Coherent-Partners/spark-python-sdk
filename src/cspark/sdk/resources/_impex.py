@@ -115,6 +115,11 @@ class Export(ApiResource):
         super().__init__(config)
         self._base_uri = {'base_url': self.config.base_url.full, 'version': 'api/v4'}
 
+    def describe(self):
+        """Describes the export job status across the tenant."""
+        url = Uri.of(None, endpoint=f'export/status', **self._base_uri)
+        return self.request(url, method='GET')
+
     def initiate(
         self,
         *,
@@ -213,6 +218,11 @@ class Import(ApiResource):
     def __init__(self, config: Config):
         super().__init__(config)
         self._base_uri = {'base_url': self.config.base_url.full, 'version': 'api/v4'}
+
+    def describe(self):
+        """Describes the import job status across the tenant."""
+        url = Uri.of(None, endpoint=f'import/status', **self._base_uri)
+        return self.request(url, method='GET')
 
     def initiate(
         self,

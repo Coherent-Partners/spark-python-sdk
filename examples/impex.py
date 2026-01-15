@@ -18,6 +18,11 @@ def download(wasm: Spark.Wasm):
     save_file(response.buffer, 'wasm.zip')
 
 
+def describe(impex: Spark.ImpEx):
+    print(impex.exports.describe().data)
+    print(impex.imports.describe().data)
+
+
 def export_entities_with(impex: Spark.ImpEx):
     downloadables = impex.exp(services=['my-folder/my-service'], max_retries=5, retry_interval=3)
     for count, download in enumerate(downloadables):
@@ -37,6 +42,7 @@ if __name__ == '__main__':
         download_file()
 
         spark = Spark.Client()
+        describe(spark.impex)
         export_entities_with(spark.impex)
         import_entities_with(spark.impex)
 

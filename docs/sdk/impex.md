@@ -7,6 +7,51 @@
 | `Spark.impex.exp(data)` | [Export Spark entities (versions, services, or folders)](#export-spark-entities). |
 | `Spark.impex.imp(data)` | [Import exported Spark entities into your workspace](#import-spark-entities).     |
 
+## Describe import and export jobs across a tenant
+
+Before getting started, you may want to get a snapshot of your tenant’s import and
+export processing: active jobs and those completed within the last hour.
+
+### Arguments
+
+No arguments are required. You may use the following methods:
+
+- `Spark.impex.exports.describe()` describes export jobs across the tenant.
+- `Spark.impex.imports.describe()` describes import jobs across the tenant.
+
+```python
+spark.impex.exports.describe()
+```
+
+### Returns
+
+Results are scoped to jobs initiated by your user unless you have elevated access (e.g., `supervisor:pf`).
+See the sample response below for the export job status.
+
+```json
+{
+  "in_progress_exports": [],
+  "recent_exports": [
+    {
+      "object": "export",
+      "id": "uuid",
+      "data": {
+        "export_status": "closed",
+        "response_timestamp": "1970-12-03T04:56:56.186Z",
+        "created_by": "john.doe@coherent.global",
+        "created_timestamp": "1970-12-03T04:56:56.186Z",
+        "updated_timestamp": "1970-12-03T04:57:56.186Z",
+        "process_time": 123
+      }
+    }
+  ],
+  "tenant": {
+    "configuration": { "export_api_job_limit": 1 },
+    "status": { "export_api_jobs_in_progress": 0 }
+  }
+}
+```
+
 ## Export Spark entities
 
 This method relies on the [Export API][export-api] to export Spark entities from

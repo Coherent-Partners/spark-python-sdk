@@ -31,6 +31,10 @@ class Services(ApiResource):
         start_date: Union[None, str, int, datetime] = None,
         end_date: Union[None, str, int, datetime] = None,
         track_user: Optional[bool] = False,
+        label: Optional[str] = None,
+        release_notes: Optional[str] = None,
+        tags: Union[None, str, List[str]] = None,
+        extras: Optional[Dict[str, Any]] = None,
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
     ):
@@ -44,6 +48,7 @@ class Services(ApiResource):
             end_date=end_date,
             max_retries=max_retries,
             retry_interval=retry_interval,
+            extras=extras,
         )
         upload = compiled['upload'].get('response_data', {})
 
@@ -57,6 +62,10 @@ class Services(ApiResource):
             start_date=start_date,
             end_date=end_date,
             track_user=track_user,
+            label=label,
+            release_notes=release_notes,
+            tags=tags,
+            extras=extras,
         )
         return {**compiled, 'publication': published.data}
 
@@ -72,6 +81,7 @@ class Services(ApiResource):
         end_date: Union[None, str, int, datetime] = None,
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
+        extras: Optional[Dict[str, Any]] = None,
     ):
         with self.compilation as compilation:
             upload = compilation.initiate(
@@ -82,6 +92,7 @@ class Services(ApiResource):
                 versioning=versioning,
                 start_date=start_date,
                 end_date=end_date,
+                extras=extras,
             )
 
             status = compilation.get_status(
@@ -106,6 +117,10 @@ class Services(ApiResource):
         start_date: Union[None, str, int, datetime] = None,
         end_date: Union[None, str, int, datetime] = None,
         track_user: Optional[bool] = False,
+        label: Optional[str] = None,
+        release_notes: Optional[str] = None,
+        tags: Union[None, str, List[str]] = None,
+        extras: Optional[Dict[str, Any]] = None,
     ):
         startdate, enddate = DateUtils.parse(start_date, end_date)
         uri = Uri.validate(UriParams(folder, service))
@@ -117,7 +132,11 @@ class Services(ApiResource):
             'original_file_documentid': file_id,
             'engine_file_documentid': engine_id,
             'version_difference': versioning or 'minor',
-            'should_track_user_action': track_user,
+            'should_trck_user_action': track_user,
+            'version_label': label,
+            'release_note': release_notes,
+            'tags': StringUtils.join(tags),
+            **(extras or {}),
         }
 
         response = self.request(url, method='POST', body={'request_data': params})
@@ -618,6 +637,7 @@ class Compilation(ApiResource):
         versioning: Optional[str] = None,
         start_date: Union[None, str, int, datetime] = None,
         end_date: Union[None, str, int, datetime] = None,
+        extras: Optional[Dict[str, Any]] = None,
     ):
         startdate, enddate = DateUtils.parse(start_date, end_date)
         uri = Uri.validate(UriParams(folder, service))
@@ -628,6 +648,7 @@ class Compilation(ApiResource):
                 'effective_start_date': startdate.isoformat(),
                 'effective_end_date': enddate.isoformat(),
                 'version_difference': versioning or 'minor',
+                **(extras or {}),
             }
         }
         form = {'engineUploadRequestEntity': json.dumps(metadata)}
