@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.3.0-rc.2 (2026-01-16)
+
+- Describe import and export jobs across a tenant
+- Introduce additional metadata when creating a service
+- Fix bug in `Batches.create(...)`:
+  - `max_input_size` parameter was renamed to `max_input_in_mb`
+  - `max_output_size` parameter was renamed to `max_output_in_mb`
+  - add fail-safe `extras` to support additional parameters in the request body
+- Remove `dataclasses` dependency (supported as built-in from Python 3.7+)
+- Update documentation and tests to reflect changes
+
 ## 0.3.0-rc.1 (2025-12-16)
 
 - Refactor synchronous clients to use context manager pattern

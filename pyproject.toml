@@ -1,14 +1,11 @@
 [project]
 name = "cspark"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 description = "A Python SDK for interacting with Coherent Spark APIs"
 license = "Apache-2.0"
 authors = [{ name = "Coherent", email = "team@coherent.global" }]
 keywords = ["coherent", "spark", "sdk", "restful", "api"]
-dependencies = [
-  "dataclasses",
-  "httpx>=0.23.0, <1"
-]
+dependencies = ["httpx>=0.23.0, <1"]
 readme = "README.md"
 requires-python = ">= 3.7"
 classifiers = [

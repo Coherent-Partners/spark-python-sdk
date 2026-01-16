@@ -1,9 +1,8 @@
 # SDK Documentation
 
 This guide should serve as a comprehensive reference for the SDK. It covers all
-the verbs (or methods) and parameters available in the SDK.
-
-Additional information can be found on [Spark's User Guide](https://docs.coherent.global).
+the verbs (or methods) and parameters available in the SDK. Additional information
+can be found on the [Spark's User Guide](https://docs.coherent.global) page.
 
 ## Table of Contents
 
@@ -21,7 +20,7 @@ Additional information can be found on [Spark's User Guide](https://docs.coheren
 The `cspark` package is a Python library that includes multiple modules:
 
 - `cspark.sdk` - the main SDK module and all its resources;
-- `cspark.wasm` - a convenience module built on top of the `cspark.sdk` to interact
+- `cspark.wasm` - a convenience module built on top of `cspark.sdk` to interact
    with hybrid-deployed services;
 - `cspark.cli` - a module for the CLI application to interact with the Spark platform,
   which is only available when the `cspark[cli]` extra is installed (or via homebrew
@@ -55,7 +54,7 @@ print(response.data)
 
 You may notice by now that `folder` and `service` names when combined form a
 base identifier to locate a resource in the Spark platform for a particular
-environment and tenant. I term this _Service URI_ locator.
+environment and tenant. We term this _Service URI_ locator.
 
 Given that this locator may be part of either the final URL or the request payload,
 it is recommended to use plain strings (i.e., not URL-encoded) when referring to
@@ -94,9 +93,8 @@ the service if the identifiers are URL-encoded.
 The SDK provides both synchronous and asynchronous clients. The synchronous client
 is the default `Spark.Client` and is recommended for most use cases. The asynchronous
 one is the `Spark.AsyncClient` and is recommended for use cases that require non-blocking
-operations, i.e, when you need to perform multiple tasks in parallel or when you
-need to perform a series of tasks in a single call. For example, the above health check
-example can be rewritten using the asynchronous client as shown below:
+operations, i.e, when you need to perform multiple tasks in parallel. For example,
+the above health check example can be rewritten using the asynchronous client as shown below:
 
 ```py
 import asyncio
@@ -109,12 +107,12 @@ async def main():
 asyncio.run(main())
 ```
 
-As you can see, the asynchronous client is quite similar to the synchronous client,
+As you can see, `Spark.AsyncClient` is quite similar to the synchronous client,
 but with the addition of the `async` keyword. The `asyncio.run` function is used to
 run the asynchronous `main()` function.
 
-With that said, even though most of the examples in this guide use the synchronous c
-lient, you are welcome to use the asynchronous client as they are both fully compatible.
+With that said, even though most of the examples in this guide use the synchronous
+client, you are welcome to use the asynchronous client as they are both fully compatible.
 
 ### Context Manager
 
@@ -236,6 +234,7 @@ config = Config(env='my-env', tenant='my-tenant', token='bearer token')
 
 # 3. Your custom resource relies on the Spark configuration to build the request.
 with HttpClient(timeout=config.timeout_in_sec) as client:
+
     # 4. Use the custom resource to fetch data.
     response = MyResource(config, client).fetch_data()
 

@@ -94,9 +94,7 @@ services:
 
 - The configuration is validated against `schema.json` at runtime; invalid configs will abort with errors.
 - Files with unsupported extensions, missing folders, or exceeding size limits are skipped with warnings.
-- Though the current implementation alludes to asynchronous uploads, the SDK only supports synchronous operations at
-  the moment. However, you can still achieve asynchronous uploads by using the `asyncio` library in conjunction
-  with [aiohttp](https://docs.aiohttp.org/en/stable/) or [httpx.AsyncClient](https://www.python-httpx.org/async/)
-  to make asynchronous requests.
+- Feel free to use this [httpx.AsyncClient](https://www.python-httpx.org/async/) to add extra capabilities
+  (proxy, auth, timeout, SSL verification, etc).
 
 <!-- References -->

@@ -118,6 +118,11 @@ class Export(ApiResource):
     def base_uri(self) -> dict[str, str]:
         return {'base_url': self.config.base_url.full, 'version': 'api/v4'}
 
+    def describe(self):
+        """Describes the export job status across the tenant."""
+        url = Uri.of(None, endpoint=f'export/status', **self.base_uri)
+        return self.request(url, method='GET')
+
     def initiate(
         self,
         *,
@@ -216,6 +221,11 @@ class Import(ApiResource):
     @property
     def base_uri(self) -> dict[str, str]:
         return {'base_url': self.config.base_url.full, 'version': 'api/v4'}
+
+    def describe(self):
+        """Describes the import job status across the tenant."""
+        url = Uri.of(None, endpoint=f'import/status', **self.base_uri)
+        return self.request(url, method='GET')
 
     def initiate(
         self,

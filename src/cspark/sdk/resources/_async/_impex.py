@@ -36,6 +36,12 @@ class AsyncImpEx(AsyncApiResource):
     def imports(self):
         return AsyncImport(self.config, self._client)
 
+    async def describe(self, as_json: bool = False):
+        """Describes the export and import jobs across the tenant."""
+        if as_json:
+            return {'exports': (await self.exports.describe()).data, 'imports': (await self.imports.describe()).data}
+        return await asyncio.gather(self.exports.describe(), self.imports.describe())
+
     async def exp(
         self,
         *,
@@ -119,6 +125,11 @@ class AsyncExport(AsyncApiResource):
     @property
     def base_uri(self) -> dict[str, str]:
         return {'base_url': self.config.base_url.full, 'version': 'api/v4'}
+
+    async def describe(self):
+        """Describes the export jobs across the tenant."""
+        url = Uri.of(None, endpoint=f'export/status', **self.base_uri)
+        return await self.request(url, method='GET')
 
     async def initiate(
         self,
@@ -218,6 +229,11 @@ class AsyncImport(AsyncApiResource):
     @property
     def base_uri(self) -> dict[str, str]:
         return {'base_url': self.config.base_url.full, 'version': 'api/v4'}
+
+    async def describe(self):
+        """Describes the import jobs across the tenant."""
+        url = Uri.of(None, endpoint=f'import/status', **self.base_uri)
+        return await self.request(url, method='GET')
 
     async def initiate(
         self,

@@ -39,8 +39,7 @@ services:
 """
 
 
-class ConfigError(ValueError):
-    ...
+class ConfigError(ValueError): ...
 
 
 def load_config(content: str = yaml_config) -> dict:
