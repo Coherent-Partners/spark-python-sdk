@@ -109,4 +109,7 @@ packages = ["src/cspark"]
 testpaths = ["test"]
 addopts = "--tb=short"
 xfail_strict = true
-filterwarnings = ["error"]
+filterwarnings = [
+  "error",
+  "ignore::trio.TrioDeprecationWarning",  # anyio+trio on Python <3.11 (MultiError deprecation)
+]
