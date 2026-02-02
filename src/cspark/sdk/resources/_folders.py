@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, BinaryIO, Optional, Union
 
-from .._config import Config
 from .._constants import SPARK_SDK
 from .._errors import SparkApiError, SparkError
 from .._utils import DateUtils, get_uuid
@@ -11,13 +12,13 @@ __all__ = ['Folders']
 
 
 class Folders(ApiResource):
-    def __init__(self, config: Config):
-        super().__init__(config)
-        self._base_uri = {'base_url': self.config.base_url.value, 'version': 'api/v1'}
+    @property
+    def base_uri(self) -> dict[str, str]:
+        return {'base_url': self.config.base_url.value, 'version': 'api/v1'}
 
     @property
     def categories(self) -> 'Categories':
-        return Categories(self.config)
+        return Categories(self.config, self._client)
 
     def find(
         self,
@@ -29,7 +30,7 @@ class Folders(ApiResource):
         sort: str = '-updated',
         **params: Any,
     ):
-        url = Uri.of(None, endpoint='product/list', **self._base_uri)
+        url = Uri.of(None, endpoint='product/list', **self.base_uri)
         search = [{'field': k, 'value': v} for k, v in {**params, 'name': name, 'isstarred': favorite}.items() if v]
         body = {'search': search, 'page': page, 'pageSize': size, 'sort': sort}
         body.update({'shouldFetchActiveServicesCount': True})
@@ -47,7 +48,7 @@ class Folders(ApiResource):
         status: Optional[str] = None,
         cover: Optional[BinaryIO] = None,
     ):
-        url = Uri.of(None, endpoint='product/create', **self._base_uri)
+        url = Uri.of(None, endpoint='product/create', **self.base_uri)
         startdate, launchdate = DateUtils.parse(start_date, launch_date)
         form = {
             'Name': name,
@@ -82,7 +83,7 @@ class Folders(ApiResource):
         launch_date: Union[None, str, int, datetime] = None,
         cover: Optional[BinaryIO] = None,
     ):
-        url = Uri.of(None, endpoint=f'product/update/{id}', **self._base_uri)
+        url = Uri.of(None, endpoint=f'product/update/{id}', **self.base_uri)
         if cover:
             self.upload_cover(id, cover)
 
@@ -98,34 +99,34 @@ class Folders(ApiResource):
         return self.request(url, method='POST', body=body)
 
     def delete(self, id: str):
-        url = Uri.of(None, endpoint=f'product/delete/{id}', **self._base_uri)
+        url = Uri.of(None, endpoint=f'product/delete/{id}', **self.base_uri)
         self.logger.warning('deleting folder will also delete all its services')
 
         return self.request(url, method='DELETE')
 
     def upload_cover(self, id: str, image: BinaryIO, filename: Optional[str] = None):
-        url = Uri.of(None, endpoint='product/uploadcoverimage', **self._base_uri)
+        url = Uri.of(None, endpoint='product/uploadcoverimage', **self.base_uri)
         files = {'coverImage': filename and (filename, image) or image}
 
         return self.request(url, method='POST', form={'id': id}, files=files)
 
 
 class Categories(ApiResource):
-    def __init__(self, config: Config):
-        super().__init__(config)
-        self._base_uri = {'base_url': self.config.base_url.value, 'version': 'api/v1'}
+    @property
+    def base_uri(self) -> dict[str, str]:
+        return {'base_url': self.config.base_url.value, 'version': 'api/v1'}
 
     def list(self):
-        return self.request(Uri.of(None, endpoint='lookup/getcategories', **self._base_uri))
+        return self.request(Uri.of(None, endpoint='lookup/getcategories', **self.base_uri))
 
     def save(self, name: str, *, key: Optional[str] = None, icon: Optional[str] = None):
-        url = Uri.of(None, endpoint='lookup/savecategory', **self._base_uri)
+        url = Uri.of(None, endpoint='lookup/savecategory', **self.base_uri)
         body = {'value': name, 'key': key or get_uuid(), 'icon': icon or 'other.svg'}
         response = self.request(url, method='POST', body=body)
         return response.copy_with(data=self.__extract_data(response.data))
 
     def delete(self, key: str):
-        url = Uri.of(None, endpoint=f'lookup/deletecategory/{key}', **self._base_uri)
+        url = Uri.of(None, endpoint=f'lookup/deletecategory/{key}', **self.base_uri)
         response = self.request(url, method='DELETE')
         return response.copy_with(data=self.__extract_data(response.data))
 

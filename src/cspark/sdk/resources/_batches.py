@@ -3,6 +3,8 @@ import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union, cast
 
+from httpx import Client
+
 from .._config import Config
 from .._constants import SPARK_SDK
 from .._errors import SparkError
@@ -78,8 +80,8 @@ class BatchChunk:
 
 
 class Batches(ApiResource):
-    def __init__(self, config: Config):
-        super().__init__(config)
+    def __init__(self, config: Config, http_client: Client):
+        super().__init__(config, http_client)
         self._base_uri = {'base_url': self.config.base_url.full, 'version': 'api/v4'}
 
     def describe(self):
@@ -107,6 +109,7 @@ class Batches(ApiResource):
         max_input_size: Optional[float] = None,
         max_output_size: Optional[float] = None,
         accuracy: Optional[float] = None,
+        extras: Optional[Dict[str, Any]] = None,
     ):
         uri = Uri.validate(uri)
         url = Uri.of(base_url=self.config.base_url.full, version='api/v4', endpoint='batch')
@@ -126,23 +129,24 @@ class Batches(ApiResource):
             'max_workers': max_runners,
             'chunks_per_request': chunks_per_vm,
             'runner_thread_count': runners_per_vm,
-            'max_input_size': max_input_size,
-            'max_output_size': max_output_size,
+            'max_input_size_in_mb': max_input_size,
+            'max_output_size_in_mb': max_output_size,
             'acceptable_error_percentage': math.ceil((1 - min(accuracy or 1, 1.0)) * 100),
+            **(extras or {}),
         }
 
         return self.request(url, method='POST', body={k: v for k, v in body.items() if v is not None})
 
     def of(self, batch_id: str) -> 'Pipeline':
-        return Pipeline(batch_id, self.config)
+        return Pipeline(batch_id, self.config, self._client)
 
 
 class Pipeline(ApiResource):
     _state: str = 'open'
     _chunks: Dict[str, int] = dict()
 
-    def __init__(self, batch_id: str, config: Config):
-        super().__init__(config)
+    def __init__(self, batch_id: str, config: Config, http_client: Client):
+        super().__init__(config, http_client)
         self._id = batch_id
         self._base_uri = {'base_url': self.config.base_url.full, 'version': 'api/v4'}
 

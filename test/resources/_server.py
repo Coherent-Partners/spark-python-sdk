@@ -11,6 +11,7 @@ Message = typing.Dict[str, typing.Any]
 Receive = typing.Callable[[], typing.Awaitable[Message]]
 Send = typing.Callable[[typing.Dict[str, typing.Any]], typing.Coroutine[None, None, None]]
 Scope = typing.Dict[str, typing.Any]
+HTTP_SUCCESS_RESP = {'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]}
 
 
 async def router(scope: Scope, receive: Receive, send: Send) -> None:
@@ -36,6 +37,10 @@ async def router(scope: Scope, receive: Receive, send: Send) -> None:
         await batch_pull(scope, send)
     elif scope['path'] == '/my-tenant/api/v4/batch/batch_uuid':
         await batch_dispose(scope, receive, send)
+    elif scope['path'] == '/auth/realms/my-tenant/protocol/openid-connect/token':
+        await retrieve_access_token(scope, send)
+    elif scope['path'] == '/my-tenant/api/v3/folders/hybrid/services/runner/execute':
+        await hybrid_execute_v3(scope, receive, send)
     else:
         await send({'type': 'http.response.start', 'status': 404, 'headers': []})
         await send({'type': 'http.response.body', 'body': b'Resource not defined yet'})
@@ -54,6 +59,19 @@ async def read_body(receive):
     return body
 
 
+async def retrieve_access_token(scope: Scope, send: Send):
+    assert scope['type'] == 'http'
+    assert scope['method'] == 'POST'
+
+    headers = {k.decode(): v.decode() for k, v in scope['headers']}
+    assert 'content-type' in headers
+    assert headers['content-type'] == 'application/x-www-form-urlencoded'
+
+    res_body = '{"access_token":"fake access token", "expires_in":360, "token_type":"Bearer"}'
+    await send(HTTP_SUCCESS_RESP)
+    await send({'type': 'http.response.body', 'body': res_body.encode()})
+
+
 async def service_execute_v3(scope: Scope, receive: Receive, send: Send) -> None:
     assert scope['method'] == 'POST'
 
@@ -65,7 +83,7 @@ async def service_execute_v3(scope: Scope, receive: Receive, send: Send) -> None
     assert req_body['request_meta']['source_system'] == 'Spark Python SDK'
 
     res_body = '{"status":"Success","response_data":{"outputs":{"my_output":42}},"response_meta":{},"error": null}'
-    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send(HTTP_SUCCESS_RESP)
     await send({'type': 'http.response.body', 'body': res_body.encode()})
 
 
@@ -80,7 +98,7 @@ async def service_execute_v4(scope: Scope, receive: Receive, send: Send) -> None
 
     res_body = '{"outputs": [{"my_output": 42}, {"my_output": 43}], "process_time": [1, 2], "service_id": "uuid"}'
     # Note that Spark may return more headers.
-    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send(HTTP_SUCCESS_RESP)
     await send({'type': 'http.response.body', 'body': res_body.encode()})
 
 
@@ -102,7 +120,7 @@ async def service_execute_with_metadata(scope: Scope, receive: Receive, send: Se
     assert req_meta['correlation_id'] == 'corr_uuid'
 
     res_body = '{"status":"Success","response_data":{"outputs":{"single_output":42}},"response_meta":{"version_id":"version_uuid"},"error": null}'
-    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send(HTTP_SUCCESS_RESP)
     await send({'type': 'http.response.body', 'body': res_body.encode()})
 
 
@@ -118,7 +136,7 @@ async def batch_create(scope: Scope, receive: Receive, send: Send) -> None:
     assert req_body['acceptable_error_percentage'] == 10
 
     res_body = '{"object": "batch", "id": "batch_uuid", "data": {}}'
-    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send(HTTP_SUCCESS_RESP)
     await send({'type': 'http.response.body', 'body': res_body.encode()})
 
 
@@ -129,7 +147,7 @@ async def batch_push(scope: Scope, receive: Receive, send: Send) -> None:
     assert len(req_body['chunks']) > 0
 
     res_body = '{"batch_status": "in_progress", "record_submitted": 3, "records_available": 0}'  # and more...
-    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send(HTTP_SUCCESS_RESP)
     await send({'type': 'http.response.body', 'body': res_body.encode()})
 
 
@@ -139,7 +157,7 @@ async def batch_pull(scope: Scope, send: Send) -> None:
     assert b'max' in query_params and query_params[b'max'] == b'2'
 
     res_body = '{"data":[{"outputs": [{}, {}]}, {"outputs": [{}]}], "status": {"records_available": 0}}'
-    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send(HTTP_SUCCESS_RESP)
     await send({'type': 'http.response.body', 'body': res_body.encode()})
 
 
@@ -150,7 +168,19 @@ async def batch_dispose(scope: Scope, receive: Receive, send: Send) -> None:
     assert req_body['batch_status'] == 'closed'
 
     res_body = '{"object": "batch", "id": "batch_uuid", "meta": {}}'
-    await send({'type': 'http.response.start', 'status': 200, 'headers': [[b'content-type', b'application/json']]})
+    await send(HTTP_SUCCESS_RESP)
+    await send({'type': 'http.response.body', 'body': res_body.encode()})
+
+
+async def hybrid_execute_v3(scope: Scope, receive: Receive, send: Send) -> None:
+    assert scope['method'] == 'POST'
+
+    req_body = json.loads(await read_body(receive))
+    assert req_body['request_data'] == {'inputs': {'data': 'test'}}
+    assert req_body['request_meta']['version'] == '0.4.2'
+
+    res_body = '{"response_data": {"outputs": {"result": "test"}}}'
+    await send(HTTP_SUCCESS_RESP)
     await send({'type': 'http.response.body', 'body': res_body.encode()})
 
 

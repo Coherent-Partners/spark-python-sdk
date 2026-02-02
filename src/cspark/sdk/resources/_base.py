@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 import time
 from dataclasses import dataclass
-from types import TracebackType
 from typing import Any, Mapping, Optional, Union
 
 from httpx import URL, Client, Headers, HTTPError, HTTPStatusError, Request, RequestError, Response
@@ -18,28 +17,10 @@ __all__ = ['ApiResource', 'UriParams', 'Uri', 'HttpResponse']
 
 
 class ApiResource:
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, http_client: Client):
         self.config = config
         self.logger = get_logger(**config.logger.__dict__)
-        self._client = config.http_client or Client(timeout=config.timeout / 1000)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(
-        self,
-        exc_type: Optional[type[BaseException]],
-        exc: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
-    ) -> None:
-        # Ideally, let users handle the closing of the custom HTTP client.
-        if self.config.http_client:
-            return
-        self.close()
-
-    def close(self):
-        if not self._client.is_closed:
-            self._client.close()
+        self._client = http_client
 
     @property
     def default_headers(self):
@@ -103,7 +84,7 @@ class ApiResource:
         status_code = response.status_code
         if status_code >= 400:
             if status_code == 401 and self.config.auth.type == 'oauth' and retries < self.config.max_retries:
-                self.config.auth.oauth.retrieve_token(self.config)  # pyright: ignore[reportOptionalMemberAccess]
+                self.config.auth.oauth.retrieve_token(self.config, self._client)  # type: ignore
                 return self.__fetch(request, retries + 1)
 
             if (status_code == 408 or status_code == 429) and retries < self.config.max_retries:
@@ -134,41 +115,6 @@ class ApiResource:
             except Exception:
                 ok_response['data'] = response.text
         return HttpResponse(**ok_response)
-
-
-def download(
-    url: str,
-    *,
-    method: str = 'GET',
-    headers: Mapping[str, str] = {},
-    params: Optional[Mapping[str, str]] = None,
-    body=None,
-    form=None,
-    timeout: Optional[float] = 60,
-):
-    with Client() as client:
-        request = client.build_request(
-            method,
-            url,
-            params=params,
-            headers=headers,
-            data=form,
-            json=body,
-            timeout=timeout,
-        )
-
-        response = client.send(request)
-        if response.status_code >= 400:
-            raise SparkError.api(response.status_code, SparkApiError.to_cause(request, response))
-
-        return HttpResponse(
-            status=response.status_code,
-            data=None,
-            buffer=response.content,
-            headers=response.headers,
-            raw_request=request,
-            raw_response=response,
-        )
 
 
 @dataclass

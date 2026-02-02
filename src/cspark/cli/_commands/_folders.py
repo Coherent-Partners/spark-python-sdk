@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 import click
@@ -29,10 +31,9 @@ def list_folders(name_only: bool, data: str, headers: list[str]) -> None:
     console = Console()
 
     try:
-        client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_pairs(headers))
-        with client.folders as f:
-            response = f.find(**json_parse(data)).data
+        with Client(**profile.to_config()) as client:
+            client.config.extra_headers.update(parse_pairs(headers))
+            response = client.folders.find(**json_parse(data)).data
 
         output = response['data']  # type: ignore
         if name_only:
@@ -58,9 +59,9 @@ def delete_services(names: list[str], headers: list[str]) -> None:
         raise click.BadParameter('at least one folder name must be provided.')
 
     try:
-        client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_pairs(headers))
-        with client.folders as f:
+        with Client(**profile.to_config()) as client:
+            client.config.extra_headers.update(parse_pairs(headers))
+            folders_api = client.folders
             for folder in names:
                 confirmed = inquirer.confirm(  # type: ignore
                     message=f'Are you sure you want to delete "{folder}" and all its services?', default=False
@@ -69,7 +70,7 @@ def delete_services(names: list[str], headers: list[str]) -> None:
                     click.echo(f'folder skipped: {folder}')
                     continue
 
-                response = f.delete(folder).data
+                response = folders_api.delete(folder).data
                 if response.get('status', '').lower() == 'success':  # type: ignore
                     click.echo(f'folder deleted: {folder}')
 

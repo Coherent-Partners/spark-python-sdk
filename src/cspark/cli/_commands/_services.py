@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import json
 
 import click
 from cspark.sdk import Client, Config, SparkError
+from httpx import Client as HttpClient
 from rich.console import Console
 
 from .._utils import get_active_profile
@@ -31,8 +34,8 @@ def list_services(folder: str, name_only: bool, data: str, headers: list[str]) -
     try:
         config = Config(**profile.to_config())
         config.extra_headers.update(parse_pairs(headers))
-        with Services(config) as s:
-            response = s.get(folder, data).data
+        with HttpClient(timeout=config.timeout_in_sec) as client:
+            response = Services(config, client).get(folder, data).data
 
         output = response['data']  # type: ignore
         if name_only:
@@ -56,10 +59,9 @@ def search_services(data: str, headers: list[str], show_all: bool) -> None:
     console = Console()
 
     try:
-        client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_pairs(headers))
-        with client.services as s:
-            response = s.search(**json_parse(data))
+        with Client(**profile.to_config()) as client:
+            client.config.extra_headers.update(parse_pairs(headers))
+            response = client.services.search(**json_parse(data))
 
         output = response.data
         if not show_all:
@@ -85,11 +87,10 @@ def execute_services(uri: str, inputs: str, params: list[str], headers: list[str
     console = Console()
 
     try:
-        client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_pairs(headers))
-        with client.services as s:
+        with Client(**profile.to_config()) as client:
+            client.config.extra_headers.update(parse_pairs(headers))
             metadata = parse_pairs(params, infer_type=True)
-            outputs = s.execute(uri, inputs=inputs, source_system='Coherent Spark CLI', **metadata).data
+            outputs = client.services.execute(uri, inputs=inputs, source_system='Coherent Spark CLI', **metadata).data
 
         if not show_all:
             outputs = outputs.get('outputs') or outputs.get('response_data', {}).get('outputs')  # type: ignore
@@ -115,12 +116,11 @@ def delete_services(folder: str, names: list[str], headers: list[str]) -> None:
         raise click.BadParameter('at least one service name must be provided.')
 
     try:
-        client = Client(**profile.to_config())
-        client.config.extra_headers.update(parse_pairs(headers))
-
-        with client.services as s:
+        with Client(**profile.to_config()) as client:
+            client.config.extra_headers.update(parse_pairs(headers))
+            services = client.services
             for service in names:
-                response = s.delete(folder=folder, service=service).data
+                response = services.delete(folder=folder, service=service).data
                 if response.get('status', '').lower() == 'success':  # type: ignore
                     click.echo(f'service deleted: {service}')
 

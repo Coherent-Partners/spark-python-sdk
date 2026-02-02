@@ -13,7 +13,7 @@ __all__ = ['History']
 class History(ApiResource):
     @property
     def downloads(self) -> 'LogDownload':
-        return LogDownload(self.config)
+        return LogDownload(self.config, self._client)
 
     def get(self, call_id: str):
         url = Uri.of(base_url=self.config.base_url.full, endpoint=f'log/getexecutionhistorybycallid/{call_id}')
@@ -67,46 +67,46 @@ class History(ApiResource):
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
     ):
-        with self.downloads as downloads:
-            response = downloads.initiate(
-                folder=folder,
-                service=service,
-                type=type,
-                version_id=version_id,
-                call_ids=call_ids,
-                start_date=start_date,
-                end_date=end_date,
-                source_system=source_system,
-                correlation_id=correlation_id,
-                timezone_offset=timezone_offset,
-            )
+        downloads = self.downloads
+        response = downloads.initiate(
+            folder=folder,
+            service=service,
+            type=type,
+            version_id=version_id,
+            call_ids=call_ids,
+            start_date=start_date,
+            end_date=end_date,
+            source_system=source_system,
+            correlation_id=correlation_id,
+            timezone_offset=timezone_offset,
+        )
 
-            job_id = isinstance(response.data, dict) and response.data.get('response_data', {}).get('job_id') or ''
-            if not job_id:
-                error = SparkError('failed to produce a download job', response)
-                self.logger.error(error.message)
-                raise error
+        job_id = isinstance(response.data, dict) and response.data.get('response_data', {}).get('job_id') or ''
+        if not job_id:
+            error = SparkError('failed to produce a download job', response)
+            self.logger.error(error.message)
+            raise error
 
-            job = downloads.get_status(
-                job_id=job_id,
-                folder=folder,
-                service=service,
-                type=type,
-                max_retries=max_retries,
-                retry_interval=retry_interval,
-            )
+        job = downloads.get_status(
+            job_id=job_id,
+            folder=folder,
+            service=service,
+            type=type,
+            max_retries=max_retries,
+            retry_interval=retry_interval,
+        )
 
-            download_url = isinstance(job.data, dict) and job.data.get('response_data', {}).get('download_url') or ''
-            if not download_url:
-                error = SparkError(f'failed to produce a download URL for <{job_id}>', job)
-                self.logger.error(error.message)
-                raise error
+        download_url = isinstance(job.data, dict) and job.data.get('response_data', {}).get('download_url') or ''
+        if not download_url:
+            error = SparkError(f'failed to produce a download URL for <{job_id}>', job)
+            self.logger.error(error.message)
+            raise error
 
-            logs = self.request(download_url)
+        logs = self.request(download_url)
 
-            # NOTE: rewrite response as API response is missing status
-            job.data.update({'status': 'Success'})  # type: ignore
-            return logs.copy_with(status=job.status, data=job.data)
+        # NOTE: rewrite response as API response is missing status
+        job.data.update({'status': 'Success'})  # type: ignore
+        return logs.copy_with(status=job.status, data=job.data)
 
 
 class LogDownload(ApiResource):

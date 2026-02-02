@@ -116,9 +116,8 @@ Here's a full example of how to harness this method:
 ```python
 import cspark.sdk as Spark
 
-spark = Spark.Client(env='my-env', tenant='my-tenant', token='bearer token')
-with spark.logs as logs:
-    response = logs.rehydrate('my-folder/my-service', call_id='uuid')
+with Spark.Client(env='my-env', tenant='my-tenant', token='bearer token') as spark:
+    response = spark.logs.rehydrate('my-folder/my-service', call_id='uuid')
     with open('path/to/my-rehydrated-excel.xlsx', 'wb') as file:
         file.write(response.buffer) # write downloaded file to disk
         print('file rehydrated successfully 🎉')

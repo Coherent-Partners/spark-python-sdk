@@ -1,0 +1,556 @@
+import gzip
+import json
+import time
+import zlib
+from datetime import datetime
+from typing import Any, BinaryIO, Dict, List, Mapping, Optional, Tuple, Union
+
+from ..._constants import SPARK_SDK
+from ..._errors import RetryTimeoutError, SparkError
+from ..._utils import DateUtils, StringUtils, get_retry_timeout
+from .._base import Uri, UriParams
+from .._services import ServiceExecuted, _ExecuteInputs, _ExecuteMeta
+from .._transforms import TransformParams
+from ._base import AsyncApiResource
+
+__all__ = ['AsyncServices']
+
+
+class AsyncServices(AsyncApiResource):
+    @property
+    def compilation(self) -> 'AsyncCompilation':
+        return AsyncCompilation(self.config, self._client)
+
+    async def create(
+        self,
+        name: str,
+        *,
+        folder: str,
+        file: BinaryIO,
+        file_name: Optional[str] = None,
+        draft_name: Optional[str] = None,
+        versioning: Optional[str] = None,
+        start_date: Union[None, str, int, datetime] = None,
+        end_date: Union[None, str, int, datetime] = None,
+        track_user: Optional[bool] = False,
+        label: Optional[str] = None,
+        release_notes: Optional[str] = None,
+        tags: Union[None, str, List[str]] = None,
+        extras: Optional[Dict[str, Any]] = None,
+        max_retries: Optional[int] = None,
+        retry_interval: Optional[float] = None,
+    ):
+        compiled = await self.compile(
+            folder=folder,
+            service=name,
+            file=file,
+            file_name=file_name,
+            versioning=versioning,
+            start_date=start_date,
+            end_date=end_date,
+            max_retries=max_retries,
+            retry_interval=retry_interval,
+            extras=extras,
+        )
+        upload = compiled['upload'].get('response_data', {})
+
+        published = await self.publish(
+            folder=folder,
+            service=name,
+            file_id=upload.get('original_file_documentid'),
+            engine_id=upload.get('engine_file_documentid'),
+            draft_name=draft_name,
+            versioning=versioning,
+            start_date=start_date,
+            end_date=end_date,
+            track_user=track_user,
+            label=label,
+            release_notes=release_notes,
+            tags=tags,
+            extras=extras,
+        )
+        return {**compiled, 'publication': published.data}
+
+    async def compile(
+        self,
+        *,
+        folder: str,
+        service: str,
+        file: BinaryIO,
+        file_name: Optional[str] = None,
+        versioning: Optional[str] = None,
+        start_date: Union[None, str, int, datetime] = None,
+        end_date: Union[None, str, int, datetime] = None,
+        max_retries: Optional[int] = None,
+        retry_interval: Optional[float] = None,
+        extras: Optional[Dict[str, Any]] = None,
+    ):
+        compilation = self.compilation
+        upload = await self.compilation.initiate(
+            folder=folder,
+            service=service,
+            file=file,
+            file_name=file_name,
+            versioning=versioning,
+            start_date=start_date,
+            end_date=end_date,
+            extras=extras,
+        )
+
+        status = await compilation.get_status(
+            job_id=isinstance(upload.data, dict)
+            and upload.data.get('response_data', {}).get('nodegen_compilation_jobid')
+            or '',  # NOTE: this should never happen (only bypassing type checker)
+            folder=folder,
+            service=service,
+            max_retries=max_retries,
+            retry_interval=retry_interval,
+        )
+        return {'upload': upload.data, 'compilation': status.data}
+
+    async def publish(
+        self,
+        folder: str,
+        service: str,
+        file_id: str,
+        engine_id: str,
+        draft_name: Optional[str] = None,
+        versioning: Optional[str] = None,
+        start_date: Union[None, str, int, datetime] = None,
+        end_date: Union[None, str, int, datetime] = None,
+        track_user: Optional[bool] = False,
+        label: Optional[str] = None,
+        release_notes: Optional[str] = None,
+        tags: Union[None, str, List[str]] = None,
+        extras: Optional[Dict[str, Any]] = None,
+    ):
+        startdate, enddate = DateUtils.parse(start_date, end_date)
+        uri = Uri.validate(UriParams(folder, service))
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='publish')
+        params = {
+            'draft_service_name': draft_name or uri.service,
+            'effective_start_date': startdate.isoformat(),
+            'effective_end_date': enddate.isoformat(),
+            'original_file_documentid': file_id,
+            'engine_file_documentid': engine_id,
+            'version_difference': versioning or 'minor',
+            'should_trck_user_action': track_user,
+            'version_label': label,
+            'release_note': release_notes,
+            'tags': StringUtils.join(tags),
+            **(extras or {}),
+        }
+
+        response = await self.request(url, method='POST', body={'request_data': params})
+        version_id = isinstance(response.data, dict) and response.data.get('response_data', {}).get('version_id')
+        if version_id:
+            self.logger.info(f'service published with version id <{version_id}>')
+        return response
+
+    async def execute(
+        self,
+        uri: Union[str, UriParams],
+        *,
+        response_format: Optional[str] = None,
+        encoding: Optional[str] = None,  # 'gzip' | 'deflate'
+        # data for calculations
+        inputs: Union[None, str, Dict[str, Any], List[Any]] = None,  # TODO: support `pandas.DataFrame`
+        # Metadata for calculations
+        active_since: Optional[str] = None,
+        source_system: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+        call_purpose: Optional[str] = None,
+        compiler_type: Optional[str] = None,
+        subservices: Union[None, str, List[str]] = None,
+        # Available only in v3
+        debug_solve: Optional[bool] = None,
+        downloadable: Optional[bool] = False,
+        echo_inputs: Optional[bool] = False,
+        tables_as_array: Union[None, str, List[str]] = None,
+        selected_outputs: Union[None, str, List[str]] = None,
+        outputs_filter: Optional[str] = None,
+        # extra metadata if needed
+        extras: Optional[Mapping[str, Any]] = None,
+    ):
+        uri = Uri.validate(uri)
+
+        executable = _ExecuteInputs(inputs)
+        metadata = _ExecuteMeta(
+            uri,
+            is_batch=executable.is_batch,
+            active_since=active_since,
+            source_system=source_system,
+            correlation_id=correlation_id,
+            call_purpose=call_purpose,
+            compiler_type=compiler_type,
+            subservices=subservices,
+            debug_solve=debug_solve,
+            downloadable=downloadable,
+            echo_inputs=echo_inputs,
+            tables_as_array=tables_as_array,
+            selected_outputs=selected_outputs,
+            outputs_filter=outputs_filter,
+            extras=extras,
+        )
+
+        if executable.is_batch:
+            url = Uri.of(uri.pick('public'), base_url=self.config.base_url.full, version='api/v4', endpoint='execute')
+            body = {'inputs': executable.inputs, **metadata.values}
+        else:
+            endpoint = '' if uri.version_id or uri.service_id else 'execute'
+            url = Uri.of(uri, base_url=self.config.base_url.full, endpoint=endpoint)
+            body = {'request_data': {'inputs': executable.inputs}, 'request_meta': metadata.values}
+
+        if encoding:
+            content, headers = self.__encode(data=body, encoding=encoding)
+            response = await self.request(url, method='POST', content=content, headers=headers)
+        else:
+            response = await self.request(url, method='POST', body=body)
+        return ServiceExecuted(response, executable.is_batch, response_format or 'alike')
+
+    async def transform(
+        self,
+        uri: Union[str, UriParams],
+        *,
+        # data for calculations
+        inputs: Any,  # required
+        using: Union[str, Dict[str, str], None] = None,
+        api_version: str = 'v3',  # 'v3' | 'v4'
+        encoding: Optional[str] = None,  # 'gzip' | 'deflate'
+        # Metadata for calculations
+        active_since: Optional[str] = None,
+        source_system: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+        call_purpose: Optional[str] = None,
+        compiler_type: Optional[str] = None,
+        subservices: Union[None, str, List[str]] = None,
+        # Only for api/v3
+        debug_solve: Optional[bool] = None,
+        downloadable: Optional[bool] = False,
+        echo_inputs: Optional[bool] = False,
+        tables_as_array: Union[None, str, List[str]] = None,
+        selected_outputs: Union[None, str, List[str]] = None,
+        outputs_filter: Optional[str] = None,
+        # extra metadata if needed
+        extras: Optional[Mapping[str, Any]] = None,
+    ):
+        uri = Uri.validate(uri)
+
+        metadata = _ExecuteMeta(
+            uri,
+            is_batch=api_version == 'v4',
+            active_since=active_since,
+            source_system=source_system,
+            correlation_id=correlation_id,
+            call_purpose=call_purpose,
+            compiler_type=compiler_type,
+            subservices=subservices,
+            debug_solve=debug_solve,
+            downloadable=downloadable,
+            echo_inputs=echo_inputs,
+            tables_as_array=tables_as_array,
+            selected_outputs=selected_outputs,
+            outputs_filter=outputs_filter,
+            extras=extras,
+        )
+
+        if isinstance(using, str):
+            # (legacy) using transform name for Documents saved under Options > /apps/transforms
+            endpoint = f'transforms/{using}/for/folders/{uri.folder}/services/{uri.service}'
+        else:
+            using = using or {}  # use 'folder' and 'service' as fallback if using is wrong
+            transform = TransformParams(using.get('folder', uri.folder), using.get('service', uri.service))
+            endpoint = f'transforms/{transform.folder}/{transform.name}/for/{uri.folder}/{uri.service}'
+
+        url = Uri.of(base_url=self.config.base_url.full, version='api/v4', endpoint=endpoint)
+
+        if encoding:
+            content, headers = self.__encode(data=inputs or {}, encoding=encoding, extras=metadata.as_header)
+            response = await self.request(url, method='POST', content=content, headers=headers)
+        else:
+            response = await self.request(url, method='POST', body=inputs or {}, headers=metadata.as_header)
+        return response
+
+    async def validate(
+        self,
+        uri: Union[str, UriParams],
+        *,
+        # data for validations
+        inputs: Union[None, str, Dict[str, Any]] = None,
+        validation_type: Optional[str] = None,  # 'dynamic' | 'static'
+        # Metadata for validations
+        active_since: Optional[str] = None,
+        source_system: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+        call_purpose: Optional[str] = None,
+        compiler_type: Optional[str] = None,
+        subservices: Union[None, str, List[str]] = None,
+        # Available only in v3
+        debug_solve: Optional[bool] = None,
+        downloadable: Optional[bool] = False,
+        echo_inputs: Optional[bool] = False,
+        tables_as_array: Union[None, str, List[str]] = None,
+        selected_outputs: Union[None, str, List[str]] = None,
+        outputs_filter: Optional[str] = None,
+        # extra metadata if needed
+        extras: Optional[Mapping[str, Any]] = None,
+    ):
+        uri = Uri.validate(uri)
+        validation_type = StringUtils.is_not_empty(validation_type) and str(validation_type).lower() or None
+
+        executable = _ExecuteInputs(inputs)
+        metadata = _ExecuteMeta(
+            uri,
+            is_batch=False,
+            active_since=active_since,
+            source_system=source_system,
+            correlation_id=correlation_id,
+            call_purpose=call_purpose,
+            compiler_type=compiler_type,
+            subservices=subservices,
+            debug_solve=debug_solve,
+            downloadable=downloadable,
+            echo_inputs=echo_inputs,
+            tables_as_array=tables_as_array,
+            selected_outputs=selected_outputs,
+            outputs_filter=outputs_filter,
+            extras=extras,
+        )
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='validation')
+        body = {
+            'request_data': {'inputs': executable.inputs},
+            'request_meta': {
+                **metadata.values,
+                'validation_type': 'dynamic' if validation_type == 'dynamic' else 'default_values',
+            },
+        }
+
+        return await self.request(url, method='POST', body=body)
+
+    async def get_schema(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        version_id: Optional[str] = None,
+    ):
+        uri = Uri.validate(Uri.to_params(uri) if uri else UriParams(folder, service, version_id=version_id))
+        base, folder, service = self.config.base_url, uri.folder, uri.service
+        if StringUtils.is_not_empty(uri.version_id):
+            url = Uri.partial(f'GetEngineDetailByVersionId/versionid/{uri.version_id}', base_url=base.full)
+            return await self.request(url, method='POST')
+        else:
+            url = Uri.of(base_url=base.value, version='api/v1', endpoint=f'product/{folder}/engines/get/{service}')
+            return await self.request(url, method='GET')
+
+    async def get_metadata(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        service_id: Optional[str] = None,
+        version_id: Optional[str] = None,
+        proxy: Optional[str] = None,
+        public: Optional[bool] = False,
+    ):
+        uri = Uri.validate(uri or UriParams(folder, service, service_id, None, version_id, proxy, public))
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='metadata')
+
+        response = await self.request(url)
+        return ServiceExecuted(response, False, 'original')
+
+    async def get_versions(
+        self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
+    ):
+        uri = Uri.validate(uri or UriParams(folder, service))
+        endpoint = f'product/{uri.folder}/engines/getversions/{uri.service}'
+        url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
+
+        response = await self.request(url)
+        return response.copy_with(data=response.data.get('data', []) if isinstance(response.data, dict) else [])
+
+    async def get_swagger(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        version_id: Optional[str] = None,
+        downloadable: Optional[bool] = False,
+        subservice: str = 'All',
+    ):
+        uri = Uri.validate(uri or UriParams(folder, service))
+        endpoint = f'downloadswagger/{subservice}/{downloadable}/{version_id or ""}'
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint=endpoint)
+
+        return await self.request(url, method='GET')
+
+    async def search(
+        self,
+        *,
+        page: int = 1,
+        limit: int = -1,
+        sort: str = 'name1_co',
+        query: Optional[List[Any]] = None,
+        fields: Optional[List[str]] = None,
+        **params: Any,
+    ):
+        uri = Uri.of(base_url=self.config.base_url.full, endpoint='services/search')
+        search_params = {
+            'page': page,
+            'page_size': limit,
+            'sort': sort,
+            'search': query or [],
+            'fields': fields or ['id', 'foldername', 'filename', 'version', 'modifiedDate'],
+            **params,  # other query parameters
+        }
+
+        return await self.request(uri, method='POST', body={'request_data': search_params})
+
+    async def download(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        version_id: Optional[str] = None,
+        file_name: Optional[str] = None,
+        type: Optional[str] = None,  # 'original' or 'configured'
+    ):
+        uri = Uri.validate(uri or UriParams(folder, service))
+        endpoint = f'product/{uri.folder}/engines/{uri.service}/download/{version_id or ""}'
+        url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
+        params = {'filename': file_name or '', 'type': 'withmetadata' if type == 'configured' else ''}
+
+        return await self.request(url, params=params)
+
+    async def recompile(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+        version_id: Optional[str] = None,
+        compiler: Optional[str] = None,
+        release_notes: Optional[str] = None,
+        label: Optional[str] = None,
+        start_date: Union[None, str, int, datetime] = None,
+        end_date: Union[None, str, int, datetime] = None,
+        upgrade: Optional[str] = None,  # 'major' | 'minor' | 'patch'
+        tags: Union[None, str, List[str]] = None,
+    ):
+        uri = Uri.validate(uri or UriParams(folder, service, version_id=version_id))
+        url = Uri.of(uri.pick('folder', 'service'), base_url=self.config.base_url.full, endpoint='recompileNodgen')
+        startdate, enddate = DateUtils.parse(start_date, end_date)
+        data = {
+            'versionId': uri.version_id,
+            'upgradeType': upgrade or 'patch',
+            'neuronCompilerVersion': compiler or 'StableLatest',
+            'releaseNotes': release_notes or f'Recompiled via {SPARK_SDK}',
+            'label': label,
+            'effectiveStartDate': startdate.isoformat(),
+            'effectiveEndDate': enddate.isoformat(),
+            'tags': StringUtils.join(tags),
+        }
+
+        return await self.request(url, method='POST', body={'request_data': data})
+
+    async def delete(
+        self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
+    ):
+        uri = Uri.validate(uri or UriParams(folder, service))
+        endpoint = f'product/{uri.folder}/engines/delete/{uri.service}'
+        url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
+
+        return await self.request(url, method='DELETE')
+
+    def __encode(
+        self,
+        *,
+        data: Any,
+        encoding: str = 'gzip',
+        content_type: str = 'application/json',
+        extras: Mapping[str, str] = {},
+    ) -> Tuple[bytes, Dict[str, str]]:
+        headers = {'Content-Type': content_type, 'Content-Encoding': encoding, 'Accept-Encoding': encoding, **extras}
+        if encoding == 'gzip':
+            return gzip.compress(json.dumps(data).encode('utf-8')), headers
+        if encoding == 'deflate':
+            return zlib.compress(json.dumps(data).encode('utf-8')), headers
+        else:
+            raise SparkError.sdk(f'encoding "{encoding}" is not supported', {'encoding': encoding})
+
+
+class AsyncCompilation(AsyncApiResource):
+    async def initiate(
+        self,
+        folder: str,
+        service: str,
+        file: BinaryIO,
+        file_name: Optional[str] = None,
+        versioning: Optional[str] = None,
+        start_date: Union[None, str, int, datetime] = None,
+        end_date: Union[None, str, int, datetime] = None,
+        extras: Optional[Dict[str, Any]] = None,
+    ):
+        startdate, enddate = DateUtils.parse(start_date, end_date)
+        uri = Uri.validate(UriParams(folder, service))
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='upload')
+
+        metadata = {
+            'request_data': {
+                'effective_start_date': startdate.isoformat(),
+                'effective_end_date': enddate.isoformat(),
+                'version_difference': versioning or 'minor',
+                **(extras or {}),
+            },
+        }
+        form = {'engineUploadRequestEntity': json.dumps(metadata)}
+        files = {'serviceFile': (file_name or f'{uri.service}.xlsx', file)}
+
+        response = await self.request(url, method='POST', form=form, files=files)
+        if isinstance(response.data, dict) and response.data.get('response_data'):
+            doc_id = response.data.get('response_data', {}).get('original_file_documentid')
+            self.logger.info(f'service file uploaded <{doc_id}>')
+        return response
+
+    async def get_status(
+        self,
+        folder: str,
+        service: str,
+        job_id: str,
+        max_retries: Optional[int] = None,
+        retry_interval: Optional[float] = None,
+        throwable: bool = True,
+    ):
+        """Polls the compilation job status until it's completed or timed out."""
+        max_retries = max_retries or self.config.max_retries
+        retry_interval = retry_interval or self.config.retry_interval
+
+        uri = Uri.validate(UriParams(folder, service))
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint=f'getcompilationprogess/{job_id}')
+
+        retries = 0
+        response = await self.request(url)
+        while True:
+            response_data = isinstance(response.data, dict) and response.data.get('response_data', {}) or {}
+            progress, status = response_data.get('progress', 0), response_data.get('status')
+
+            if progress == 100 and status == 'Success':
+                return response
+
+            if progress < 100 and retries < max_retries:
+                self.logger.info(f'waiting for compilation job to complete - {progress}%')
+
+                retries += 1
+                time.sleep(get_retry_timeout(retries, retry_interval))
+                response = await self.request(url)
+            else:
+                err_msg = f'compilation job status check timed out after {retries} attempts'
+                if throwable:
+                    self.logger.error(err_msg)
+                    raise RetryTimeoutError(err_msg, retries=retries, interval=retry_interval)
+                self.logger.warning(err_msg)
+                return response

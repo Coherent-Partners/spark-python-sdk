@@ -2,7 +2,7 @@ from cspark.sdk import sdk_version
 
 __all__ = ['__version__', '__title__', 'about']
 
-__version__ = '0.1.0'
+__version__ = '0.2.0-rc.1'
 
 __title__ = 'Coherent Hybrid Runner Python SDK'
 

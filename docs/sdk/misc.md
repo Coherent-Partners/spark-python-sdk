@@ -22,7 +22,8 @@ This method does not require any arguments as it relies on the current `Spark.Co
 ```python
 import cspark.sdk as Spark
 
-Spark.Client(env='my-env', tenant='my-tenant', token='open').health.check()
+with Spark.Client(env='my-env', tenant='my-tenant', token='open') as spark:
+    response = spark.health.check()
 ```
 
 > [!NOTE]
@@ -126,9 +127,8 @@ it to disk:
 ```python
 import cspark.sdk as Spark
 
-spark = Spark.Client(env='my-env', tenant='my-tenant', token='bearer token')
-with spark.wasm as wasm:
-    response = wasm.download(version_id='uuid')
+with Spark.Client(env='my-env', tenant='my-tenant', token='bearer token') as spark:
+    response = spark.wasm.download(version_id='uuid')
     with open('wasm.zip', 'wb') as file:
         file.write(response.buffer) # write downloaded file to disk
         print('file downloaded successfully 🎉')

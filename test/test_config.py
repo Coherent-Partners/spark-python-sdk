@@ -75,6 +75,20 @@ def test_build_base_url_from_parts():
     assert BaseUrl.of(env='my.env', tenant='tenant').full == VALID_URL
 
 
+def test_build_base_url_from_custom_location():
+    assert BaseUrl.at('my.env/tenant').full == 'https://excel.my.env.coherent.global/tenant'
+    assert BaseUrl.at('my.env/tenant/other/path').full == 'https://excel.my.env.coherent.global/tenant/other/path'
+    assert BaseUrl.at('my.env:tenant', separator=':').full == 'https://excel.my.env.coherent.global/tenant'
+    with pytest.raises(SparkSdkError):
+        BaseUrl.at(None)  # type: ignore
+    with pytest.raises(SparkSdkError):
+        BaseUrl.at('')
+    with pytest.raises(SparkSdkError):
+        BaseUrl.at('env/')
+    with pytest.raises(SparkSdkError):
+        BaseUrl.at('env:tenant')
+
+
 def test_base_url_can_be_converted_to_other_services():
     base_url = BaseUrl.of(url='https://spark.my.env.coherent.global/tenant')  # 'spark' is not a supported service name
     assert base_url.full == 'https://excel.my.env.coherent.global/tenant'

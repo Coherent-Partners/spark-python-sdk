@@ -1,12 +1,13 @@
 [tool.poetry]
 name = "token_validation"
-version = "0.1.0"
+version = "0.2.0"
 description = "Validate JWTs against Keycloak"
 authors = ["Coherent <team@coherent.global>"]
 readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+cspark = "^0.3.0"
 pyjwt = {extras = ["crypto"], version = "^2.10.0"}
 
 [build-system]

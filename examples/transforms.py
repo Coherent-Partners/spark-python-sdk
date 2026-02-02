@@ -32,7 +32,8 @@ if __name__ == '__main__':
     load_dotenv()
 
     try:
-        with Spark.Client().transforms as transforms:
+        with Spark.Client() as spark:
+            transforms = spark.transforms
             list(transforms)
             validate(transforms)
             save(transforms)

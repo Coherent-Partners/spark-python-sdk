@@ -53,18 +53,18 @@ def run_batch():
 
     pipeline = None
     try:
-        with spark.batches as batches:
-            batch = batches.create(Config.SERVICE_URI, **METADATA).data
-            pipeline = batches.of(batch['id'])  # type: ignore
-            logger.debug(f'Creating batch with ID "{pipeline.batch_id}"...')
+        batches = spark.batches
+        batch = batches.create(Config.SERVICE_URI, **METADATA).data
+        pipeline = batches.of(batch['id'])  # type: ignore
+        logger.debug(f'Creating batch with ID "{pipeline.batch_id}"...')
 
-            processor = ChunkProcessor(False, Config.OUTPUT_DIR)
-            elapsed_time = process_chunks(pipeline, processor)
-            pipeline.dispose()
+        processor = ChunkProcessor(False, Config.OUTPUT_DIR)
+        elapsed_time = process_chunks(pipeline, processor)
+        pipeline.dispose()
 
-            status = pipeline.get_status().data
-            avg = status['records_completed'] / elapsed_time  # type: ignore
-            logger.debug(f'{avg} records per second (on average)')
+        status = pipeline.get_status().data
+        avg = status['records_completed'] / elapsed_time  # type: ignore
+        logger.debug(f'{avg} records per second (on average)')
 
     except Exception as exc:
         logger.error(exc)
@@ -75,7 +75,7 @@ def run_batch():
         if pipeline:
             if pipeline.state == 'open':
                 pipeline.dispose()
-            pipeline.close()
+        spark.close()
 
 
 def handle_interrupt(signal, frame, pipeline):  # noqa: ARG001

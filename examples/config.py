@@ -2,6 +2,7 @@ from typing import cast
 
 import cspark.sdk as Spark
 from dotenv import load_dotenv
+from httpx import Client as HttpClient
 
 
 def print_logs():
@@ -18,7 +19,7 @@ def retrieve_token():
 
     spark = Spark.Client()
     oauth = cast(Spark.OAuth, spark.config.auth.oauth)
-    oauth.retrieve_token(spark.config)  # also return `AccessToken` object.
+    oauth.retrieve_token(spark.config, spark.http_client)  # also return `AccessToken` object.
     print(f'access token: {oauth.access_token}')
 
 
@@ -35,8 +36,8 @@ def fetch_platform_config():
 
 def test_extended_resource():
     config = Spark.Config()  # same as client options.
-    with ExtendedResource(config) as resource:
-        response = resource.fetch_config()
+    with HttpClient(timeout=config.timeout_in_sec) as client:
+        response = ExtendedResource(config, client).fetch_config()
         print(response.data)
 
 

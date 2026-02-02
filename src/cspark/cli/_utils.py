@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import pathlib
 import re
@@ -43,7 +45,7 @@ class Profile:
         def mask(s, count=24):
             return (s or '')[:4] + '*' * count + (s or '')[-4:]
 
-        auth = dict[str, str]()
+        auth = dict()
         if self.api_key:
             auth['api_key'] = self.api_key if show else mask(self.api_key, 12)
         if self.token:

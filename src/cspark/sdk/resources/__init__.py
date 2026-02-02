@@ -1,3 +1,4 @@
+from ._async import *
 from ._base import *
 from ._batches import *
 from ._folders import *

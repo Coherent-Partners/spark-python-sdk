@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 
 import jwt  # type: ignore
 from cspark.sdk import BaseUrl, Config, LoggerOptions, SparkError
-from httpx import Client as HttpClient
 
 
 class JwtConfig(Config):
@@ -17,7 +16,6 @@ class JwtConfig(Config):
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
         logger: Union[bool, Mapping[str, Any], LoggerOptions] = True,
-        http_client: Optional[HttpClient] = None,
     ):
         options = JwtConfig.decode(token, verify=verify)
         if verify and not options['verified']:
@@ -31,7 +29,6 @@ class JwtConfig(Config):
             max_retries=max_retries,
             retry_interval=retry_interval,
             logger=logger,
-            http_client=http_client,
         )
 
     @staticmethod

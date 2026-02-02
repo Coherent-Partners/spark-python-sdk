@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bulk Upload",
+  "type": "object",
+  "definitions": {
+    "service": {
+      "description": "Upload configuration for a single service",
+      "type": "object",
+      "properties": {
+        "folder": {
+          "description": "Name of the Spark folder to upload the service to; it must exist in the tenant.",
+          "type": "string"
+        },
+        "versioning": {
+          "description": "Versioning strategy when incrementing the service version.",
+          "type": "string",
+          "enum": ["patch", "minor", "major"]
+        },
+        "start_date": {
+          "description": "Effective start date of the service.",
+          "type": "string",
+          "format": "date"
+        },
+        "end_date": {
+          "description": "Effective end date of the service.",
+          "type": "string",
+          "format": "date"
+        },
+        "track_user": {
+          "description": "Whether to track the user who created the service.",
+          "type": "boolean",
+          "default": true
+        },
+        "max_retries": {
+          "description": "Number of retries on failure",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 3
+        },
+        "retry_interval": {
+          "description": "Interval between retries in seconds",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10.0,
+          "default": 3.0
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["outdir", "bulk_size"],
+  "properties": {
+    "version": {
+      "description": "Version of the bulk upload configuration",
+      "pattern": "^\\d+\\.\\d+$",
+      "default": "1.0"
+    },
+    "logging": {
+      "description": "Logging level",
+      "type": "string",
+      "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+      "default": "INFO"
+    },
+    "outdir": {
+      "description": "Relative or absolute path to save the reports in CSV format",
+      "type": "string",
+      "format": "uri"
+    },
+    "allowed_formats": {
+      "oneOf": [
+        {
+          "description": "List of supported file extensions",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "examples": [".xlsx", ".xls"]
+        },
+        {
+          "description": "Comma-separated file extensions",
+          "type": "string",
+          "examples": [".xlsx, .xls"]
+        }
+      ]
+    },
+    "max_file_size_mb": {
+      "description": "Maximum file size in megabytes",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 25,
+      "default": 10
+    },
+    "bulk_size": {
+      "description": "Execute bulk operations asynchronously in batches of this size",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 5
+    },
+    "upload": {
+      "description": "Common configuration for the bulk upload",
+      "$ref": "#/definitions/service",
+      "required": ["folder"]
+    },
+    "services": {
+      "oneOf": [
+        {
+          "description": "List of file paths to upload",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "description": "File name is used as the service name",
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        {
+          "description": "Detailed configuration per service",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["name", "file"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "description": "Name of the service to create",
+                "type": "string"
+              },
+              "file": {
+                "description": "Path to the file to upload",
+                "type": "string",
+                "format": "binary"
+              },
+              "using": {
+                "description": "Using this specific configuration for the service",
+                "$ref": "#/definitions/service"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

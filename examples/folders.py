@@ -41,10 +41,12 @@ if __name__ == '__main__':
     load_dotenv()
 
     try:
-        with Spark.Client().folders as folders:
+        with Spark.Client() as spark:
+            folders = spark.folders
             list_categories(folders)
             save_category(folders)
             delete_category(folders)
+
             list(folders)
             create(folders)
             update(folders)

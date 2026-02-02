@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import pathlib
 from datetime import datetime, timedelta
@@ -5,6 +7,7 @@ from typing import Union
 
 import click
 from cspark.sdk import Config, OAuth, SparkApiError
+from httpx import Client as HttpClient
 from rich.console import Console
 
 from .._utils import DATE_FORMAT, HOME_DIR, Profile, get_active_profile, load_profiles
@@ -196,7 +199,8 @@ class AuthLoginCommand(click.Command):
 
         console = Console()
         try:
-            access_token = OAuth(oauth).retrieve_token(config)
+            with HttpClient(timeout=config.timeout_in_sec) as client:
+                access_token = OAuth(oauth).retrieve_token(config, client)
 
             path = HOME_DIR / f'{profile.name}_auth.json'
             with path.open('w') as file:
