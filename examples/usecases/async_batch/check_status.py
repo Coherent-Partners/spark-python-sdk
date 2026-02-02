@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 # Usage:
 #   export CSPARK_API_KEY=...
-#   python3 check_status.py --base-url 'https://excel.uat.us.coherent/global/my-tenant'
+#   python3 check_status.py --base-url 'https://excel.my-env.coherent.global/my-tenant'
 
 
 def print_separator(char: str = '-', width: int = 100) -> None:

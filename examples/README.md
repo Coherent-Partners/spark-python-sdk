@@ -102,6 +102,7 @@ The [use cases](./usecases/) are standalone projects that demonstrate common sce
 - [Asynchronous batch processing](./usecases/async_batch/readme.md)
 - [Promote services across tenants or environments](./usecases/service_promotion/readme.md)
 - [Validate JWTs against Keycloak](./usecases/token_validation/readme.md)
+- [Bulk upload services to Spark](./usecases/bulk_upload/readme.md)
 
 > [!NOTE]
 >

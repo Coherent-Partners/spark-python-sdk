@@ -7,7 +7,7 @@ readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-cspark = "^0.3.0-rc.1"
+cspark = "^0.3.0"
 pyjwt = {extras = ["crypto"], version = "^2.10.0"}
 
 [build-system]

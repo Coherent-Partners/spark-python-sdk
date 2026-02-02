@@ -7,7 +7,7 @@ readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-cspark = "^0.3.0-rc.1"
+cspark = "^0.3.0"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.0.1"

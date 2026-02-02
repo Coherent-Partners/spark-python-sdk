@@ -4,6 +4,8 @@ This guide should serve as a comprehensive reference for the SDK. It covers all
 the verbs (or methods) and parameters available in the SDK. Additional information
 can be found on the [Spark's User Guide](https://docs.coherent.global) page.
 
+> See the [migration guide](./migration.md) for details on the changes between [0.2.x] and [0.3.x].
+
 ## Table of Contents
 
 - [Authentication](./sdk/authentication.md)
@@ -282,3 +284,7 @@ or submit a pull request following these [guidelines](../CONTRIBUTING.md).
 Happy coding! 🚀
 
 [Back to top](#sdk-documentation) or [Next: Authentication](./sdk/authentication.md)
+
+<!-- References -->
+[0.2.x]: https://github.com/Coherent-Partners/spark-python-sdk/tree/release/0.2.x/docs
+[0.3.x]: https://github.com/Coherent-Partners/spark-python-sdk/tree/main/docs

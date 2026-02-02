@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
-## 0.3.0-rc.2 (2026-01-16)
+## 0.3.0 (2026-02-02)
 
 - Describe import and export jobs across a tenant
 - Introduce additional metadata when creating a service
@@ -13,14 +13,12 @@ for commit guidelines.
   - `max_output_size` parameter was renamed to `max_output_in_mb`
   - add fail-safe `extras` to support additional parameters in the request body
 - Remove `dataclasses` dependency (supported as built-in from Python 3.7+)
+- BREAKING CHANGES:
+  - Refactor synchronous clients to use context manager pattern
+  - Add asynchronous client and resources for both SaaS and Hybrid Runner APIs
+  - Add basic tests for asynchronous client and resources
+  - Add migration guide for 0.2.x to 0.3.x (see [migration guide](./docs/migration.md))
 - Update documentation and tests to reflect changes
-
-## 0.3.0-rc.1 (2025-12-16)
-
-- Refactor synchronous clients to use context manager pattern
-- Add asynchronous client and resources for both SaaS and Hybrid Runner APIs
-- Add basic tests for asynchronous client and resources
-- Update documentation and examples for both SaaS and Hybrid Runner APIs
 
 ## 0.2.3 (2025-10-15)
 

@@ -220,6 +220,15 @@ class BaseUrl:
             cause=json.dumps({'url': url, 'tenant': tenant, 'env': env}),
         )
 
+    @staticmethod
+    def at(location: str, separator: str = '/') -> 'BaseUrl':
+        """Builds a base URL from the environment and tenant combination (e.g. 'my.env/my-tenant')."""
+        try:
+            env, tenant = str(location).strip().split(separator, maxsplit=1)
+            return BaseUrl.of(env=env, tenant=tenant)
+        except ValueError as e:
+            raise SparkError.sdk(message='cannot build base URL from invalid location', cause=location) from e
+
 
 class HealthUrl(BaseUrl):
     def __init__(self, base_url: str):
