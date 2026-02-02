@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 from json import dumps
 from typing import BinaryIO, List, Mapping, Optional, Union

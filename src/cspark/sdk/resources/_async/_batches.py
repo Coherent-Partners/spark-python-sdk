@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from json import dumps
 from math import ceil
 from typing import Any, Dict, List, Optional, Union, cast
