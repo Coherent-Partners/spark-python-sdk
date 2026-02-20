@@ -23,6 +23,25 @@ def retrieve_token():
     print(f'access token: {oauth.access_token}')
 
 
+def decode_token():
+    access_token = 'some-access-token'
+    decoded = Spark.JwtConfig.decode(access_token, verify=True)
+    print(decoded)
+
+
+def start_client_from_token_only():
+    access_token = 'some-access-token'
+    # create a config using JwtConfig (with additional client options if needed)
+    config = Spark.JwtConfig(access_token, verify=True)  # verify=True will validate the token signature.
+    client = Spark.Client.use(config)
+    print(client.config)
+
+    # or use a decoded token to extract base_url and tenant
+    decoded = Spark.JwtConfig.decode(access_token, verify=True)  # will fail to decode if signature is invalid.
+    client = Spark.Client(base_url=decoded['base_url'], tenant=decoded['tenant'], token=access_token)
+    print(client.config)
+
+
 def check_health(env='uat.us'):
     response = Spark.Client.health_check(env)
     print(response.data)

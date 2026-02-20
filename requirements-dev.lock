@@ -21,7 +21,8 @@ certifi==2024.6.2
     # via httpcore
     # via httpx
     # via requests
-cffi==1.17.1
+cffi==2.0.0
+    # via cryptography
     # via xattr
 charset-normalizer==3.4.0
     # via requests
@@ -33,6 +34,8 @@ click==8.1.7
 crashtest==0.4.1
     # via cleo
     # via poetry
+cryptography==46.0.5
+    # via pyjwt
 distlib==0.3.9
     # via virtualenv
 dulwich==0.21.7
@@ -108,6 +111,8 @@ pycparser==2.22
     # via cffi
 pygments==2.18.0
     # via rich
+pyjwt==2.11.0
+    # via cspark
 pyproject-hooks==1.2.0
     # via build
     # via poetry

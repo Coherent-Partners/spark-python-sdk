@@ -3,6 +3,7 @@
 [![PyPI version][version-img]][version-url]
 [![CI build][ci-img]][ci-url]
 [![License][license-img]][license-url]
+[![Ask DeepWiki][deepwiki-img]][deepwiki-url]
 
 The Coherent Spark Python SDK is designed to elevate the developer experience and
 provide convenient access to Coherent Spark APIs.
@@ -294,6 +295,8 @@ conduct, and the process for submitting pull requests.
 [license-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/LICENSE
 [ci-img]: https://github.com/Coherent-Partners/spark-python-sdk/workflows/Build/badge.svg
 [ci-url]: https://github.com/Coherent-Partners/spark-python-sdk/actions/workflows/build.yml
+[deepwiki-img]: https://deepwiki.com/badge.svg
+[deepwiki-url]: https://deepwiki.com/Coherent-Partners/spark-python-sdk
 
 [api-key-docs]: https://docs.coherent.global/spark-apis/authorization-api-keys
 [bearer-token-docs]: https://docs.coherent.global/spark-apis/authorization-bearer-token

@@ -67,6 +67,23 @@ spark = Spark.Client(token='Bearer my-access-token')
 spark = Spark.Client(token='my-access-token')
 ```
 
+Bearer tokens also carry additional Spark settings that can be extracted and simplify
+the creation of a `Spark.Client` instance. To harness this capability, you're required
+to install this SDK using `cspark[jwt]` extra, which includes the [`pyjwt[crypto]`][pyjwt-crypto]
+library. In short, the SDK can and will automatically try to decode, validate, and
+extract base URL and tenant name from the token when using `Spark.JwtConfig`.
+
+```py
+import cspark.sdk as Spark
+
+config = Spark.JwtConfig(token='my-access-token', verify=True) # verify=True will validate the token signature.
+client = Spark.Client.use(config)
+```
+
+Note that `Spark.JwtConfig` is simply an extension of `Spark.Config` with the sole
+goal of decoding and validating JSON web tokens (JWT). Other client options can be
+specified as well if needed.
+
 ## Client Credentials Grant
 
 The [OAuth2.0 client credentials grant][oauth2] is the preferred scheme to handle
@@ -152,3 +169,4 @@ the following order: OAuth2.0 client credentials grant > API key > Bearer token.
 [bearer-token]: https://docs.coherent.global/spark-apis/authorization-bearer-token
 [oauth2]: https://docs.coherent.global/spark-apis/authorization-client-credentials
 [python-dotenv]: https://pypi.org/project/python-dotenv/
+[pyjwt-crypto]: https://pyjwt.readthedocs.io/en/stable/usage.html

@@ -13,8 +13,12 @@ anyio==4.4.0
 certifi==2024.6.2
     # via httpcore
     # via httpx
+cffi==2.0.0
+    # via cryptography
 click==8.1.7
     # via cspark
+cryptography==46.0.5
+    # via pyjwt
 h11==0.14.0
     # via httpcore
 httpcore==1.0.5
@@ -34,8 +38,12 @@ pfzy==0.3.4
     # via inquirerpy
 prompt-toolkit==3.0.47
     # via inquirerpy
+pycparser==3.0
+    # via cffi
 pygments==2.18.0
     # via rich
+pyjwt==2.11.0
+    # via cspark
 pyyaml==6.0.2
     # via cspark
 rich==13.8.1

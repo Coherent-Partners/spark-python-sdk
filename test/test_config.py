@@ -1,10 +1,15 @@
 import pytest
-from cspark.sdk import BaseUrl, Config, HealthUrl, SparkSdkError
+from cspark.sdk import BaseUrl, Config, HealthUrl, JwtConfig, SparkSdkError
 from cspark.sdk._constants import *
 
 BASE_URL = 'https://excel.test.coherent.global'
 TENANT_NAME = 'tenant-name'
 API_KEY = 'some-api-key'
+TOKEN = (
+    'eyJhbGciOiJIUzI1NiJ9.'
+    'eyJpc3MiOiJodHRwczovL2tleWNsb2FrLm15LWVudi5jb2hlcmVudC5nbG9iYWwvYXV0aC9yZWFsbXMvbXktdGVuYW50IiwicmVhbG0iOiJteS10ZW5hbnQifQ.'
+    '9G0zF-XAN9EpDLu11tmqkRwNFU52ecoGz4vTq0NEJBw'
+)  # this unsigned token uses HS256 algorithm for testing but Coherent uses RS256 algorithm.
 
 
 def test_throw_sdk_error_if_base_url_or_auth_is_missing():
@@ -63,6 +68,45 @@ def test_copied_with_new_values():
     assert copy.base_url.value == 'https://excel.prod.coherent.global'
     assert copy.auth.api_key == '***-key'
     assert copy.base_url.tenant == 'new-tenant'
+
+
+def test_jwt_config_can_decode_token_to_basic_client_options():
+    decoded = JwtConfig.decode(TOKEN, verify=False)
+    assert decoded['token'] == TOKEN
+    assert decoded['base_url'] == 'https://excel.my-env.coherent.global'
+    assert decoded['tenant'] == 'my-tenant'
+    assert decoded['verified'] is False
+    assert isinstance(decoded['decoded'], dict)
+    assert 'iss' in decoded['decoded']
+    assert 'realm' in decoded['decoded']
+
+
+def test_jwt_config_can_build_client_config_from_token():
+    config = JwtConfig(TOKEN, verify=False, max_retries=2, retry_interval=5)
+    assert config.base_url.value == 'https://excel.my-env.coherent.global'
+    assert config.base_url.tenant == 'my-tenant'
+    assert config.auth.token == TOKEN
+    assert config.timeout == DEFAULT_TIMEOUT_IN_MS
+    assert config.max_retries == 2
+    assert config.retry_interval == 5
+    assert config.has_headers is False
+
+
+def test_jwt_config_should_throw_error_if_token_is_invalid():
+    with pytest.raises(SparkSdkError):
+        JwtConfig(token='invalid-token', verify=False)
+    with pytest.raises(SparkSdkError):
+        JwtConfig.decode('invalid-token', verify=False, raise_if_invalid=True)
+
+
+def test_jwt_config_cannot_decode_invalid_token():
+    decoded = JwtConfig.decode('invalid-token', verify=False)
+    assert decoded['token'] == 'invalid-token'
+    assert decoded['base_url'] is None
+    assert decoded['tenant'] is None
+    assert decoded['verified'] is False
+    assert isinstance(decoded['decoded'], str)
+    assert decoded['decoded'].startswith('invalid token')
 
 
 def test_build_base_url_from_parts():
