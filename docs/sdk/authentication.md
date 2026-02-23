@@ -80,7 +80,7 @@ config = Spark.JwtConfig(token='my-access-token', verify=True) # verify=True wil
 client = Spark.Client.use(config)
 ```
 
-Note that `Spark.JwtConfig` is simply an extension of `Spark.Config` with the sole
+Note that `Spark.JwtConfig` (Python 3.8+ only) is simply an extension of `Spark.Config` with the sole
 goal of decoding and validating JSON web tokens (JWT). Other client options can be
 specified as well if needed.
 
