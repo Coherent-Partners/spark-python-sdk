@@ -44,7 +44,7 @@ class JwtConfig(Config):
 
         issuer = decoded.get('iss')
         if verify:
-            valid, decoded = JwtConfig.validate(token, issuer)
+            valid, decoded = JwtConfig.validate(token, issuer)  # type: ignore
 
         if isinstance(decoded, dict):
             url, tenant = urlparse(issuer), decoded.get('realm')

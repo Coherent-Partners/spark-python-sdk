@@ -262,7 +262,7 @@ always handle these errors to avoid disrupting the flow of your application.
 ```py
 from cspark.sdk import Client, SparkError
 
-spark = Client(api_key='open')
+spark = Client(base_url='...', api_key='open')
 try:
     response = spark.services.execute('my-folder/my-service')
     # Do something with the response.

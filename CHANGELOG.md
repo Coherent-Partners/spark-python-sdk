@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.3.1 (2026-02-20)
+
+- Add support for decoding and validating JSON web tokens (JWT)
+- Introduce `Spark.JwtConfig` class to simplify the creation of a `Spark.Client` instance from a JWT
+- Add ability to check the existence of a folder or service in Spark
+- Update documentation and examples to reflect changes
+- Add tests for `Spark.JwtConfig` class
+
 ## 0.3.0 (2026-02-02)
 
 - Describe import and export jobs across a tenant

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import json
 import os
 import re
-from typing import Any, Mapping, Optional, Union, cast
+from typing import Any, Mapping, Optional, Tuple, Union, cast
 from urllib.parse import urlparse
 
 from httpx import AsyncClient as AsyncHttpClient
@@ -10,10 +12,10 @@ from httpx import Client as HttpClient
 from ._constants import *
 from ._errors import SparkError
 from ._logger import LoggerOptions
-from ._utils import StringUtils
+from ._utils import StringUtils, import_optional_module
 from ._validators import Validators
 
-__all__ = ['Config', 'BaseUrl', 'HealthUrl']
+__all__ = ['Config', 'JwtConfig', 'BaseUrl', 'HealthUrl']
 
 
 class Config:
@@ -137,6 +139,70 @@ class Config:
         from .resources._async import AsyncPlatform
 
         return await AsyncPlatform(self, client or AsyncHttpClient(timeout=self.timeout_in_sec)).get_config()
+
+
+class JwtConfig(Config):
+    def __init__(
+        self,
+        token: str,
+        *,
+        verify: bool = True,
+        timeout: Optional[float] = None,
+        max_retries: Optional[int] = None,
+        retry_interval: Optional[float] = None,
+        logger: Union[bool, Mapping[str, Any], LoggerOptions] = True,
+    ):
+        options = JwtConfig.decode(token, verify=verify)
+        if verify and not options['verified']:
+            raise SparkError.sdk(options['decoded'], cause=f'{options["token"][:32]}...')
+
+        super().__init__(
+            token=options['token'],
+            base_url=options['base_url'],
+            tenant=options['tenant'],
+            timeout=timeout,
+            max_retries=max_retries,
+            retry_interval=retry_interval,
+            logger=logger,
+        )
+
+    @staticmethod
+    def decode(token: str, *, verify: bool = True, raise_if_invalid: bool = False) -> Mapping[str, Any]:
+        valid, base_url, tenant = False, None, None
+        token = re.sub(r'(?i)\bBearer\b', '', token).strip()
+
+        try:
+            jwt = import_optional_module('jwt', 'pyjwt[crypto]')
+            decoded = jwt.decode(token, options={'verify_signature': False})
+        except ImportError as err:
+            raise SparkError.sdk('install cspark[jwt] to decode access tokens', cause=str(err)) from err
+        except Exception as exc:
+            msg = f'invalid token ({exc})'
+            if raise_if_invalid:
+                raise SparkError.sdk(msg, cause=token) from exc
+            return {'token': token, 'base_url': base_url, 'tenant': tenant, 'verified': valid, 'decoded': msg}
+
+        issuer = decoded.get('iss')
+        if verify:
+            valid, decoded = JwtConfig.validate(token, issuer)
+
+        if isinstance(decoded, dict):
+            url, tenant = urlparse(issuer), decoded.get('realm')
+            base_url = BaseUrl.of(url=f'{url.scheme}://{url.netloc}', tenant=tenant).to('excel')
+        return {'token': token, 'base_url': base_url, 'tenant': tenant, 'verified': valid, 'decoded': decoded}
+
+    @staticmethod
+    def validate(token: str, issuer: str, *, audience: str = 'product-factory', algorithms: Tuple[str] = ('RS256',)):
+        try:
+            jwt = import_optional_module('jwt', 'pyjwt[crypto]')
+            jwks_client = jwt.PyJWKClient(f'{issuer}/protocol/openid-connect/certs')
+            signing_key = jwks_client.get_signing_key_from_jwt(token)
+            decoded = jwt.decode(token, key=signing_key, algorithms=algorithms, audience=audience, issuer=issuer)
+            return True, decoded
+        except ImportError as err:
+            raise SparkError.sdk('install cspark[jwt] to validate json web tokens (JWT)', cause=str(err)) from err
+        except Exception as exc:
+            return False, str(exc)
 
 
 class BaseUrl:

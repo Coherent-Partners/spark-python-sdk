@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import importlib
 import math
 import random
 import re
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union, cast
 
 from ._constants import DEFAULT_RETRY_INTERVAL, RETRY_RANDOMIZATION_FACTOR
+
+if TYPE_CHECKING:
+    import types
 
 
 def is_int(value: Any | None) -> bool:
@@ -149,3 +153,11 @@ class DateUtils:
                 return datetime.fromisoformat(value)
             except ValueError:
                 return datetime.strptime(value, '%Y-%m-%d')
+
+
+def import_optional_module(name: str, package: str = '') -> types.ModuleType:
+    try:
+        return importlib.import_module(name)
+    except ImportError as err:
+        msg = f"failed to import '{name}' module; make sure to have '{package or name}' installed."
+        raise ImportError(msg) from err

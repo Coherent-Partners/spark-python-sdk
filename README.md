@@ -3,6 +3,7 @@
 [![PyPI version][version-img]][version-url]
 [![CI build][ci-img]][ci-url]
 [![License][license-img]][license-url]
+[![Ask DeepWiki][deepwiki-img]][deepwiki-url]
 
 The Coherent Spark Python SDK is designed to elevate the developer experience and
 provide convenient access to Coherent Spark APIs.
@@ -99,7 +100,7 @@ Alternatively, a combination of `env` and `tenant` options can be used to constr
 the base URL.
 
 ```py
-spark = Spark.Client(env='my-env', tenant='my-tenant')
+spark = Spark.Client(env='my-env', tenant='my-tenant', ...)
 ```
 
 > For more advanced customizations, you can extend the `BaseUrl` class and make
@@ -113,7 +114,7 @@ The SDK supports three types of authentication schemes:
   (also known as synthetic key), which is sensitive and should be kept secure.
 
 ```py
-spark = Spark.Client(api_key='my-api-key')
+spark = Spark.Client(api_key='my-api-key', ...)
 ```
 
 > **PRO TIP:**
@@ -126,9 +127,9 @@ spark = Spark.Client(api_key='my-api-key')
   limited time and should be refreshed periodically.
 
 ```py
-spark = Spark.Client(token='Bearer my-access-token') # with prefix
+spark = Spark.Client(token='Bearer my-access-token', ...) # with prefix
 # or
-spark = Spark.Client(token='my-access-token') # without prefix
+spark = Spark.Client(token='my-access-token', ...) # without prefix
 ```
 
 - `oauth` (default: `os.getenv['CSPARK_CLIENT_ID']` and `os.getenv['CSPARK_CLIENT_SECRET']` or
@@ -137,9 +138,9 @@ spark = Spark.Client(token='my-access-token') # without prefix
   the JSON file containing the credentials.
 
 ```py
-spark = Spark.Client(oauth={'client_id': 'my-client-id', 'client_secret': 'my-client-secret'})
+spark = Spark.Client(oauth={'client_id': 'my-client-id', 'client_secret': 'my-client-secret'}, ...)
 # or
-spark = Spark.Client(oauth='path/to/oauth/credentials.json')
+spark = Spark.Client(oauth='path/to/oauth/credentials.json', ...)
 ```
 
 ### Additional Settings
@@ -165,14 +166,15 @@ spark = Spark.Client(oauth='path/to/oauth/credentials.json')
     - `level` (default: `DEBUG`) defines the [logging level][logging-level] for the logs.
 
 ```py
-spark = Spark.Client(logger=False)
+spark = Spark.Client(logger=False, ...)
 # or
-spark = Spark.Client(logger={'colorful': False})
+spark = Spark.Client(logger={'colorful': False}, ...)
 ```
 
 - `http_client` (default: `None`) indicates the custom HTTP client to use to
-  perform HTTP requests. It is an instance of [httpx.Client][httpx-client] and
-  can be used to configure proxy, cookies, timeout, SSL verification, etc.
+  perform HTTP requests. It is an instance of [httpx.Client][httpx-client] (or
+  [httpx.AsyncClient][httpx-async-client]) and can be used to configure proxy,
+  cookies, timeout, SSL verification, etc.
 
 ```py
 import httpx
@@ -224,7 +226,7 @@ OAuth2.0 Client Credentials flow:
 
 [Folders API](./docs/sdk/folders.md) - manages folders:
 
-- `Spark.folders.categories.list()` gets the list of folder categories.
+- `Spark.folders.exists(name)` checks if a folder exists.
 - `Spark.folders.create(data)` creates a new folder with additional info.
 - `Spark.folders.find(name)` finds folders by name, status, category, or favorite.
 - `Spark.folders.update(id, data)` updates a folder's information by id.
@@ -232,6 +234,7 @@ OAuth2.0 Client Credentials flow:
 
 [Services API](./docs/sdk/services.md) - manages Spark services:
 
+- `Spark.services.exists(uri)` checks if a service exists.
 - `Spark.services.create(data)` creates a new Spark service.
 - `Spark.services.execute(uri, inputs)` executes a Spark service.
 - `Spark.services.transform(uri, inputs)` executes a Spark service using `Transforms`.
@@ -268,6 +271,7 @@ OAuth2.0 Client Credentials flow:
 - `Spark.impex.exp(data)` exports Spark entities (versions, services, or folders).
 - `Spark.impex.imp(data)` imports previously exported Spark entities into the platform.
 - `Spark.impex.exports.cancel(job_id)` cancels an in-progress export job.
+- `Spark.impex.exports.describe()` describes export jobs across the tenant.
 
 [Other APIs](./docs/sdk/misc.md) - for other functionality:
 
@@ -294,6 +298,8 @@ conduct, and the process for submitting pull requests.
 [license-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/LICENSE
 [ci-img]: https://github.com/Coherent-Partners/spark-python-sdk/workflows/Build/badge.svg
 [ci-url]: https://github.com/Coherent-Partners/spark-python-sdk/actions/workflows/build.yml
+[deepwiki-img]: https://deepwiki.com/badge.svg
+[deepwiki-url]: https://deepwiki.com/Coherent-Partners/spark-python-sdk
 
 [api-key-docs]: https://docs.coherent.global/spark-apis/authorization-api-keys
 [bearer-token-docs]: https://docs.coherent.global/spark-apis/authorization-bearer-token
@@ -305,3 +311,4 @@ conduct, and the process for submitting pull requests.
 [uri-url]: https://github.com/Coherent-Partners/spark-python-sdk/blob/main/src/cspark/sdk/resources/_base.py
 [logging-level]: https://docs.python.org/3/library/logging.html#logging-levels
 [httpx-client]: https://www.python-httpx.org/api/#client
+[httpx-async-client]: https://www.python-httpx.org/async

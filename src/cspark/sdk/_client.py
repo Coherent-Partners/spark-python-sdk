@@ -125,6 +125,21 @@ class Client:
         return API.ImpEx.only(self.config, self.http_client)
 
     @staticmethod
+    def use(config: Config, http_client: Optional[HttpClient] = None) -> 'Client':
+        """Creates a new client using an existing config."""
+        return Client(
+            base_url=config.base_url,
+            token=config.auth.token,
+            api_key=config.auth.api_key,
+            oauth=config.auth.oauth.to_dict() if config.auth.oauth else None,
+            timeout=config.timeout,
+            max_retries=config.max_retries,
+            retry_interval=config.retry_interval,
+            logger=config.logger,
+            http_client=http_client,
+        )
+
+    @staticmethod
     def health_check(
         base_url: Union[str, BaseUrl], token: str = 'open', http_client: Optional[HttpClient] = None, **options: Any
     ):
@@ -248,6 +263,21 @@ class AsyncClient:
     def impex(self) -> API.AsyncImpEx:
         """The resource to import and export Spark services."""
         return API.AsyncImpEx.only(self.config, self.http_client)
+
+    @staticmethod
+    async def use(config: Config, http_client: Optional[AsyncHttpClient] = None) -> 'AsyncClient':
+        """Creates a new client using an existing config."""
+        return AsyncClient(
+            base_url=config.base_url,
+            token=config.auth.token,
+            api_key=config.auth.api_key,
+            oauth=config.auth.oauth.to_dict() if config.auth.oauth else None,
+            timeout=config.timeout,
+            max_retries=config.max_retries,
+            retry_interval=config.retry_interval,
+            logger=config.logger,
+            http_client=http_client,
+        )
 
     @staticmethod
     async def health_check(

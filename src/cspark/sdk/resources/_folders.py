@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, BinaryIO, Optional, Union
+from typing import Any, BinaryIO, Mapping, Optional, Union
 
 from .._constants import SPARK_SDK
 from .._errors import SparkApiError, SparkError
@@ -13,12 +13,17 @@ __all__ = ['Folders']
 
 class Folders(ApiResource):
     @property
-    def base_uri(self) -> dict[str, str]:
+    def base_uri(self) -> Mapping[str, str]:
         return {'base_url': self.config.base_url.value, 'version': 'api/v1'}
 
     @property
     def categories(self) -> 'Categories':
         return Categories(self.config, self._client)
+
+    def exists(self, name: str):
+        response = self.check_existence(name)
+        status = response.data.get('data', False) if isinstance(response.data, dict) else False
+        return response.status == 200 and status is True
 
     def find(
         self,
@@ -109,6 +114,10 @@ class Folders(ApiResource):
         files = {'coverImage': filename and (filename, image) or image}
 
         return self.request(url, method='POST', form={'id': id}, files=files)
+
+    def check_existence(self, name: str):
+        url = Uri.of(None, endpoint=f'product/isproductexists/{name}', **self.base_uri)
+        return self.request(url, method='POST')
 
 
 class Categories(ApiResource):

@@ -72,5 +72,5 @@ jobs:
 
       - name: Run tests
         run: |
-          pip install pytest uvicorn anyio trio
+          pip install pytest uvicorn anyio trio pyjwt[crypto]>=2.10.0
           pytest test/ -v
