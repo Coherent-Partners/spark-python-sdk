@@ -19,6 +19,13 @@ class Services(ApiResource):
     def compilation(self):
         return Compilation(self.config, self._client)
 
+    def exists(
+        self, uri: Union[None, str, UriParams] = None, *, folder: Optional[str] = None, service: Optional[str] = None
+    ):
+        response = self.check_existence(uri or UriParams(folder, service))
+        data = response.data.get('response_data', {}) if isinstance(response.data, dict) else {}
+        return response.status == 200 and data.get('is_exists', False) is True
+
     def create(
         self,
         name: str,
@@ -463,6 +470,18 @@ class Services(ApiResource):
         url = Uri.of(base_url=self.config.base_url.value, version='api/v1', endpoint=endpoint)
 
         return self.request(url, method='DELETE')
+
+    def check_existence(
+        self,
+        uri: Union[None, str, UriParams] = None,
+        *,
+        folder: Optional[str] = None,
+        service: Optional[str] = None,
+    ):
+        uri = Uri.validate(uri or UriParams(folder, service))
+        url = Uri.of(uri, base_url=self.config.base_url.full, endpoint='exists')
+
+        return self.request(url)
 
     def __encode(
         self,

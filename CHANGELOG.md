@@ -8,6 +8,7 @@ for commit guidelines.
 
 - Add support for decoding and validating JSON web tokens (JWT)
 - Introduce `Spark.JwtConfig` class to simplify the creation of a `Spark.Client` instance from a JWT
+- Add ability to check the existence of a folder or service in Spark
 - Update documentation and examples to reflect changes
 - Add tests for `Spark.JwtConfig` class
 

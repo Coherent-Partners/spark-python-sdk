@@ -21,6 +21,11 @@ class AsyncFolders(AsyncApiResource):
     def categories(self) -> 'AsyncCategories':
         return AsyncCategories(self.config, self._client)
 
+    async def exists(self, name: str):
+        response = await self.check_existence(name)
+        status = response.data.get('data', False) if isinstance(response.data, dict) else False
+        return response.status == 200 and status is True
+
     async def find(
         self,
         name: Optional[str] = None,
@@ -110,6 +115,10 @@ class AsyncFolders(AsyncApiResource):
         files = {'coverImage': filename and (filename, image) or image}
 
         return self.request(url, method='POST', form={'id': id}, files=files)
+
+    async def check_existence(self, name: str):
+        url = Uri.of(None, endpoint=f'product/isproductexists/{name}', **self.base_uri)
+        return await self.request(url, method='POST')
 
 
 class AsyncCategories(AsyncApiResource):
