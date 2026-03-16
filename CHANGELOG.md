@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.3.2 (2026-03-16)
+
+- Fix bug in `Spark.History.rehydrate(...)` method: request body now needs to be an empty dictionary.
+- Add ability to pass `extras` parameter to `Spark.History.download(...)` method.
+
 ## 0.3.1 (2026-02-20)
 
 - Add support for decoding and validating JSON web tokens (JWT)

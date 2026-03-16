@@ -42,7 +42,7 @@ class AsyncHistory(AsyncApiResource):
         endpoint = f'download/{call_id}' if legacy else f'download/xml/{call_id}'
         url = Uri.of(uri.pick('folder', 'service'), base_url=self.config.base_url.full, endpoint=endpoint)
         params = {'index': str(index)} if is_int(index) and cast(int, index) >= 0 else None
-        response = await self.request(url, method='POST', params=params)
+        response = await self.request(url, method='POST', params=params, body={})
 
         if isinstance(response.data, dict) and isinstance(response.data['response_data'], dict):
             download_url = response.data['response_data']['download_url']
@@ -65,6 +65,7 @@ class AsyncHistory(AsyncApiResource):
         source_system: Optional[str] = None,
         correlation_id: Optional[str] = None,
         timezone_offset: Optional[str] = None,
+        extras: Optional[dict] = None,
         max_retries: Optional[int] = None,
         retry_interval: Optional[float] = None,
     ):
@@ -80,6 +81,7 @@ class AsyncHistory(AsyncApiResource):
             source_system=source_system,
             correlation_id=correlation_id,
             timezone_offset=timezone_offset,
+            extras=extras,
         )
 
         job_id = isinstance(response.data, dict) and response.data.get('response_data', {}).get('job_id') or ''
@@ -124,6 +126,7 @@ class AsyncLogDownload(AsyncApiResource):
         source_system: Optional[str] = None,
         correlation_id: Optional[str] = None,
         timezone_offset: Optional[str] = None,
+        extras: Optional[dict] = None,
     ):
         type = type.lower() if type.lower() in ['json', 'csv'] else 'json'
         uri = Uri.validate(UriParams(folder, service))
@@ -136,7 +139,7 @@ class AsyncLogDownload(AsyncApiResource):
             call_ids.append(correlation_id)
 
         body = {
-            'request_data': {'call_ids': call_ids, 'timezone_offset': timezone_offset},
+            'request_data': {'call_ids': call_ids, 'timezone_offset': timezone_offset, **(extras or {})},
             'request_meta': {'version_id': version_id},
         }
         if DateUtils.is_date(start_date):
@@ -174,6 +177,7 @@ class AsyncLogDownload(AsyncApiResource):
             progress = response_data.get('progress', 0)
 
             if progress == 100:
+                self.logger.info(f'log download job completed <{job_id}>')
                 return response
 
             if progress < 100 and retries < max_retries:
