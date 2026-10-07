@@ -206,7 +206,7 @@ class JwtConfig(Config):
 
 
 class BaseUrl:
-    __services = ['excel', 'keycloak', 'utility', 'entitystore']
+    __services = ['excel', 'keycloak', 'utility', 'entitystore', 'mcp']
     _service: Optional[str]
     _env: Optional[str]
 

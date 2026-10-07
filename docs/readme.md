@@ -16,6 +16,7 @@ can be found on the [Spark's User Guide](https://docs.coherent.global) page.
 - [ImpEx API](./sdk/impex.md)
 - [Other APIs](./sdk/misc.md)
 - [Hybrid Deployment](./hybrid.md)
+- [MCP Client](./mcp/readme.md)
 
 ## Getting Started
 
@@ -26,7 +27,9 @@ The `cspark` package is a Python library that includes multiple modules:
    with hybrid-deployed services;
 - `cspark.cli` - a module for the CLI application to interact with the Spark platform,
   which is only available when the `cspark[cli]` extra is installed (or via homebrew
-  if you're on macOS).
+  if you're on macOS);
+- `cspark.mcp` - **experimental** client for Coherent's remote MCP server
+  (`pip install 'cspark[mcp]'`; Python 3.10+). See [MCP Client](./mcp/readme.md).
 
 You're most likely interested in the `cspark.sdk` module, which this guide
 is all about. So, you may import the SDK module using the following syntax:

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## Unreleased
+
+- Add experimental `cspark.mcp` client for Coherent's remote MCP server
+  (`pip install 'cspark[mcp]'`; requires Python 3.10+ and `mcp` 1.x).
+
 ## 0.3.2 (2026-03-16)
 
 - Fix bug in `Spark.History.rehydrate(...)` method: request body now needs to be an empty dictionary.
