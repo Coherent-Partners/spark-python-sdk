@@ -65,7 +65,14 @@ jobs:
           name: dist
 
       - name: Install package
-        run: pip install cspark-*.whl
+        run: |
+          whl="$(ls cspark-*.whl)"
+          # The mcp extra requires Python 3.10+. Older interpreters still install the base wheel.
+          if python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)'; then
+            pip install "./${whl}[mcp]"
+          else
+            pip install "./${whl}"
+          fi
 
       - name: Ensure importability
         run: python examples/main.py

@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import os
+import sys
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from cspark.mcp import AsyncMcpClient, McpClient, SparkMcpError
 from cspark.mcp._client import _normalize_tool_result
 from cspark.mcp._tools import omit_none
+
+requires_mcp = pytest.mark.skipif(
+    sys.version_info < (3, 10),
+    reason='cspark[mcp] requires Python 3.10+',
+)
 
 
 def test_omit_none():
@@ -81,18 +87,21 @@ async def test_run_testbed_tool_name():
     )
 
 
+@requires_mcp
 def test_sync_client_requires_context_manager():
     client = McpClient(env='test', tenant='t', token='tok')
     with pytest.raises(SparkMcpError, match='context manager'):
         client.list_tools()
 
 
+@requires_mcp
 def test_async_session_requires_context_manager():
     client = AsyncMcpClient(env='test', tenant='t', token='tok')
     with pytest.raises(SparkMcpError, match='not connected'):
         _ = client.session
 
 
+@requires_mcp
 @pytest.mark.skipif(
     os.getenv('CSPARK_MCP_INTEGRATION') != '1',
     reason='set CSPARK_MCP_INTEGRATION=1 with CSPARK_BEARER_TOKEN, env, and tenant to run',
