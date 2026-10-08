@@ -79,5 +79,14 @@ jobs:
 
       - name: Run tests
         run: |
-          pip install pytest uvicorn anyio trio pyjwt[crypto]>=2.10.0
+          pip install pytest uvicorn anyio trio
+          # PyJWT 2.10+ needs Python 3.9. On 3.7/3.8, newer cryptography only
+          # warns that the interpreter is deprecated, and this suite treats warnings as errors.
+          if python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)'; then
+            pip install 'pyjwt[crypto]>=2.10.0'
+          elif python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'; then
+            pip install 'pyjwt[crypto]>=2.9,<2.10' 'cryptography>=3.4,<47'
+          else
+            pip install 'pyjwt[crypto]>=2.8,<2.9' 'cryptography>=3.4,<44'
+          fi
           pytest test/ -v
