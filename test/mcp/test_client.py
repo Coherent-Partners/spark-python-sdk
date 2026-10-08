@@ -2,9 +2,27 @@ from __future__ import annotations
 
 import os
 import sys
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
+
+try:
+    from unittest.mock import AsyncMock
+except ImportError:  # Python 3.7
+
+    class AsyncMock(MagicMock):
+        """Minimal stand-in for unittest.mock.AsyncMock (added in Python 3.8)."""
+
+        def __call__(self, *args, **kwargs):
+            async def _call():
+                return super(AsyncMock, self).__call__(*args, **kwargs)
+
+            return _call()
+
+        def assert_awaited_once_with(self, *args, **kwargs):
+            return self.assert_called_once_with(*args, **kwargs)
+
+
 from cspark.mcp import AsyncMcpClient, McpClient, SparkMcpError
 from cspark.mcp._client import _normalize_tool_result
 from cspark.mcp._tools import omit_none
