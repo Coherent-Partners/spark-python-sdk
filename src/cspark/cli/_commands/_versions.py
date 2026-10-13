@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import json
-
 import click
 from cspark.sdk import Client, SparkError
-from rich.console import Console
 
 from .._utils import get_active_profile
-from ._api import AliasedGroup, header_option, parse_pairs
+from ._api import AliasedGroup, echo_json, handle_error, header_option, parse_pairs
 
 
 @click.group(
@@ -27,7 +24,6 @@ def versions_cmd():
 @click.option('--latest', is_flag=True, default=False, help='Show only the latest version')
 def list_versions(uri: str, headers: list[str], latest: bool) -> None:
     profile = get_active_profile()
-    console = Console()
 
     try:
         with Client(**profile.to_config()) as client:
@@ -37,10 +33,8 @@ def list_versions(uri: str, headers: list[str], latest: bool) -> None:
         if latest and isinstance(versions, (list, tuple)) and len(versions) > 0:
             versions = versions[0]
 
-        click.echo(json.dumps(versions, indent=2))
+        echo_json(versions)
     except SparkError as err:
-        console.print(f'[red]✗[/red] {err.message}')
-        raise click.exceptions.Exit(1) from err
+        handle_error(err)
     except Exception as exc:
-        console.print(f'[red]✗[/red] {exc}')
-        raise click.exceptions.Exit(1) from exc
+        handle_error(exc)
