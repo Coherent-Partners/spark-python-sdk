@@ -67,9 +67,17 @@ jobs:
       - name: Install package
         run: |
           whl="$(ls cspark-*.whl)"
-          # The mcp extra requires Python 3.10+. Older interpreters still install the base wheel.
+          extras=""
+          # The cli extra requires Python 3.8+.
+          if python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'; then
+            extras="cli"
+          fi
+          # The mcp extra requires Python 3.10+.
           if python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)'; then
-            pip install "./${whl}[mcp]"
+            extras="${extras:+$extras,}mcp"
+          fi
+          if [ -n "$extras" ]; then
+            pip install "./${whl}[${extras}]"
           else
             pip install "./${whl}"
           fi
@@ -89,4 +97,9 @@ jobs:
           else
             pip install 'pyjwt[crypto]>=2.8,<2.9' 'cryptography>=3.4,<44'
           fi
-          pytest test/ -v
+          # CLI tests require the cli extra (Python 3.8+); skip them on older interpreters.
+          if python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'; then
+            pytest test/ -v
+          else
+            pytest test/ -v --ignore=test/cli
+          fi
