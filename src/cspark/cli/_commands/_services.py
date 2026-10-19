@@ -460,6 +460,28 @@ def service_exists(uri: str, headers: list[str]) -> None:
         handle_error(exc)
 
 
+@services_cmd.command(name='version', help='List available versions of a service')
+@click.argument('uri', type=str, metavar='<SERVICE URI>')
+@header_option()
+@click.option('--latest', is_flag=True, default=False, help='Show only the latest version')
+def service_version(uri: str, headers: list[str], latest: bool) -> None:
+    profile = get_active_profile()
+
+    try:
+        with Client(**profile.to_config()) as client:
+            client.config.extra_headers.update(parse_pairs(headers))
+            versions = client.services.get_versions(uri).data
+
+        if latest and isinstance(versions, (list, tuple)) and len(versions) > 0:
+            versions = versions[0]
+
+        echo_json(versions)
+    except SparkError as err:
+        handle_error(err)
+    except Exception as exc:
+        handle_error(exc)
+
+
 @services_cmd.command(name='delete', help='Delete services in a folder (irreversible - use with caution)')
 @click.option('-f', '--folder', type=str, metavar='<FOLDER NAME>', help='Name of the folder to delete services from')
 @click.argument('names', type=str, metavar='<SERVICE NAMES>', nargs=-1)

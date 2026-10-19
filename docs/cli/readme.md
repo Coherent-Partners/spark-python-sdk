@@ -57,18 +57,16 @@ Coherent Spark CLI 0.1.0-beta (sdk v0.3.2)
 | `auth` | OAuth2 login / logout / status |
 | `health` | Check environment health |
 | `folders` | Create, list, update, and delete folders |
-| `services` | Create, execute, validate, and manage services |
-| `versions` | List service versions |
+| `services` | Create, execute, validate, version, and manage services |
 | `transforms` | Manage api/v4 transforms |
 | `logs` | Execution history, downloads, and rehydrate |
-| `impex` | Export / import service packages |
+| `export` | Export service packages |
+| `import` | Import service packages |
 | `wasm` | Download WASM / Nodegen packages |
 | `files` | Authenticated file download by URL |
 
 Most API commands accept `-H` / `--header` to send extra HTTP headers
 (for example `-H "x-request-id: abc"`).
-
----
 
 ## Configuration and authentication
 
@@ -96,16 +94,12 @@ cspark auth status -v        # show token status
 cspark auth logout           # clear cached token
 ```
 
----
-
 ## Health
 
 ```bash
 cspark health check   # print health payload (JSON)
 cspark health ok      # print true/false; exit 1 when unhealthy
 ```
-
----
 
 ## Folders
 
@@ -120,8 +114,6 @@ cspark folders delete my-folder          # interactive confirmation
 
 > Category management (`folders.categories`) is available in the SDK but not
 > exposed in the CLI.
-
----
 
 ## Services
 
@@ -141,8 +133,8 @@ cspark services validate my-folder/my-service --inputs '{"value": 42}' --validat
 cspark services schema my-folder/my-service
 cspark services metadata my-folder/my-service
 cspark services swagger my-folder/my-service -o swagger.json
-cspark versions list my-folder/my-service
-cspark versions list my-folder/my-service --latest
+cspark services version my-folder/my-service
+cspark services version my-folder/my-service --latest
 
 # Create (upload → compile with progress → publish)
 cspark services create my-service \
@@ -169,8 +161,6 @@ cspark services delete -f my-folder my-service
 `compile` and `publish` are not exposed as standalone CLI commands because they
 are subtasks of `create`.
 
----
-
 ## Transforms
 
 Transform definitions are JSON objects with optional fields:
@@ -195,8 +185,6 @@ Example transform file:
 }
 ```
 
----
-
 ## Logs / history
 
 ```bash
@@ -211,33 +199,29 @@ cspark logs rehydrate my-folder/my-service --call-id <CALL_ID> -o rehydrated.xls
 `logs download` waits for the async download job to complete (with a spinner)
 before writing the file.
 
----
-
-## Import / export (ImpEx)
+## Import / export
 
 ```bash
 # Export a folder or service package
-cspark impex export --folder my-folder -o export.zip
-cspark impex export --service my-folder/my-service -o service.zip
+cspark export --folder my-folder -o export.zip
+cspark export --service my-folder/my-service -o service.zip
 
 # Job helpers
-cspark impex export describe
-cspark impex export status <JOB_ID>
-cspark impex export cancel <JOB_ID>
+cspark export describe
+cspark export status <JOB_ID>
+cspark export cancel <JOB_ID>
 
 # Import a package
-cspark impex import ./export.zip -d my-folder/my-service
-cspark impex import ./export.zip -d source/uri=target/uri --if-present add_version
+cspark import ./export.zip -d my-folder/my-service
+cspark import ./export.zip -d source/uri=target/uri --if-present add_version
 
 # Job helpers
-cspark impex import describe
-cspark impex import status <JOB_ID>
+cspark import describe
+cspark import status <JOB_ID>
 ```
 
-`impex export` and `impex import` default to the `run` action. You can also call
-`impex export run` / `impex import run` explicitly.
-
----
+`export` and `import` default to the `run` action. You can also call
+`export run` / `import run` explicitly.
 
 ## WASM and files
 
@@ -247,8 +231,6 @@ cspark wasm download my-folder/my-service --public -o public.zip
 
 cspark files download "https://example.com/path/to/file.zip" -o file.zip
 ```
-
----
 
 ## Common workflows
 
@@ -265,11 +247,11 @@ cspark services execute pricing/quote --inputs '{"premium": 100}'
 
 ```bash
 # On source tenant (active profile = source)
-cspark impex export --folder pricing -o pricing.zip
+cspark export --folder pricing -o pricing.zip
 
 # Switch profile to destination tenant
 cspark config switch
-cspark impex import ./pricing.zip -d pricing/quote --if-present add_version
+cspark import ./pricing.zip -d pricing/quote --if-present add_version
 ```
 
 ### Investigate an execution
@@ -280,8 +262,6 @@ cspark services execute pricing/quote --inputs '{"premium": 100}' --show-all
 cspark logs get <CALL_ID>
 cspark logs rehydrate pricing/quote --call-id <CALL_ID> -o debug.xlsx
 ```
-
----
 
 ## Tips
 

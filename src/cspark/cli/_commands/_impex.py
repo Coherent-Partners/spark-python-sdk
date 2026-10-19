@@ -38,18 +38,7 @@ class DefaultRunGroup(AliasedGroup):
         return super().parse_args(ctx, args)  # type: ignore[return-value]
 
 
-@click.group(
-    name='impex',
-    help='Import and export Spark services',
-    options_metavar='',
-    cls=AliasedGroup,
-    aliases={'exp': 'export', 'imp': 'import'},
-)
-def impex_cmd():
-    pass
-
-
-@impex_cmd.group(name='export', help='Export Spark services', cls=DefaultRunGroup, aliases={})
+@click.group(name='export', help='Export Spark services', cls=DefaultRunGroup)
 def export_cmd():
     pass
 
@@ -163,7 +152,7 @@ def export_cancel(job_id: str, headers: list[str]) -> None:
         handle_error(exc)
 
 
-@impex_cmd.group(name='import', help='Import Spark services', cls=DefaultRunGroup, aliases={})
+@click.group(name='import', help='Import Spark services', cls=DefaultRunGroup)
 def import_cmd():
     pass
 

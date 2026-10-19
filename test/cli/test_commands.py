@@ -12,7 +12,7 @@ from .conftest import make_response
 def test_root_help(runner: CliRunner, cli):
     result = runner.invoke(cli, ['--help'])
     assert result.exit_code == 0
-    for name in ('health', 'services', 'folders', 'transforms', 'logs', 'impex', 'wasm', 'files'):
+    for name in ('health', 'services', 'folders', 'transforms', 'logs', 'export', 'import', 'wasm', 'files'):
         assert name in result.output
 
 
@@ -134,9 +134,9 @@ def test_services_download(runner: CliRunner, cli, mock_client: MagicMock, tmp_p
     assert out.read_bytes() == b'xlsx-bytes'
 
 
-def test_versions_list(runner: CliRunner, cli, mock_client: MagicMock):
+def test_services_version(runner: CliRunner, cli, mock_client: MagicMock):
     mock_client.services.get_versions.return_value = make_response([{'version': '1.0'}, {'version': '0.9'}])
-    result = runner.invoke(cli, ['versions', 'list', 'demo/pricing', '--latest'])
+    result = runner.invoke(cli, ['services', 'version', 'demo/pricing', '--latest'])
     assert result.exit_code == 0
     assert json.loads(result.output) == {'version': '1.0'}
 
@@ -178,34 +178,34 @@ def test_logs_download(runner: CliRunner, cli, mock_client: MagicMock, tmp_path:
     assert out.read_bytes() == b'[{"call_id":"1"}]'
 
 
-def test_impex_export_describe(runner: CliRunner, cli, mock_client: MagicMock):
+def test_export_describe(runner: CliRunner, cli, mock_client: MagicMock):
     mock_client.impex.exports.describe.return_value = make_response({'jobs': []})
-    result = runner.invoke(cli, ['impex', 'export', 'describe'])
+    result = runner.invoke(cli, ['export', 'describe'])
     assert result.exit_code == 0
     assert json.loads(result.output) == {'jobs': []}
 
 
-def test_impex_export_run(runner: CliRunner, cli, mock_client: MagicMock, tmp_path: Path):
+def test_export_run(runner: CliRunner, cli, mock_client: MagicMock, tmp_path: Path):
     out = tmp_path / 'export.zip'
     mock_client.impex.exp.return_value = [make_response(buffer=b'zip-bytes')]
-    result = runner.invoke(cli, ['impex', 'export', '--folder', 'demo', '-o', str(out)])
+    result = runner.invoke(cli, ['export', '--folder', 'demo', '-o', str(out)])
     assert result.exit_code == 0, result.output
     assert out.read_bytes() == b'zip-bytes'
     mock_client.impex.exp.assert_called_once()
 
 
-def test_impex_import_run(runner: CliRunner, cli, mock_client: MagicMock, tmp_path: Path):
+def test_import_run(runner: CliRunner, cli, mock_client: MagicMock, tmp_path: Path):
     package = tmp_path / 'package.zip'
     package.write_bytes(b'zip')
     mock_client.impex.imp.return_value = make_response({'status': 'completed', 'outputs': {'services': ['a']}})
-    result = runner.invoke(cli, ['impex', 'import', str(package), '-d', 'demo/pricing'])
+    result = runner.invoke(cli, ['import', str(package), '-d', 'demo/pricing'])
     assert result.exit_code == 0, result.output
     mock_client.impex.imp.assert_called_once()
 
 
-def test_impex_export_cancel(runner: CliRunner, cli, mock_client: MagicMock):
+def test_export_cancel(runner: CliRunner, cli, mock_client: MagicMock):
     mock_client.impex.exports.cancel.return_value = make_response({'id': 'job-1', 'status': 'cancelled'})
-    result = runner.invoke(cli, ['impex', 'export', 'cancel', 'job-1'])
+    result = runner.invoke(cli, ['export', 'cancel', 'job-1'])
     assert result.exit_code == 0
     mock_client.impex.exports.cancel.assert_called_once_with('job-1')
 
