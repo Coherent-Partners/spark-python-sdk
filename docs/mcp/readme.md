@@ -1,4 +1,4 @@
-# MCP Client (experimental)
+# MCP Client
 
 > **Experimental:** Coherent MCP is tenant-gated and evolving. Tool schemas and the
 > protocol revision may change between releases. Prefer [`cspark.sdk`](../sdk/) for

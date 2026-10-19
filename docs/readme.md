@@ -28,7 +28,7 @@ The `cspark` package is a Python library that includes multiple modules:
 - `cspark.cli` - a module for the CLI application to interact with the Spark platform,
   which is only available when the `cspark[cli]` extra is installed (or via homebrew
   if you're on macOS);
-- `cspark.mcp` - **experimental** client for Coherent's remote MCP server
+- `cspark.mcp` - client for Coherent's remote MCP server
   (`pip install 'cspark[mcp]'`; Python 3.10+). See [MCP Client](./mcp/readme.md).
 
 You're most likely interested in the `cspark.sdk` module, which this guide

@@ -3,7 +3,7 @@ from cspark.sdk import sdk_version
 
 from ._commands import register_commands
 
-__version__ = '0.1.0-beta'
+__version__ = '0.2.0-beta'
 __title__ = f'Coherent Spark CLI {__version__} (sdk v{sdk_version})'
 __description__ = 'Interact with Coherent Spark APIs from the command line'
 

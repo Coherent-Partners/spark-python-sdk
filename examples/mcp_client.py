@@ -1,5 +1,5 @@
 """
-Experimental example: list Coherent MCP tools and fetch service info.
+Example: list Coherent MCP tools and fetch service info.
 
 Requires:
   pip install 'cspark[mcp]'   # or: rye sync --features mcp

@@ -70,7 +70,7 @@ class AsyncMcpClient(McpToolsMixin):
     """
     Asynchronous client for Coherent's remote MCP server.
 
-    This is an experimental bridge for agent runtimes and scripts that need the
+    This is a bridge for agent runtimes and scripts that need the
     same tool surface IDEs see. Prefer ``cspark.sdk`` for normal REST usage.
 
     Auth: bearer ``token=`` or OAuth2 ``oauth=`` (access token is retrieved on enter).
