@@ -43,7 +43,7 @@ cspark services execute "my-folder/my-service" --inputs '{"value": 42}'
 
 ```bash
 $ cspark -v
-Coherent Spark CLI 0.1.0-beta (sdk v0.3.2)
+Coherent Spark CLI 0.2.0-beta (sdk v0.3.3)
 ```
 
 [![flow.png](flow.png)](flow.png)

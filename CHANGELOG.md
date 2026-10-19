@@ -4,10 +4,13 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
-## Unreleased
+## 0.3.3 (2026-10-19)
 
 - Add experimental `cspark.mcp` client for Coherent's remote MCP server
   (`pip install 'cspark[mcp]'`; requires Python 3.10+ and `mcp` 1.x).
+- Add support for more CLI commands and update documentation to reflect changes.
+- Add test coverage for CLI commands.
+- Upgrade CI actions (checkout, setup-python, download-artifact) to v6.
 
 ## 0.3.2 (2026-03-16)
 
