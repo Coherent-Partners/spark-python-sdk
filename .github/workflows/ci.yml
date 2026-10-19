@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rye
         run: |
@@ -52,25 +52,53 @@ jobs:
         python-version: ['3.7', '3.8', '3.9', '3.10', '3.12', '3.13']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Download build from artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: dist
 
       - name: Install package
-        run: pip install cspark-*.whl
+        run: |
+          whl="$(ls cspark-*.whl)"
+          extras=""
+          # The cli extra requires Python 3.8+.
+          if python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'; then
+            extras="cli"
+          fi
+          # The mcp extra requires Python 3.10+.
+          if python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)'; then
+            extras="${extras:+$extras,}mcp"
+          fi
+          if [ -n "$extras" ]; then
+            pip install "./${whl}[${extras}]"
+          else
+            pip install "./${whl}"
+          fi
 
       - name: Ensure importability
         run: python examples/main.py
 
       - name: Run tests
         run: |
-          pip install pytest uvicorn anyio trio pyjwt[crypto]>=2.10.0
-          pytest test/ -v
+          pip install pytest uvicorn anyio trio
+          # PyJWT 2.10+ needs Python 3.9. On 3.7/3.8, newer cryptography only
+          if python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)'; then
+            pip install 'pyjwt[crypto]>=2.10.0'
+          elif python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'; then
+            pip install 'pyjwt[crypto]>=2.9,<2.10' 'cryptography>=3.4,<47'
+          else
+            pip install 'pyjwt[crypto]>=2.8,<2.9' 'cryptography>=3.4,<44'
+          fi
+          # CLI tests require the cli extra (Python 3.8+); skip them on older interpreters.
+          if python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'; then
+            pytest test/ -v
+          else
+            pytest test/ -v --ignore=test/cli
+          fi

@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import json
-
 import click
 from cspark.sdk import Client, SparkError
 from InquirerPy import inquirer
-from rich.console import Console
 
 from .._utils import get_active_profile
-from ._api import AliasedGroup, header_option, json_parse, parse_pairs
+from ._api import AliasedGroup, echo_json, handle_error, header_option, json_parse, parse_pairs
 
 
 @click.group(
@@ -28,7 +25,6 @@ def folders_cmd():
 @header_option()
 def list_folders(name_only: bool, data: str, headers: list[str]) -> None:
     profile = get_active_profile()
-    console = Console()
 
     try:
         with Client(**profile.to_config()) as client:
@@ -39,21 +35,110 @@ def list_folders(name_only: bool, data: str, headers: list[str]) -> None:
         if name_only:
             output = [item['name'] for item in output]  # type: ignore
 
-        click.echo(json.dumps(output, indent=2))
+        echo_json(output)
     except SparkError as err:
-        console.print(f'[red]✗[/red] {err.message}')
-        raise click.exceptions.Exit(1) from err
+        handle_error(err)
     except Exception as exc:
-        console.print(f'[red]✗[/red] {exc}')
-        raise click.exceptions.Exit(1) from exc
+        handle_error(exc)
+
+
+@folders_cmd.command(name='create', help='Create a new folder')
+@click.argument('name', type=str, metavar='<FOLDER NAME>')
+@click.option('--description', type=str, metavar='<TEXT>', help='Folder description')
+@click.option('--category', type=str, metavar='<NAME>', help='Folder category (default: Other)')
+@click.option('--status', type=str, metavar='<STATUS>', help='Folder status (default: Design)')
+@click.option('--start-date', type=str, metavar='<DATE>', help='Effective start date')
+@click.option('--launch-date', type=str, metavar='<DATE>', help='Launch date')
+@header_option()
+def create_folder(
+    name: str,
+    description: str,
+    category: str,
+    status: str,
+    start_date: str,
+    launch_date: str,
+    headers: list[str],
+) -> None:
+    profile = get_active_profile()
+
+    try:
+        with Client(**profile.to_config()) as client:
+            client.config.extra_headers.update(parse_pairs(headers))
+            response = client.folders.create(
+                name,
+                description=description,
+                category=category,
+                status=status,
+                start_date=start_date,
+                launch_date=launch_date,
+            )
+        echo_json(response.data)
+    except SparkError as err:
+        handle_error(err)
+    except Exception as exc:
+        handle_error(exc)
+
+
+@folders_cmd.command(name='update', help='Update an existing folder')
+@click.argument('id', type=str, metavar='<FOLDER ID>')
+@click.option('--description', type=str, metavar='<TEXT>', help='Folder description')
+@click.option('--category', type=str, metavar='<NAME>', help='Folder category')
+@click.option('--start-date', type=str, metavar='<DATE>', help='Effective start date')
+@click.option('--launch-date', type=str, metavar='<DATE>', help='Launch date')
+@header_option()
+def update_folder(
+    id: str,
+    description: str,
+    category: str,
+    start_date: str,
+    launch_date: str,
+    headers: list[str],
+) -> None:
+    profile = get_active_profile()
+
+    try:
+        with Client(**profile.to_config()) as client:
+            client.config.extra_headers.update(parse_pairs(headers))
+            response = client.folders.update(
+                id,
+                description=description,
+                category=category,
+                start_date=start_date,
+                launch_date=launch_date,
+            )
+        echo_json(response.data)
+    except SparkError as err:
+        handle_error(err)
+    except Exception as exc:
+        handle_error(exc)
+
+
+@folders_cmd.command(name='exists', help='Check whether a folder exists')
+@click.argument('name', type=str, metavar='<FOLDER NAME>')
+@header_option()
+def folder_exists(name: str, headers: list[str]) -> None:
+    profile = get_active_profile()
+
+    try:
+        with Client(**profile.to_config()) as client:
+            client.config.extra_headers.update(parse_pairs(headers))
+            exists = client.folders.exists(name)
+        click.echo('true' if exists else 'false')
+        if not exists:
+            raise click.exceptions.Exit(1)
+    except SparkError as err:
+        handle_error(err)
+    except click.exceptions.Exit:
+        raise
+    except Exception as exc:
+        handle_error(exc)
 
 
 @folders_cmd.command(name='delete', help='Delete a folder (and all its services)')
 @click.argument('names', type=str, metavar='<FOLDER NAMES>', nargs=-1)
 @header_option()
-def delete_services(names: list[str], headers: list[str]) -> None:
+def delete_folders(names: list[str], headers: list[str]) -> None:
     profile = get_active_profile()
-    console = Console()
 
     if not names:
         raise click.BadParameter('at least one folder name must be provided.')
@@ -75,8 +160,6 @@ def delete_services(names: list[str], headers: list[str]) -> None:
                     click.echo(f'folder deleted: {folder}')
 
     except SparkError as err:
-        console.print(f'[red]✗[/red] {err.message}')
-        raise click.exceptions.Exit(1) from err
+        handle_error(err)
     except Exception as exc:
-        console.print(f'[red]✗[/red] {exc}')
-        raise click.exceptions.Exit(1) from exc
+        handle_error(exc)

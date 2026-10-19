@@ -1,6 +1,6 @@
 [project]
 name = "cspark"
-version = "0.3.2"
+version = "0.3.3"
 description = "A Python SDK for interacting with Coherent Spark APIs"
 license = "Apache-2.0"
 authors = [{ name = "Coherent", email = "team@coherent.global" }]
@@ -17,6 +17,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Operating System :: OS Independent",
   "Operating System :: POSIX",
   "Operating System :: MacOS",
@@ -51,6 +52,7 @@ dev-dependencies = [
 [project.optional-dependencies]
 cli = ["click==8.*", "pyyaml>=6.0.0", "rich>=10", "InquirerPy==0.3.*"]
 jwt = ["pyjwt[crypto]>=2.10.0"]
+mcp = ["mcp>=1.28,<2"]
 
 [project.scripts]
 cspark = "cspark.cli:main"

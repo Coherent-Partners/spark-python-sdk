@@ -72,10 +72,8 @@ def test_copied_with_new_values():
     assert copy.base_url.tenant == 'new-tenant'
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason='skip this test for Python 3.7 and below')
 def test_jwt_config_can_decode_token_to_basic_client_options():
-    if sys.version_info < (3, 8):
-        pytest.skip('skip this test for Python 3.7 and below')
-
     decoded = JwtConfig.decode(TOKEN, verify=False)
     assert decoded['token'] == TOKEN
     assert decoded['base_url'] == 'https://excel.my-env.coherent.global'
@@ -86,10 +84,8 @@ def test_jwt_config_can_decode_token_to_basic_client_options():
     assert 'realm' in decoded['decoded']
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason='skip this test for Python 3.7 and below')
 def test_jwt_config_can_build_client_config_from_token():
-    if sys.version_info < (3, 8):
-        pytest.skip('skip this test for Python 3.7 and below')
-
     config = JwtConfig(TOKEN, verify=False, max_retries=2, retry_interval=5)
     assert config.base_url.value == 'https://excel.my-env.coherent.global'
     assert config.base_url.tenant == 'my-tenant'
